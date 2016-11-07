@@ -4,7 +4,22 @@ class Database:
     def __init__(self, DBName):
         self.dbConnect = sqlite3.connect("%s.db3" % DBName)
         self.dbCursor  = self.dbConnect.cursor()
+    
+    def CreateExprTable2(self, tableName):
+        # Dit hoort eigenlijk in de __init__
+        self.fields = [("pressSeq", "text"), ("langUID", "integer"), ("langName", "text")]
+        field_string = ""
+        for f in self.fields:
+            if f == self.fields[-1]:
+                # last field does not have a trailing common
+                field_string += "\n%-16s%s" % f
+            else:
+                field_string += "\n%-16s%s," % f
 
+        command = "CREATE TABLE %s(%s)" % (tableName, field_string)
+        self.dbCursor.execute(command)
+        self.dbConnect.commit()
+        
     def CreateExprTable(self, expressions):
         """ Create a generic Gellish SQL expression table in 'database' (cursor).
         The tableName is 'expressions'.
@@ -150,10 +165,13 @@ if __name__ == "__main__":
     import os
     from copy import deepcopy
     # gooi de oude database weg omdat we anders geen table met de naam expressions kunnen maken:
-    os.remove("FormalEnglish.db3")
+    try:
+        os.remove("FormalEnglish.db3")
+    except OSError:
+        pass
     FED = Database("FormalEnglish")
     expressions = "expressions"
-    FED.CreateExprTable(expressions)
+    FED.CreateExprTable2(expressions)
 
     if True:
         row1 = []
@@ -200,4 +218,4 @@ if __name__ == "__main__":
 
 
 
-
+
