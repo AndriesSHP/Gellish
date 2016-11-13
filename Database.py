@@ -37,7 +37,7 @@ class Database:
         # namingColIDs = [69,71,101,60,2] # languageUID, langCommUID, name, relUID, UID
         # column names for namingTable.
         self.namingFields = [("langUID", "integer"), ("commUID", "integer"),\
-                             ("termName", "text")   , ("relUID", "i	nteger") ,\
+                             ("termName", "text")   , ("relUID", "integer") ,\
                              ("nameUID", "integer")]
 
     def CreateTable(self, tableName):
