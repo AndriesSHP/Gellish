@@ -25,7 +25,7 @@ class ImportInDatabase():
                        68, 82, 80, 81, 84]
         try:
             f = open(fname, "r")
-        except IoError:
+        except IOError:
             print("File '%s' does not exist or is not readable." % fname)
             sys.exit()
         
