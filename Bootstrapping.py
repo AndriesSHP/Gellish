@@ -1,24 +1,19 @@
 # Base ontology and domain dictionaries directories
-#dict_dirs = ["TestData"]
-dict_dirs  = ["EN models", "Language definition models (subsets)"]
-#dict_dirs = ["NL modellen", "Woordenboek definitiemodellen"]
+dict_dirs  = ["Data"]
 
 # Base ontology file
-#base_onto_file = "TestDBcontent.csv"
 base_onto_file = "Base ontology (core).csv"
-#base_onto_file = "Base ontology.csv"
-#base_onto_file = "basisontologie NL + EN - Nov2014.csv"
 
 # Taxonomic Dictionary files
 dict_files = ["Taxonomic Dictionary - UoMs & currencies - Subset.csv",\
               "Taxonomic Dictionary about Roads.csv"]
 
 # Knowledge, Requirements and Product file paths
-model_dirs  = ["EN models", "Knowledge and requirements models",]
+model_dirs  = ["Data",]
 model_files = ["Knowledge base ROADS - v5.1.csv"]
 
 # Knowledge, Requirements and Product & Processes Models file paths
-prod_dirs  = ["EN models", "Product and process models",]
+prod_dirs  = ["Data",]
 prod_files = ["Semantic model of a road network.csv"]
 
 # Bootstrapping phrases and UIDs
