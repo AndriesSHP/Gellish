@@ -1,69 +1,111 @@
 #!/usr/bin/python3
 
-from Anything import GUI_Language
+#languages = ['English', 'Nederlands', 'American']
+lang_name_dict = {'English':'910036', 'Nederlands':'910037', 'American':'911689', 'Chinese':'911876'}
+lang_dict = {'910036': "English", '910037': "Nederlands", '911689':"American", '589211':"international"}
+comm_dict = {'492014': "Gellish", '589830': "Gellish alternative"}
 
-GUI_languages = ['English', 'Nederlands']
-lang_dict = {910036: "English", 910037: "Nederlands", 911689:"American", 589211:"international"}
-comm_dict = {492015: "Formal English", 492016: "Formeel Nederlands"}
+class System():
+    def __init__(self):
+        self.users   = []
+        self.pw_dict = {}
 
-# Existing users to be read from database (** TO BE DONE **)
-user_pw_dict = {}
-users = [] 
-
+    def Register_User(self, new_user, pw):
+        self.pw_dict[new_user] = pw
+        self.users.append(new_user)
+        
 class User():
     def __init__(self, name):
         self.name = name
         self.preferences = []
-        self.GUI_language      = "English"    # default
+        self.GUI_lang_pref_uids = []
+##        self.GUI_lang_name     = 'Nederlands' # default
+##        self.GUI_lang_uid      = lang_name_dict['Nederlands'] # default
+##        self.GUI_lang_index    = 1            # "Nederlands" (default)
         self.modeling_language = "English"    # default
         # English:910036, American:911689, international:589211, Nederlands:910037
-        self.lang_prefs = [910036, 911689, 589211, 910037] # Default
-        # 492015:"Formal English", 492016:"Formeel Nederlands"
-        self.comm_prefs = [492015, 492016] # Default
-        self.Set_GUI_Language(self.GUI_language)
+        self.lang_pref_uids = []
+        # 492014:"Gellish"
+        self.comm_pref_uids = ['492014'] # Default: 'Gellish'
         
-    def Providing_Access(self, party):
+    def Providing_Access(self, party, system):
         # Login: Determine party and preferences
         sesam = False
         known_party = False
         trials = 0
         while known_party != True:
             # Verify password
-            if party in user_pw_dict:
+            if party in system.pw_dict:
                 known_party = True
                 while sesam != True and trials < 5:
                     trials += 1
-                    pw = input("Password: ")
-                    if user_pw_dict[party] == pw:
+                    pw = 'pw' #input("Password: ")
+                    if system.pw_dict[party] == pw:
                         sesam = True
                 if sesam == False:
                     print("Password %i times incorrect" % (trials))
                     exit(0)
             else:
                 # Register new users
-                pw    = input("Password: ")
-                email = input("Email address: ")
-                self.Register_User(party, pw, email)
+                self.pw    = 'pw' #input("Password: ")
+                self.email = 'email' #input("Email address: ")
+                system.Register_User(party, self.pw)
                 sesam = True
         return (sesam)
 
-    def Register_User(self, new_user, pw, email):
-        user_pw_dict[new_user] = pw
-        self.email = email
-
-    def Set_GUI_Language(self, GUI_lang):
-        if GUI_lang in GUI_languages:
-            self.GUI_language = GUI_lang
-            self.GUI_index = GUI_languages.index
+    def Set_GUI_language(self, GUI_lang):
+        '''Set the GUI language of the user'''
+        if GUI_lang in lang_name_dict:
+            self.GUI_lang_name = GUI_lang
+            self.GUI_lang_uid  = lang_name_dict[GUI_lang]
+            if GUI_lang == 'Nederlands':
+                self.GUI_lang_index = 1
+            else:
+                self.GUI_lang_index = 0
+            GUI_set = True
+            if self.GUI_lang_uid == '910036':
+                # Set default GUI_preferences at international, English, American
+                self.GUI_lang_pref_uids = ['589211', '910036', '911689']
+            elif self.GUI_lang_uid == '910037':
+                # Set default preferences at international, Dutch, English
+                self.GUI_lang_pref_uids = ['589211', '910037', '910036']
+            else:
+                # Set default preferences at international, user_language, English
+                self.GUI_lang_pref_uids = ['589211', self.GUI_lang_uid, '910036']
         else:
             print('GUI language %s unknown. Default = English.' % (GUI_lang))
-            self.GUI_language = GUI_languages[0]
-            self.GUI_index = 0
+            GUI_set = False
+        return GUI_set
 
-    def Display_Preferences(self):
-        # Display preferences
-        print("Preferences for %s " % (self.name))
-        print("  GUI language     : %s " % (self.GUI_language))
+    def Set_reply_language(self, reply_lang_name):
+        '''Set the reply language for display of the user views'''
+        if reply_lang_name in lang_name_dict:
+            self.reply_lang_name = reply_lang_name
+            self.reply_lang_uid  = lang_name_dict[reply_lang_name]
+            if self.reply_lang_uid == '910036':
+                # Set default preferences at international, English, American
+                self.lang_pref_uids = ['589211', '910036', '911689']
+            elif self.reply_lang_uid == '910037':
+                # Set default preferences at international, Dutch, English
+                self.lang_pref_uids = ['589211', '910037', '910036']
+            else:
+                # Set default preferences at international, user_language, English
+                self.lang_pref_uids = ['589211', self.reply_lang_uid, '910036']
+        else:
+            print('Reply language %s unknown. Default = English.' % (reply_lang_name))
+            self.reply_lang_name = 'English'
+            self.reply_lang_uid  = '910037'
+
+    def Message(self, mess_text_EN, mess_text_NL):
+        if self.GUI_lang_index == 1:
+            print(mess_text_NL)
+        else:
+            print(mess_text_EN)
+
+    def Modify_Preferences(self):
+        # Display user preferences
+        print("Preferences for user %s " % (self.name))
+        print("  GUI language     : %s " % (self.GUI_lang_name))
         print("  Modeling language: %s " % (self.modeling_language))
         print("Output languages pref sequence:")
         print(' ', end=" ")
@@ -71,17 +113,31 @@ class User():
             print(lang_dict[lang],',', sep="", end=" ")
         print("\nLanguage community pref sequence:")
         print(' ', end=" ")
-        for comm in self.comm_prefs:
+        for comm in self.comm_pref_uids:
             print(comm_dict[comm],',', sep="", end=" ")
         change_prefs = input("\nChange preferences? (y/n): ")
         if change_prefs == 'y':
-            # Determine and initialize GUI_language
+            # Determine and initialize GUI_lang_name
             out_lang = input("GUI language (EN or NL): ")
             if out_lang in ['NL', 'nl']:
                 self.Set_GUI_Language("Nederlands")
             else:
                 self.Set_GUI_Language("English")
-            print("GUI language: %s " % (self.GUI_language))
+            print("GUI language: %s " % (self.GUI_lang_name))
+
+class Language:
+    """ Determine which modelling language will be used
+        Defaults = English
+    """
+    def __init__(self, language):
+
+        # language == 'Nederlands' then ..., otherwise English (default)
+        if language == lang_dict['910037'] or language == comm_dict['492014']:
+            self.language  = self.lang_dict['910037']
+            self.community = self.comm_dict['492014']
+        else:
+            self.language  = lang_dict['910036']
+            self.community = comm_dict['492014']
 
 #------------------------------------------------------------------------------------
 if __name__ == "__main__":
@@ -89,20 +145,20 @@ if __name__ == "__main__":
     users = []
 
     # Create and register first user
-    party = "a"
+    party = "Andries"
     user = User(party)
     users.append(user)
-    pw    = 'a'   #pw    = input("Password: ")
+    pw    = 'pw'   #pw    = input("Password: ")
     email = 'andries.vanrenssen@gellish.net' #email = input("Email address: ")
     user.Register_User(party, pw, email)
 
     # Enter user name, if not registered the register
-    party = input("User name: ")
+    party = "Andries"   #input("User name: ")
     if party not in user_pw_dict:
         user = User(party)
         users.append(user)
-        pw    = input("Password: ")
-        email = input("Email address: ")
+        pw    = 'pw'    #input("Password: ")
+        email = 'a@a'   #input("Email address: ")
         user.Register_User(party, pw, email)
     else:
         if len(users) > 0:
@@ -113,6 +169,6 @@ if __name__ == "__main__":
     sesam = user.Providing_Access(party)
     if sesam == False:
         exit(0)
-    user.Display_Preferences()
+    user.Modify_Preferences()
     print('Ready')
     

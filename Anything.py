@@ -1,16 +1,33 @@
 from Bootstrapping import *
+from Expr_Table_Def import *
+from Expression_list import *
+from tkinter import filedialog
+from tkinter import *
+from tkinter.ttk import *
+import os
+import csv
 
 class Anything:
-    def __init__(self, uid):
+    def __init__(self, uid, name, category = None):
         self.uid = uid
-        self.names_in_contexts = []  #[lang_uid, comm_uid, name, naming_rel_uid, description]
+        self.name = name    # Name (out of context) at time of creation of the object
+        self.candidate_names = [] # rh object names that need to be verified later with lh object names
+        self.defined = False
+        # Categories are upper level concepts: individual, kind, etc. for guiding logic and the GUI views
+        # If category not specified than allocate 'anything' as category.
+        self.category = category if category is not None else 'anything'
+        self.names_in_contexts = [] #[lang_uid, comm_uid, name, naming_rel_uid, description]
         self.relations      = [] # expressions (including used names)
         self.basePhrases    = []
+        self.basePhrases_in_context = []
         self.inversePhrases = []
-        self.supertypes     = [] # duplicate of uids in relations (subset), invalid for individuals
-        self.subtypes       = [] # duplicate of uids in relations (subset), invalid for individuals
-        self.classifiers    = [] # kinds, duplicate of uids in relations (subset)
-        self.individuals    = [] # individuals, duplicate of uids in relations (subset), invalid for individuals
+        self.inversePhrases_in_context = []
+        self.supertypes  = [] # direct supertype objects that duplicate the uid refs in specialization relations (subset), invalid for individuals
+        self.subtypes    = [] # direct subtype objects that duplicate the uid refs in specialization relations (subset), invalid for individuals
+        self.classifiers = [] # kinds, duplicate of uid refs in classification relations (subset)
+        self.individuals = [] # individuals, duplicate of uid refs in classification relations (subset), invalid for individuals
+        #self.parts          = [] # parts of kinds or individual things (duplicate part-whole relations)
+        #self.aspects        = [] # aspects and intrinsic aspects of kinds or individual things (duplicate part-whole relations)
 
     # add name or alias to collection of names:
     # name_in_context = (lanuageUID, communityUID, naming_relationUID, name).
@@ -18,13 +35,12 @@ class Anything:
         if name_in_context not in self.names_in_contexts:
             self.names_in_contexts.append(name_in_context)
 
-    # add relation to collection of relations with self
-    # relation = [ideaUID, intentUID, Obj1UID, relTypeUID, phraseType, Obj2UID]
+    # add relation object to collection of relations with self
     def add_relation(self, relation):
         if relation not in self.relations:
             self.relations.append(relation)
         else:
-            print('Duplicate relation ignored: ',relation)
+            print('Duplicate relation uid {} ignored: ',format(relation.uid))
     
     def add_classifier(self, classifier):   # only applicable for individuals
         if classifier not in self.classifiers:
@@ -41,10 +57,26 @@ class Anything:
     def add_individual(self, individual):   # only applicable for kinds
         if individual not in self.individuals:
             self.individuals.append(individual)
+    
+    def add_first_role(self, kind_of_role):
+        self.first_role = kind_of_role
 
-    def show(self, network):
+    def add_second_role(self, kind_of_role):
+        self.second_role = kind_of_role
+
+    def add_role_player(self, kind_of_role_player):
+        self.role_player = kind_of_role_player
+
+    def add_first_role_player(self, kind_of_role_player):
+        self.first_role_player = kind_of_role_player
+
+    def add_second_role_player(self, kind_of_role_player):
+        self.second_role_player = kind_of_role_player
+
+    def show(self, network, user):
         uid = self.uid
-        print('\nObject UID: %i' % (uid)) # , self.names_in_contexts), ('Python id: %i'% (id(self))
+        query_results = []
+        print('\nProduct model of object UID: %i' % (uid)) # , self.names_in_contexts), ('Python id: %i'% (id(self))
         for nam in self.names_in_contexts:
             if len(nam) > 0:
                 if nam[4] != '':
@@ -54,68 +86,93 @@ class Anything:
                     print('  Name: %s %s.'    % (nam[2], nam[0:2]))
             else:
                 print('  Name: %s %s.' % (self.name))
+        # Show all relations
         for rel in self.relations:
-            lh = network.find_object(rel.lh_uid)
+            lh = network.uid_dict[rel.expression[lh_uid_col]]   #find_object(rel.expression[lh_uid_col])
             if len(lh.names_in_contexts) > 0:
                 lh_pref_name = lh.names_in_contexts[0][2] # name should be determined by preferences
             else:
                 lh_pref_name = lh.name
                 print('  LH name in context missing:', lh.name, lh.names_in_contexts)
-            rh = network.find_object(rel.rh_uid)
+            rh = network.uid_dict[rel.expression[rh_uid_col]]   #find_object(rel.expression[rh_uid_col])
             if len(rh.names_in_contexts) > 0:
                 rh_pref_name = rh.names_in_contexts[0][2] # name should be determined by preferences
             else:
                 rh_pref_name = rh.name 
             print('  Idea %i: (%i) %s (%i) %s (%i) %s' % \
                   (rel.uid, \
-                   rel.lh_uid      , lh_pref_name,\
-                   rel.rel_type_uid, rel.rel_type_name, \
-                   rel.rh_uid      , rh_pref_name))
-        #    header += "\t%s\n" % str(rel)
+                   rel.expression[lh_uid_col]      , lh_pref_name,\
+                   rel.expression[rel_type_uid_col], rel.expression[rel_type_name_col], \
+                   rel.expression[rh_uid_col]      , rh_pref_name))
+            query_results.append(rel.expression)
+            
+        save_on_file = input('\nSave query results on output file? (y/n): ')
+        if save_on_file == 'y':
+            lang_name = 'Naderlands'
+            serialization = 'CSV'
+            Open_output_file(query_results, self.name, lang_name, serialization)
+            Save_expressions_in_file(query_results, output_file, header1, serialization)
+                                     #self.name, user.GUI_lang_name, query_results, user.GUI_lang_index)
 
     def __repr__(self):
         #return(self.uid, self.names_in_contexts)
         return(" (%i) %s" % (self.uid, self.names_in_contexts))
 
+    def add_base_phrase(self, phrase_in_context):
+        self.basePhrases_in_context.append(phrase_in_context)
+        self.basePhrases.append(phrase_in_context[2])
+
+    def add_inverse_phrase(self, phrase_in_context):
+        self.inversePhrases_in_context.append(phrase_in_context)
+        self.inversePhrases.append(phrase_in_context[2])
+
+    def add_first_kind_of_role(self, first_role_type):
+        self.first_role_type = first_role_type
+
+    def add_second_kind_of_role(self, second_role_type):
+        self.second_role_type = second_role_type
+
 class Object(Anything):
     pass
 
 class Individual(Object):
-    kind = "individual thing"
+    #category = "individual thing"
+    pass
 
 class Kind(Object):
-    kind = "kind"
+    #category = "kind"
+    pass
     
 class RelationType(Kind):
-    kind = "kind of relation"
-    def add_base_phrase(self, phrase):
-        self.basePhrases.append(phrase)
+##    def __init__(self, uid, category = "kind of relation"):
+##        Kind.__init__(self, uid, category = None):
+##            self.basePhrases    = []
+##            self.inversePhrases = []
+    pass
 
-    def add_inverse_phrase(self, phrase):
-        self.inversePhrases.append(phrase)
+class Intention_type(Kind):
+    #category = "intention"
+    pass
 
 class Relation(Anything):
-    kind = "binary relation" # expression kernel
-    def __init__(self, ideaUID, idea_desc, intentUID, intent_name, \
-                 lhUID, lhName, relTypeUID, relTypeName, phraseTypeUID, \
-                 rhUID, rhName, uomUID, uomName):
-        self.uid           = ideaUID
-        self.intent_uid    = intentUID
-        self.rel_type_uid  = relTypeUID
-        self.lh_uid        = lhUID
-        self.rh_uid        = rhUID
-        self.phrase_type_uid = phraseTypeUID
-        self.name          = idea_desc
-        self.intent_name   = intent_name
-        self.lh_name       = lhName
-        self.rel_type_name = relTypeName
-        self.rh_name       = rhName
-        self.uom_uid       = uomUID
-        self.uom_name      = uomName
-        #relation = [self.uid         , self.intent_uid     , self.lh_uid,\
-        #            self.rel_type_uid, self.phrase_type_uid, self.rh_uid]
-        #self.lh_uid.add_relation(relation)
-        #self.rh_uid.add_relation(relation)
+    ''' lh, rel_type, rh, phrase_type, uom and expression that expresses a binary relation with contextual facts.
+        Contextual facts are about this object.
+        Default category is 'binary relation'
+    '''
+    def __init__(self, lh_obj, rel_type, rh_obj, phrase_type_uid, uom, expression, category = None):
+        # intention_type = None
+        self.uid        = expression[idea_uid_col]
+        self.lh_obj     = lh_obj
+        self.rel_type   = rel_type
+        self.rh_obj     = rh_obj
+        self.phrase_type_uid = phrase_type_uid
+        self.uom        = uom
+        # The intention_type default is 491285 (statement)
+##        statement_uid = 491285
+##        self.intention_type = intention_type if intention_type is not None else statement_uid
+        self.expression = expression
+        # The category of a relation (default: 'binary relation') is the highlevel category.
+        self.category   = category if category is not None else 'binary relation'
 
     def add_contextual_fact(self, cont_fact):
         try:
@@ -127,80 +184,47 @@ class Relation(Anything):
         #return(self.uid, self.lh_uid, self.rel_type_uid, self.phrase_type_uid, self.rh_uid)
         return("Idea %i %i (%i) %i %i" % (self.uid, self.lh_uid, self.rel_type_uid,\
                                           self.phrase_type_uid, self.rh_uid))
-
-class Language:
-    """ Determine which modelling language will be used
-        Defaults = English
-    """
-    def __init__(self, language):
-        lang_dict = {910036: "English", 910037: "Nederlands"}
-        comm_dict = {492015: "Formal English", 492016: "Formeel Nederlands"}
-
-        # language == 'Nederlands' then ..., otherwise English (default)
-        if language == lang_dict[910037] or language == comm_dict[492016]:
-            self.language  = self.lang_dict[910037]
-            self.community = self.comm_dict[492016]
-        else:
-            self.language  = lang_dict[910036]
-            self.community = comm_dict[492015]
-
-class GUI_Language:
-    '''The language of the user interface. Default is English.
-       GUIlang = "English" or "Nederlands"
-    '''
-    def __init__(self, GUI_lang):
-        self.GUI_lang_dict = {910036: "English", 910037: "Nederlands"}
-        self.GUI_lang = GUI_lang
-        if self.GUI_lang == self.GUI_lang_dict[910037]:
-            self.GUI_index = 1
-        else:
-            self.GUI_index = 0
-
-    def Message(self, mess_text_EN, mess_text_NL):
-        if self.GUI_index == 1:
-            print(mess_text_NL)
-        else:
-            print(mess_text_EN)
 #------------------------------------------------------------------------------------
-if __name__ == "__main__":
+if __name__ == "__main__":   
     import TestData.TestDBcontent as Exprs
+    
     lang = Language("English")
+    GUI = GUI_Language("English")
+    net_name = 'Semantic network'
+    Gel_net = Semantic_Network(net_name)
     for ex in Exprs.expr:
-        langUID   = ex[1];   langName   = ex[2] ; commUID = ex[3]    ; commName = ex[4]
+        langUID   = ex[1];   langName   = ex[2] ; commUID = ex[3]    ; commName = ex[4] ;
         intentUID = ex[6];   intentName = ex[7] ; lhobUID = ex[9]    ; lhobName = ex[10];
         ideaUID   = ex[15];  ideaName   = ex[16]; relTypeUID = ex[17]; relTypePhrase = ex[18]; rhobUID  = ex[23];
-        rhobName  = ex[24];  fullDef    = ex[25]; uomUID  = ex[26]   ; uomName[27]
+        rhobName  = ex[24];  fullDef    = ex[25]; uomUID  = ex[26]   ; uomName  = ex[27]
         print("Expression: ",langName, commName, intentName, lhobName, relTypePhrase, rhobName)
 
         # Interpret an expression and create things, and main relation if they do not yet exist.
 
-        rel = Relation(ideaUID, ideaName, intentUID, intentName, \
-                       lhobUID, lhobName, relTypeUID, relTypePhrase, phraseTypeUID, \
-                       rhobUID, rhobName, uomUID, uomName)
-        lang.idea_uids.append(rel)
-        
-        #Id = Idea(ideaUID)
-        #Id.descr = "idea-" + str(ideaUID)
+        rel = Relation(ex) #ideaName, intentUID, intentName, \
+                       #lhobUID, lhobName, relTypeUID, relTypePhrase, phraseTypeUID, \
+                       #rhobUID, rhobName, uomUID, uomName)
+
         R1 = [0   , "has approval status",790375, "accepted"]
         R2 = [6023, "has as originator",0,"Andries van Renssen"]
         rel.add_contextual_fact(R1)
         rel.add_contextual_fact(R2)
-        print('Lang_rel_uids: ', lang.idea_uids)
+        rel.show(Gel_net)
 
         naming_rel_uid = 5117
         description = 'text'
         O1 = Object(lhobUID, fullDef)
-        if O1 not in lang.obj_uids:
-            lang.obj_uids.append(O1)
+        if O1 not in Gel_net.obj_uids:
+            Gel_net.obj_uids.append(O1)
             lhob_name_in_context = [langUID, commUID, lhobName, naming_rel_uid, description]
             O1.add_name_in_context(lhob_name_in_context)
-        print('LH_obj.names_in_contexts: ', O1.names_in_contexts)
+        Q1.show(Gel_net)
 
         O2 = Object(rhobUID,'')
-        if O2 not in lang.obj_uids and O2 not in lang.rh_obj_uids:
-            lang.rh_obj_uids.append(O2)
+        if O2 not in Gel_net.obj_uids and O2 not in Gel_net.rh_obj_uids:
+            Gel_net.rh_obj_uids.append(O2)
             O2.add_name_in_context(rhobName)
-        print('RH+obj.names: ', O2.names_in_contexts)
+        Q2.show(Gel_net)
 
         RT = RelationType(1260,'bla, bla')
         rt_name_in_context = [langUID, commUID, "composition relation between an individual thing \
@@ -208,5 +232,24 @@ and a composed individual thing", naming_rel_uid, description]
         RT.add_name_in_context(rt_name_in_context)
         RT.add_base_phrase("is a part of")
         RT.add_inverse_phrase("has as part")
+        RT.show(Gel_net)
+    GUI_index = 0
+    categoryInFocus = 'kind'
+    root = Tk()
+    root.title("Semantic model server")
+    root.minsize(1000,400)
+    myStyle = Style()
+    myStyle.configure("TFrame"   ,background="#dfd")
+    root.configure(background="#ddf")
+    root.columnconfigure (0,weight=1)
+    root.rowconfigure    (0,weight=0)
+    root.rowconfigure    (1,weight=1)
+    prod_model = []
+    summ_model = []
+    query_table = []
+    user = User("A")
+    Notebook_views()
 
-        print(RT)
+class User:
+    def __init__(self, name):
+        self.name = name
