@@ -8,7 +8,7 @@ base_onto_file_name = "Formal language definition base-UTF-8.csv"
 dict_file_names = [
 ##                   "extended language definition-UTF-8.csv",\
 ##                   "units of measures & currencies-UTF-8.csv",\
-##                   "units of measure - Special symbols-UTF-8.csv",\
+##                   "units of measures - Special symbols-UTF-8.csv",\
 ##                   "aspects & properties & qualities & laws-UTF-8.csv",\
 ##                   "information & documents & rules & identification & symbols.csv",\
 ##                   "qualitative aspects & qualitative information.csv",\
