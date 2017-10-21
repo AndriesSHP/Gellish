@@ -1,26 +1,26 @@
 # Base ontology and domain dictionaries directories
-dict_dirs = ["C:\\", "Users", "Andries", "CloudStation", "Gellish Language", \
-             "Gellish Dictionary", "Gellish Dictionary CSV - August 2017"]
+dict_dirs = ["../GellishData"]
 
 # Base ontology file
 base_onto_file_name = "Formal language definition base-UTF-8.csv"
 
 # Taxonomic Dictionary files
-dict_file_names = ["extended language definition-UTF-8.csv",\
-                   "units of measures & currencies-UTF-8.csv",\
-                   "units of measure - Special symbols-UTF-8.csv",\
-                   "aspects & properties & qualities & laws-UTF-8.csv",\
+dict_file_names = [
+                   "extended language definition-UTF-8.csv",\
+##                   "units of measures & currencies-UTF-8.csv",\
+##                   "units of measure - Special symbols-UTF-8.csv",\
+##                   "aspects & properties & qualities & laws-UTF-8.csv",\
 ##                   "information & documents & rules & identification & symbols.csv",\
 ##                   "qualitative aspects & qualitative information.csv",\
 ##                   "activities & events & processes.csv",\
-                   "buildings & civil & infrastructure & furniture-UTF-8.csv",\
+##                   "buildings & civil & infrastructure & furniture-UTF-8.csv",\
 ##                   "biology & biochemistry & agriculture.csv",\
-                   "electrical & instrumentation & control & IT-UTF-8.csv",\
+##                   "electrical & instrumentation & control & IT-UTF-8.csv",\
 ##                   "facilities & static eq & process units & piping & protection & connection.csv",\
-                   "Chinese - fasteners-UTF-8.csv",\
+##                   "Chinese - fasteners-UTF-8.csv",\
 ##                   "geography & countries & businesses & persons & organizations.csv",\
 ##                   "mathematics & shapes.csv",\
-##                   #"roles of aspects.csv",\
+##                   "roles of aspects.csv",\
 ##                   "roles of physical objects.csv",\
 ##                   "rotating equipment & transport & solids handling.csv",\
 ##                   "substances & materials of construction, fluids and solids.csv",\
