@@ -6,7 +6,7 @@ base_onto_file_name = "Formal language definition base-UTF-8.csv"
 
 # Taxonomic Dictionary files
 dict_file_names = [
-                   "extended language definition-UTF-8.csv",\
+##                   "extended language definition-UTF-8.csv",\
 ##                   "units of measures & currencies-UTF-8.csv",\
 ##                   "units of measure - Special symbols-UTF-8.csv",\
 ##                   "aspects & properties & qualities & laws-UTF-8.csv",\
