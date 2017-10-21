@@ -7,7 +7,7 @@ base_onto_file_name = "Formal language definition base-UTF-8.csv"
 # Taxonomic Dictionary files
 dict_file_names = [
 ##                   "extended language definition-UTF-8.csv",\
-##                   "units of measures & currencies-UTF-8.csv",\
+                   "units of measures & currencies-UTF-8.csv",\
 ##                   "units of measures - Special symbols-UTF-8.csv",\
 ##                   "aspects & properties & qualities & laws-UTF-8.csv",\
 ##                   "information & documents & rules & identification & symbols.csv",\
@@ -36,10 +36,10 @@ model_file_names = ["Kennisboek WEGEN - v5-UTF-8.csv"]
 # Product & Processes Models file paths
 #prod_dirs  = ["EN models", "Product and process models",]
 prod_dirs  = ["NL modellen", "Product en procesmodellen",]
-prod_file_names = [] #["Semantisch model van een WEG - v5.2.csv"]
+prod_file_names = [] #["Semantisch model van een wegennet-UTF-8.csv"]
 
 # Default output path name
-ini_out_path = r"C:\Users\Andries\CloudStation\Gellish Software\Gellish Model Server\NL modellen"
+ini_out_path = r"../GellishData"
 
 # Bootstrapping phrases and UIDs
 boot_base_phrasesEN    = ["is a kind of", "is a specialization of",\
