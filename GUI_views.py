@@ -1,4 +1,4 @@
-import os
+himport os
 from tkinter import *
 from tkinter.ttk import *
 from tkinter import messagebox, filedialog
@@ -13,7 +13,7 @@ class Main_view():
         self.root = main.root
         self.main = main
         self.user = main.user
-        self.root.title("Semantic model server")
+        self.root.title("Gellish Communicator")
         max_width, max_height = self.root.winfo_screenwidth(), self.root.winfo_screenheight()
         self.root.geometry('1000x600')
         self.root.minsize(width=600,height=300)
