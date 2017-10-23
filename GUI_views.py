@@ -31,8 +31,8 @@ class Main_view():
         # Import semantic network from Pickle
         self.main.Load_net()
 
-        # Set GUI language default in Dutch
-        self.user.Set_GUI_language(self.GUI_lang_names[1])
+        # Set GUI language default = English: GUI_lang_names[0]
+        self.user.Set_GUI_language(self.GUI_lang_names[0])
         self.lang_index = self.user.GUI_lang_index
         
         # Open main window
@@ -62,7 +62,7 @@ class Main_view():
         new_net = ['New network','Nieuw netwerk']
         save_as = ['Save net','Opslaan']
         load_net= ['Load net','Import']
-        read_db = ['Net_from_db', 'Net_van_db']
+        read_db = ['Net from db', 'Net van db']
         
         self.menubar.add_command(label=verify[self.lang_index], command=self.main.Verify_table)
         self.menubar.add_command(label=query [self.lang_index], command=self.main.Query_net)
@@ -74,7 +74,7 @@ class Main_view():
         self.DBMenu.add_command (label=new_net [self.lang_index], command=self.main.Create_net)
         self.DBMenu.add_command (label=save_as [self.lang_index], command=self.main.Dump_net)
         self.DBMenu.add_command (label=load_net[self.lang_index], command=self.main.Load_net)
-        self.DBMenu.add_command (label=read_db [self.lang_index], command=self.main.Read_db)
+        #self.DBMenu.add_command (label=read_db [self.lang_index], command=self.main.Read_db)
 
     # Main Frame
         self.main_frame = Frame(self.root)
