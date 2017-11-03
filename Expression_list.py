@@ -12,16 +12,17 @@ from Anything import Anything
 
 class Gellish_file:
     """ Data about files. """
-    def __init__(self, path_and_name, user):
+    def __init__(self, path_and_name, Gel_net):
         # The file file_name is without path or directory, but with file extension
         self.path_and_name = path_and_name
-        self.user = user
+        self.Gel_net = Gel_net
         parts = path_and_name.rsplit('\\', maxsplit=1)
         if len(parts) == 1:
             parts2 = path_and_name.rsplit('/', maxsplit=1)
             if len(parts2) == 1:
-                self.user.Message('\nFile name {} has no directory.'.format(path_and_name),\
-                                  '\nFilenaam {} heeft geen directory.'.format(path_and_name))
+                Message(Gel_net.GUI_lang_index, \
+                        '\nFile name {} has no directory.'.format(path_and_name),\
+                        '\nFilenaam {} heeft geen directory.'.format(path_and_name))
                 self.name = parts2[0]
             else:
                 self.name = parts2[1]
@@ -31,13 +32,15 @@ class Gellish_file:
         # Determine the file extension from path_and_name
         name_ext = self.path_and_name.rsplit('.', maxsplit=1)
         if len(name_ext) == 1:
-            self.user.Message('\nFile name {} has no file extension.'.format(path_and_name),\
-                              '\nFilenaam {} heeft geen file extensie.'.format(path_and_name))
+            Message(Gel_net.GUI_lang_index, \
+                    '\nFile name {} has no file extension.'.format(path_and_name),\
+                    '\nFilenaam {} heeft geen file extensie.'.format(path_and_name))
             self.extension = '' 
             return
         elif name_ext[1] not in ['csv', 'json']:
-            self.user.Message('\nFile name extension {} is not (yet) supported.'.format(name_ext[1]),\
-                              '\nFilenaam extensie {} wordt (nog) niet ondersteund.'.format(name_ext[1]))
+            Message(Gel_net.GUI_lang_index, \
+                    '\nFile name extension {} is not (yet) supported.'.format(name_ext[1]),\
+                    '\nFilenaam extensie {} wordt (nog) niet ondersteund.'.format(name_ext[1]))
             self.extension = ''
         else:
             # Allocate file extension to file
@@ -49,8 +52,8 @@ class Expression_list:
        build a semantic network from it
        or export such a list in any of various formats (such as CSV or JSON files).
     '''
-    def __init__(self, user):
-        self.user = user
+    def __init__(self, Gel_net):
+        self.Gel_net = Gel_net
         self.expressions = []
         self.files_read  = []
         self.interpreted_lines = []
@@ -90,7 +93,7 @@ class Expression_list:
         #print('Ontology path:', onto_path)
         
         # Create file object
-        file = Gellish_file(onto_path, self.user)
+        file = Gellish_file(onto_path, Gel_net)
         
         self.Import_Gellish_from_file(file, Gel_net) #, Gel_db)
         #print('Imported: base ontology')
@@ -111,7 +114,7 @@ class Expression_list:
                 path_and_name.append(dir)
             path_and_name.append(file_name)
             model_path = os.path.join(*path_and_name)
-            file = Gellish_file(model_path, self.user)
+            file = Gellish_file(model_path, Gel_net)
             #print('Model file: ', file.path_and_name)
             model_files.append(file)
 
@@ -144,7 +147,7 @@ class Expression_list:
                                                              ("All files","*.*")], title="Select file")
         #print('Selected file(s):',modelFiles)
         if file_path_names == '':
-            self.user.Message(
+            Message(Gel_net.GUI_lang_index, \
                 '\nThe file name is blank or the inclusion is cancelled. There is no file read.',\
                 '\nDe file naam is blanco of het inlezen is gecancelled. Er is geen file ingelezen.')
             return
@@ -154,25 +157,28 @@ class Expression_list:
             # Split file_path_and_name in file path and file name
             path_name = file_path_and_name.rsplit('/', maxsplit=1)
             if len(path_name) == 2:
-                self.user.Message('\nReading file <{}> from directory {}.'.format(path_name[1], path_name[0]),\
-                                  '\nLees file <{}> van directory {}.'.format(path_name[1], path_name[0]))
+                Message(Gel_net.GUI_lang_index, \
+                        '\nReading file <{}> from directory {}.'.format(path_name[1], path_name[0]),\
+                        '\nLees file <{}> van directory {}.'.format(path_name[1], path_name[0]))
                 file_name = path_name[1]
                 file_path = path_name[0]
             else:
-                self.user.Message('\nReading file <{}> from current directory.'.format(file_path_and_name),\
-                                  '\nLees file <{}> van actuele directory.'.format(file_path_and_name))
+                Message(Gel_net.GUI_lang_index, \
+                        '\nReading file <{}> from current directory.'.format(file_path_and_name),\
+                        '\nLees file <{}> van actuele directory.'.format(file_path_and_name))
                 file_name = file_path_and_name
                 file_path = ''
                 
             # Create file object
-            file = Gellish_file(file_path_and_name, self.user)
+            file = Gellish_file(file_path_and_name, Gel_net)
 
             # Import expressions from file
             self.Import_Gellish_from_file(file, Gel_net) #, Gel_db)
             self.files_read.append(file)
                 
-##            self.user.Message('\nRead file   : %s is added to list of read files.'              % (file.path_and_name),\
-##                        '\nGelezen file: %s is toegevoegd aan lijst van gelezen files.\n' % (file.path_and_name))
+##            Message(Gel_net.GUI_lang_index, \
+##                    '\nRead file   : %s is added to list of read files.'              % (file.path_and_name),\
+##                    '\nGelezen file: %s is toegevoegd aan lijst van gelezen files.\n' % (file.path_and_name))
 
     def Import_Gellish_from_file(self, file, Gel_net): #, Gel_db):
         """ Read file file_name in a Gellish Expression Format.
@@ -184,8 +190,9 @@ class Expression_list:
         try:
             f = open(file.path_and_name, "r", encoding="utf-8")
         except IOError:
-            self.user.Message("File '%s' does not exist or is not readable." % (file.name), \
-                        "File '%s' bestaat niet of is niet leesbaar."  % (file.name))
+            Message(Gel_net.GUI_lang_index, \
+                    "File '%s' does not exist or is not readable." % (file.name), \
+                    "File '%s' bestaat niet of is niet leesbaar."  % (file.name))
             sys.exit()
 
         # Determine the file extension
@@ -216,9 +223,10 @@ class Expression_list:
         # Read first line and determine whether it is a Gellish file or not
         #print('Header line:', self.header)
         if self.header[0] != "Gellish":
-            self.user.Message("File {} is not in Gellish expression format, \
+            Message(Gel_net.GUI_lang_index, \
+                    "File {} is not in Gellish expression format, \
 bacause the first field has not as content 'Gellish'.".format(file.name), \
-                        "File {} is niet in Gellish expressie formaat, \
+                    "File {} is niet in Gellish expressie formaat, \
 want het eerste veld heeft niet als inhoud 'Gellish'.".format(file.name))
             if file.extension == 'json':
                 self.Interpret_non_gellish_JSON_file()
@@ -486,8 +494,8 @@ want het eerste veld heeft niet als inhoud 'Gellish'.".format(file.name))
                 if source_id >= 910036 and source_id < 912000:
                     lang_name_col_id[source_id] = source_ids.index(source_id)
                     #print('Col nr of alt_name', lang_name_col_id[source_id])
-                    # If language uid not in uid_dict then create language object
                     
+                    # If language uid not in uid_dict then create language object
                     if str_id not in Gel_net.uid_dict:
                         lang = Anything(str_id, Gel_net.lang_dict_EN[str_id])
                         lang.defined = False
@@ -558,28 +566,28 @@ want het eerste veld heeft niet als inhoud 'Gellish'.".format(file.name))
                 # If an additional language column is present
                 # then append the dictionary with the terms available in the language column
                 #print('Col_ids',lang_name_col_id)
-                for col_uid in lang_name_col_id:
+                for col_id in lang_name_col_id:
                     # Only for rows with a specialization and alias relation
                     if (db_row[rel_type_uid_col] in Gel_net.specialRelUIDs or \
                         db_row[rel_type_uid_col] in Gel_net.alias_uids):
                         # Check whether column value (name of object) is not blank,
                         # then include name_in_context in the dictionary (if not yet present)
-                        if in_row[lang_name_col_id[col_uid]] != '':
+                        if in_row[lang_name_col_id[col_id]] != '':
                             if db_row[rel_type_uid_col] in Gel_net.alias_uids:
                                 naming_uid = db_row[rel_type_uid_col]
                                 
                                 # Collect base_phrase or inverse_phrase of additional language column
                                 if db_row[rel_type_uid_col] == '6066':
-                                    Gel_net.base_phrases.append(in_row[lang_name_col_id[col_uid]])
+                                    Gel_net.base_phrases.append(in_row[lang_name_col_id[col_id]])
                                 elif db_row[rel_type_uid_col] == '1986':
-                                    Gel_net.inverse_phrases.append(in_row[lang_name_col_id[col_uid]])
+                                    Gel_net.inverse_phrases.append(in_row[lang_name_col_id[col_id]])
                             else:
                                 naming_uid = '5117'
-                            # Note: col_uid is integer, whereas lang_uid should be a string
-                            name_in_context = (str(col_uid), db_row[comm_uid_col], in_row[lang_name_col_id[col_uid]])
+                            # Note: col_id is integer, whereas lang_uid should be a string
+                            name_in_context = (str(col_id), db_row[comm_uid_col], in_row[lang_name_col_id[col_id]])
                             
                             # Check whether a description column is present
-                            key_descr = col_uid + 1000000
+                            key_descr = col_id + 1000000
                             if key_descr in lang_descr_col_id:
                                 lang_descr = in_row[lang_descr_col_id[key_descr]]
                             else:
@@ -588,8 +596,8 @@ want het eerste veld heeft niet als inhoud 'Gellish'.".format(file.name))
                             if name_in_context not in Gel_net.dictionary:
                                 value_triple = (db_row[lh_uid_col], naming_uid, lang_descr)
                                 Gel_net.dictionary[name_in_context] = value_triple
-                                name_and_descr = [str(col_uid), db_row[comm_uid_col],\
-                                                  in_row[lang_name_col_id[col_uid]], naming_uid, lang_descr]
+                                name_and_descr = [str(col_id), db_row[comm_uid_col],\
+                                                  in_row[lang_name_col_id[col_id]], naming_uid, lang_descr]
                                 names_and_descriptions.append(name_and_descr)
                                 #print('Name and descr', name_and_descr)
                 
@@ -607,7 +615,7 @@ want het eerste veld heeft niet als inhoud 'Gellish'.".format(file.name))
                 names_and_descriptions.clear()
 ##            # Add non-language defining expressions to the language defining semantic network from DB
 ##            if self.content_type in ['mapping', 'product_model', 'unknown']:
-##                Gel_net.Add_row_to_network(db_row)
+##                Gel_net.Add_row_to_network(db_row, names_and_descriptions)
 ##
 ##            # Store batch of 2000 db_rows in database table provided that idea uids are present 
 ##            if len(db_rows) > 2000 and table_name != 'none':
@@ -637,7 +645,7 @@ want het eerste veld heeft niet als inhoud 'Gellish'.".format(file.name))
 
         # If file contains a query then create a query object and query_spec
         if self.content_type == 'queries':
-            query = Query(Gel_net, self.user)
+            query = Query(Gel_net, main)
             # Create query_spec
             query.query_spec = self.interpreted_lines
             query.Interpret_query_spec()
@@ -705,7 +713,7 @@ want het eerste veld heeft niet als inhoud 'Gellish'.".format(file.name))
         # Verify consistency of language names.
         lang_uid = db_row[lang_uid_col]
         if lang_uid != '':
-            # If file language is Dutch then lang_uid must be in or added to lang_dict_NL
+            # If file language is Dutch then lang_uid and name must be in or added to lang_dict_NL
             if file.lang_ind == 1:
                 if lang_uid not in Gel_net.lang_dict_NL:
                    Gel_net.lang_dict_NL[lang_uid] = db_row[lang_name_col]
@@ -716,7 +724,7 @@ want het eerste veld heeft niet als inhoud 'Gellish'.".format(file.name))
                     print('  Waarschuwing: Naam van de taal {} correspondeert niet met eerdere naam {} voor UID {}'.\
                           format(db_row[lang_name_col], Gel_net.lang_dict_NL[lang_uid], lang_uid))
             elif file.lang_ind == 0:
-                # If file language is English then lang_uid must be in or added to lang_dict_EN
+                # If file language is English then lang_uid and name must be in or added to lang_dict_EN
                 if lang_uid not in Gel_net.lang_dict_EN:
                    Gel_net.lang_dict_EN[lang_uid] = db_row[lang_name_col]
                 try:
@@ -963,14 +971,14 @@ want het eerste veld heeft niet als inhoud 'Gellish'.".format(file.name))
 if __name__ == "__main__":
     from SystemUsers import System, User
     from SemanticNetwork import Semantic_Network
-    
-    expr_list = Expression_list()
-    expr_list.expressions = [(101,'lh-101',1726,'is een kwalitatief subtype van',102,'rh-102'),
-                             (102,'lh-102',1146,'is een soort'                  ,103,'rh-103')]
 
     user = User('Andries')
     # Create semantic network and define user
     Gel_net = Semantic_Network("Network", user)
+
+    expr_list = Expression_list(Gel_net)
+    expr_list.expressions = [(101,'lh-101',1726,'is een kwalitatief subtype van',102,'rh-102'),
+                             (102,'lh-102',1146,'is een soort'                  ,103,'rh-103')]
     
     # Read base ontology
     Import_Base_Ontology(Gel_net) #, Gel_db)

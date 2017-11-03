@@ -11,7 +11,7 @@ from Expr_Table_Def import *
 from Anything import Anything, Object, Individual, Kind, Relation, RelationType
 from Bootstrapping import *
 from GellishDict import GellishDict
-from GUI_views import Display_views
+from ModelViews import Display_views
 from Create_output_file import Create_gellish_expression, Convert_numeric_to_integer, Open_output_file
 
 class Semantic_Network():
@@ -25,7 +25,6 @@ class Semantic_Network():
     def __init__(self, net_name, user):
         self.name          = net_name
         self.user          = user
-        #self.lang_index    = user.GUI_lang_index
         self.rels          = []
         self.idea_uids     = []
         self.rel_types     = [] # initialize and collect all binary relation types
@@ -38,15 +37,21 @@ class Semantic_Network():
         self.languages     = []
         # A dictionary for names in a context that refers to the denoted concepts
         self.dictionary      = GellishDict('Dictionary of Gellish formal languages')
+        self.GUI_lang_name_dict   = {"English":'910036', "Nederlands":'910037'}
+        self.reply_lang_name_dict = {'English':'910036', 'Nederlands':'910037', 'American':'911689', \
+                                     'Chinese':'911876', 'Deutsch'   :'910038', 'Francais':'910039'}
         self.lang_uid_dict   = {} #{910036: "English", 910037: "Nederlands" , 589211: "international"}
         self.community_dict  = {} #{492015: "Formal English", 492016: "Formeel Nederlands", \
                                   # 492014: "Gellish", 589830: "Gellish alternative"}
         self.lang_dict_EN    = {'910036': "English", '910037': "Dutch"     , '589211': "international",\
-                                '910038': "German" , '910039': "French"}
+                                '910038': "German" , '910039': "French"    , '911689': "American"}
         self.lang_dict_NL    = {'910036': "Engels" , '910037': "Nederlands", '589211': "internationaal",\
-                                '910038': "Duits"  , '910039': "Frans"}
+                                '910038': "Duits"  , '910039': "Frans"     , '911689': "Amerikaans"}
         self.comm_dict_EN    = {'492014': "Gellish"}
         self.comm_dict_NL    = {'492014': "Gellish"}
+        self.GUI_lang_pref_uids = []
+        self.reply_lang_pref_uids  = []
+        self.comm_pref_uids  = ['492014'] # Default: 'Gellish'
         self.base_phrases    = boot_base_phrasesEN    + boot_base_phrasesNL
         self.inverse_phrases = boot_inverse_phrasesEN + boot_inverse_phrasesNL
         self.specialRelUIDs  = ['1146']   # 1146 base UID for 'is a kind of'
@@ -94,7 +99,7 @@ class Semantic_Network():
         self.taxon_model  = []
         self.taxon_objects  = []
         self.possibilities_model = []
-        self.possib_objects = []
+##        self.possib_objects = []
         self.indiv_model    = []
         self.indiv_objects  = []
         self.info_model     = []
@@ -133,6 +138,49 @@ class Semantic_Network():
         self.idea_uid = 211000000
         self.classification = ['is classified as a', 'is geclassificeerd als een']
         self.test = False
+
+    def Set_GUI_Language(self, GUI_lang):
+        '''Set the GUI language of the user'''
+        if GUI_lang in self.GUI_lang_name_dict:
+            self.GUI_lang_name = GUI_lang
+            self.GUI_lang_uid  = self.GUI_lang_name_dict[GUI_lang]
+            if GUI_lang == 'Nederlands':
+                self.GUI_lang_index = 1
+            else:
+                self.GUI_lang_index = 0
+            GUI_set = True
+            if self.GUI_lang_uid == '910036':
+                # Set default GUI_preferences at international, English, American
+                self.GUI_lang_pref_uids = ['589211', '910036', '911689']
+            elif self.GUI_lang_uid == '910037':
+                # Set default preferences at international, Dutch, English
+                self.GUI_lang_pref_uids = ['589211', '910037', '910036']
+            else:
+                # Set default preferences at international, user_language, English
+                self.GUI_lang_pref_uids = ['589211', self.GUI_lang_uid, '910036']
+        else:
+            print('GUI language %s unknown. Default = English.' % (GUI_lang))
+            GUI_set = False
+        return GUI_set
+
+    def Set_reply_language(self, reply_lang_name):
+        '''Set the reply language for display of the user views'''
+        if reply_lang_name in self.reply_lang_name_dict:
+            self.reply_lang_name = reply_lang_name
+            self.reply_lang_uid  = self.reply_lang_name_dict[reply_lang_name]
+            if self.reply_lang_uid == '910036':
+                # Set default preferences at international, English, American
+                self.reply_lang_pref_uids = ['589211', '910036', '911689']
+            elif self.reply_lang_uid == '910037':
+                # Set default preferences at international, Dutch, English
+                self.reply_lang_pref_uids = ['589211', '910037', '910036']
+            else:
+                # Set default preferences at international, user_language, English
+                self.reply_lang_pref_uids = ['589211', self.reply_lang_uid, '910036']
+        else:
+            print('Reply language %s unknown. Default = English.' % (reply_lang_name))
+            self.reply_lang_name = 'English'
+            self.reply_lang_uid  = '910037'
 
     def Create_base_reltype_objects(self):
         '''Create relation_type objects conform Bootstrapping base_rel_type_uids'''
@@ -471,7 +519,8 @@ class Semantic_Network():
         # and add the relation between objects to both objects, except when lh == rh
         if rh_uid != lh_uid:
             rel_type = self.uid_dict[rel_type_uid]
-            relation = Relation(lh, rel_type, rh, phrase_type_uid, uom, row) # Default: category == None
+            # Default: category == None
+            relation = Relation(lh, rel_type, rh, phrase_type_uid, uom, row)
 ##            # Verify whether phrase corresponds to uid
 ##            if rel_type_name not in rel_type.basePhrases and rel_type_name not in rel_type.inversePhrases:
 ##                print('Phrase <{}> does not correspond with UID {}'.format(rel_type_name, rel_type_uid))
@@ -529,7 +578,8 @@ class Semantic_Network():
                         if rh.category == 'anything':
                             rh.category = 'kind'
                         elif rh.category not in ['kind', 'kind of physical object', 'kind of aspect', \
-                                                 'kind of occurrence', 'kind of role', 'number']:
+                                                 'kind of occurrence', 'kind of role', 'kind of relation', \
+                                                 'number']:
                             print("Error: Idea {} Object '{}' category '{}' should be 'kind'".\
                                   format(idea_uid, rh_name, rh.category))
                             rh.category = 'kind'
@@ -607,6 +657,7 @@ class Semantic_Network():
         self.subOccurrences,  self.subOccurrenceUIDs   = self.DetermineSubtypeList(occurrenceUID)
         self.subComposs,      self.subComposUIDs       = self.DetermineSubtypeList(composUID)     # composition relation and its subtypes
         self.subCompons,      self.subComponUIDs       = self.DetermineSubtypeList(componUID)     # component role and its subtypes
+        self.subConcComposs,  self.subConcComposUIDs   = self.DetermineSubtypeList(concComposUID) # conceptual composition relation and its subtypes
         self.subConcCompons,  self.subConcComponUIDs   = self.DetermineSubtypeList(concComponUID) # conceptual component role and its subtypes
         self.subInvolveds,    self.subInvolvedUIDs     = self.DetermineSubtypeList(involvedUID)
         self.subNexts,        self.subNextUIDs         = self.DetermineSubtypeList(nextUID)
@@ -971,7 +1022,7 @@ class Semantic_Network():
             else:
                 uid = 2000000000 + number
         return uid
-#-------------------------------------  
+#---------------------------------------
     def Pickle_Dump(self, fname):
         f = open(fname, "bw")
         pickle.dump(self, f)
@@ -987,7 +1038,7 @@ class Semantic_Network():
         self.summ_model[:]    = []
         self.summ_objects[:]  = []
         self.possibilities_model[:] = []
-        self.possib_objects[:] = []
+##        self.possib_objects[:] = []
         self.indiv_model[:]   = []
         self.indiv_objects[:] = []
         self.query_table[:]   = []
@@ -1008,7 +1059,7 @@ class Semantic_Network():
 
         for obj in obj_list:
             lang_name, comm_name, preferred_name, descr = \
-                       self.Determine_name_in_language_and_community(obj, self.user.lang_pref_uids)
+                       self.Determine_name_in_language_and_community(obj)
             obj.name = preferred_name
             self.object_in_focus  = obj
             
@@ -1043,7 +1094,7 @@ class Semantic_Network():
         self.Create_prod_model_view_header(obj)
 
         if obj.category in ['kind', 'kind of physical object', 'kind of occurrence', \
-                            'kind of aspect', 'kind of role', 'number']:
+                            'kind of aspect', 'kind of role', 'kind of relation', 'number']:
             # Search for the first supertype relation that generalizes the self.object_in_focus
             if len(obj.supertypes) == 0:
                 # No supertypes found for kind: report omission
@@ -1074,7 +1125,7 @@ class Semantic_Network():
             kindUID    = classifier.uid
             # Determine name etc. of the kind of the self.object_in_focus
             lang_name, comm_name, kindName, descrOfKind = \
-                       self.Determine_name_in_language_and_community(classifier, self.user.lang_pref_uids)
+                       self.Determine_name_in_language_and_community(classifier)
                 
 ##            if kindUID in self.DetermineSubtypeList(occurrenceUID):     # Verify whether the individual is an occurrence. occurrenceUID
 ##                self.categoryInFocus = 'occurrence'
@@ -1091,10 +1142,10 @@ class Semantic_Network():
 
         # Find kinds of aspects and their values of kind_in_focus (and implied parts)
         if obj.category in ['kind', 'kind of physical object', 'kind of occurrence', \
-                            'kind of aspect', 'kind of role', 'number']:
+                            'kind of aspect', 'kind of role' , 'kind of relation', 'number']:
             # Find preferred name of object in required language and community
             lang_name, comm_name, obj_name, descr = \
-                       self.Determine_name_in_language_and_community(obj, self.user.lang_pref_uids)
+                       self.Determine_name_in_language_and_community(obj)
             obj.name = obj_name
         
             self.taxon_row[0] = obj.uid
@@ -1104,7 +1155,7 @@ class Semantic_Network():
 
             if len(obj.supertypes) > 0:
                 lang_name, comm_name_supertype, supertype_name, descr_of_super = \
-                           self.Determine_name_in_language_and_community(obj.supertypes[0], self.user.lang_pref_uids)
+                           self.Determine_name_in_language_and_community(obj.supertypes[0])
             else:
                 supertype_name = 'unknown'
 
@@ -1113,6 +1164,8 @@ class Semantic_Network():
             self.possibility_row[2] = ''
             self.possibility_row[3] = supertype_name
             self.possibility_row[4] = comm_name     # of obj (not of supertype)
+            # Add object_in_focus to possibilities_model
+            self.possibilities_model.append(self.possibility_row[:])
             
             nr_of_aspects = self.Find_kinds_of_aspects(obj, role)
             
@@ -1181,8 +1234,8 @@ class Semantic_Network():
 ##        #self.subtype_level = 0
 ##        # Create header line for subtypes in prod_model
 ##        self.line_nr  += 1
-##        prod_head_5 = ['','',self.line_nr, subsHead[self.user.GUI_lang_index], sub2Head[self.user.GUI_lang_index],\
-##                     sub3Head[self.user.GUI_lang_index],'','','','','','']
+##        prod_head_5 = ['','',self.line_nr, subsHead[self.GUI_lang_index], sub2Head[self.GUI_lang_index],\
+##                     sub3Head[self.GUI_lang_index],'','','','','','']
 ##        if len(self.prod_model) < self.max_nr_of_rows:
 ##            self.prod_model.append(prod_head_5)
 ##
@@ -1225,14 +1278,14 @@ class Semantic_Network():
 ##                # Determine sub-subtypes
 ##                Subtypes_of_kinds(sub)
 
-    def Determine_name_in_language_and_community(self, obj, lang_pref_uids):
+    def Determine_name_in_language_and_community(self, obj):
         ''' Given an object and preferred language sequence uids and community sequence uids,
             determine lang_name, comm_name, obj_name for user interface
         '''
         name_known = False
         if len(obj.names_in_contexts) > 0:
             # For language_prefs search for name  === for comm_pref_uids to be done ===
-            for lang_uid in lang_pref_uids:
+            for lang_uid in self.reply_lang_pref_uids:
                 for name_in_context in obj.names_in_contexts:
                     # Verify if language uid corresponds with required reply language uid
                     if name_in_context[0] == lang_uid:
@@ -1261,7 +1314,7 @@ class Semantic_Network():
         # Determine supertype name in the preferred language and concatenate with part_def
         super_name_known = False
         if len(obj.supertypes) > 0 and len(obj.supertypes[0].names_in_contexts) > 0:
-            for lang_uid in lang_pref_uids:
+            for lang_uid in self.reply_lang_pref_uids:
                 for name_in_context in obj.supertypes[0].names_in_contexts:
                     # Verify if language uid corresponds with required reply language uid
                     if name_in_context[0] == lang_uid:
@@ -1285,24 +1338,24 @@ class Semantic_Network():
         if len(obj.classifiers) == 0 and len(obj.supertypes) == 0:
             obj_kind_uid  = ''
             obj_kind_name = 'unknown'
-            status = status_text[self.user.GUI_lang_index]
+            status = status_text[self.GUI_lang_index]
         else:
             obj_kind_uid  = obj.kind.uid
             lang_name, comm_name, obj_kind_name, descr = \
-                               self.Determine_name_in_language_and_community(obj.kind, self.user.lang_pref_uids)
+                               self.Determine_name_in_language_and_community(obj.kind)
             status = 'unknown'
         is_a = ['is a ', 'is een ']
         form_text  = ['Product form for:', 'Product formulier voor:']
         kind_text  = ['Kind:'            , 'Soort:']
         descr_text = ['Description:'     , 'Omschrijving:']
         if len(obj.names_in_contexts) > 0:
-            description = is_a[self.user.GUI_lang_index] + obj_kind_name + '' + obj.names_in_contexts[0][4]
+            description = is_a[self.GUI_lang_index] + obj_kind_name + '' + obj.names_in_contexts[0][4]
         else:
-            description = is_a[self.user.GUI_lang_index] + obj_kind_name
+            description = is_a[self.GUI_lang_index] + obj_kind_name
 
-        prod_line_0 = [obj.uid  , obj_kind_uid , '', 1 , form_text[self.user.GUI_lang_index], obj.name, '', '',\
-                       kind_text[self.user.GUI_lang_index], obj_kind_name, '', '', '', status]    # names_in_contexts[0][2]
-        prod_line_1 = ['','','',2,'', descr_text[self.user.GUI_lang_index], description,'','','','','','','']
+        prod_line_0 = [obj.uid  , obj_kind_uid , '', 1 , form_text[self.GUI_lang_index], obj.name, '', '',\
+                       kind_text[self.GUI_lang_index], obj_kind_name, '', '', '', status]    # names_in_contexts[0][2]
+        prod_line_1 = ['','','',2,'', descr_text[self.GUI_lang_index], description,'','','','','','','']
         
 ##        prod_line_NL0 = [obj.uid,obj_kind_uid,'',1,'Product formulier voor:',obj.name,'','',\
 ##                         'Soort:',obj_kind_name,'','','',status]
@@ -1329,36 +1382,28 @@ class Semantic_Network():
             self.kind_model.append(prod_line_0)
             if len(obj.supertypes) > 1:
                 for super_type in obj.supertypes[1:]:
-                    self.kind_model.append([obj.uid,super_type.uid,'',1,'','','','','',super_type.name])
+                    lang_name, comm_name, supert_type_name, descr = \
+                               self.Determine_name_in_language_and_community(super_type)
+                    self.kind_model.append([obj.uid,super_type.uid,'',1,'','','','','',supert_type_name])
             self.kind_model.append(prod_line_1)
-            if self.user.GUI_lang_name == 'Nederlands':
+            if self.GUI_lang_name == 'Nederlands':
                 self.kind_model.append(prod_head_NL2K)
             else:
                 self.kind_model.append(prod_head_EN2K)
         else:
-            # category is individual
+            # Category is individual
             self.prod_model.append(prod_line_0)
             # If there are several classifiers, then add a line per classifier
             if len(obj.classifiers) > 1:
                 for classifier in obj.classifiers[1:]:
-                    self.prod_model.append([obj.uid,classifier.uid,'',1,'','','','','',classifier.name])
+                    lang_name, comm_name, classifier_name, descr = \
+                               self.Determine_name_in_language_and_community(classifier)
+                    self.prod_model.append([obj.uid,classifier.uid,'',1,'','','','','',classifier_name])
             self.prod_model.append(prod_line_1)
-            if self.user.GUI_lang_name == 'Nederlands':
+            if self.GUI_lang_name == 'Nederlands':
                 self.prod_model.append(prod_head_NL2I)
             else:
                 self.prod_model.append(prod_head_EN2I)
-            
-##        if self.user.GUI_lang_name == 'Nederlands':
-##            if obj.category in ['kind', 'kind of physical object', 'kind of occurrence']:
-##                self.prod_model.append(prod_head_NL2K)
-##            else:
-##                self.prod_model.append(prod_head_NL2I)
-##        else:
-##            if obj.category in ['kind', 'kind of physical object', 'kind of occurrence']:
-##                self.prod_model.append(prod_head_EN2K)
-##            else:
-##                self.prod_model.append(prod_head_EN2I)
-##        self.kind_model = self.prod_model[:]
 
     def Find_kinds_of_aspects(self, obj, role):
         '''Search for kinds of aspects that can/shall or are by definition possessed by a kind of thing (obj)
@@ -1372,6 +1417,8 @@ class Semantic_Network():
         unknownKind  = ['unknown supertype','onbekend supertype']
         noValuesText = ['No specification','Geen specificatie']
         self.has_as_subtypes = ['has as subtypes', 'heeft als subtypes']
+        possible_aspect_text = ['possible characteristic of a ', 'mogelijk kenmerk van een ']
+        of_text = [' (of ', ' (van ']
 
         # Search for expressions that are (subtypes of) the <can have as aspect a> kind of relation
         # with the obj.uid (or its supertypes) at left or at right.
@@ -1385,19 +1432,16 @@ class Semantic_Network():
         status    = ''
         obj_name  = obj.name
 
-        # Collect relations other than subConcPossAspUIDs in query_table
+        # Collect all relations in query_table
         for rel_obj in obj.relations:
                 expr = rel_obj.expression
                 if len(self.query_table) < self.max_nr_of_rows and expr not in self.query_table:
                         self.query_table.append(expr)
-##                if expr[lh_uid_col] == obj.uid \
-##                   and not expr[rel_type_uid_col] in self.subConcPossAspUIDs:
-##                    if len(self.query_table) < self.max_nr_of_rows:
-##                        self.query_table.append(expr)
         
         # Collect list of obj and its supertypes in the complete hierarchy for searching inherited aspects
         all_supers = self.Determine_supertypes(obj)
-        # For each object in the hierarchy find (inherited) aspect values but exclude the roles
+        
+        # For each object in the hierarchy find aspects and inherited aspect values but exclude the roles
         for obj_i in all_supers:
             value_presence = False
             for rel_obj in obj_i.relations:
@@ -1428,6 +1472,8 @@ class Semantic_Network():
                 #self.line_nr  += 1
                 status = expr[status_col]     
                 equality = '='
+                value_uid  = ''
+                value_name = ''
                 uom_uid   = ''
                 uom_name  = ''
                 value_presence = False
@@ -1496,14 +1542,71 @@ class Semantic_Network():
                             value_name = expr2[lh_name_col]
                             value_presence = True
                             break
-                       
+
+                # Determine preferred names for aspect, aspect_supertype, obj, and value 
+                asp = self.uid_dict[aspect_uid]
+                if len(asp.names_in_contexts) > 0:
+                    lang_name, comm_name, aspect_name, descr = \
+                               self.Determine_name_in_language_and_community(asp)
+                else:
+                    aspect_name = asp.name
+                # Supertype name
+                if len(asp.supertypes) > 0:
+                    if len(asp.supertypes[0].names_in_contexts) > 0:
+                        lang_name, comm_name, asp_supertype_name, descr = \
+                                   self.Determine_name_in_language_and_community(asp.supertypes[0])
+                    else:
+                        asp_supertype_name = asp.supertypes[0].name
+                else:
+                    asp_supertype_name = 'unknown'
+                # Obj name
+                if len(obj.names_in_contexts) > 0:
+                    lang_name, comm_name, object_name, descr = \
+                               self.Determine_name_in_language_and_community(obj)
+                else:
+                    object_name = obj.name
+                # Value name
+                if value_uid != '':
+                    value = self.uid_dict[value_uid]
+                    lang_name, comm_name, value_name, descr = \
+                           self.Determine_name_in_language_and_community(value)
+                else:
+                    value_name = ''
+
+                # If not a subtype (subtype_level == 0) then create a row in the possibilities_model
+                #   for any decomp_level
+                if self.subtype_level == 0:
+                    # Create header for possible characteristics of part (only preceding the first aspect)
+                    if nr_of_aspects == 1:
+                        poss_asp_of_obj_text = possible_aspect_text[self.GUI_lang_index] + obj_name
+                        self.possibility_row[0] = obj.uid
+                        self.possibility_row[1] = poss_asp_of_obj_text
+                        self.possibility_row[2] = obj_name
+                        self.possibilities_model.append(self.possibility_row[:])
+                    
+                    if len(self.possibilities_model) < self.max_nr_of_rows:
+                        community_name = self.community_dict[obj.names_in_contexts[0][1]] # community uid
+                        self.possibility_row[0] = obj.uid
+                        self.possibility_row[1] = aspect_name + of_text[self.GUI_lang_index] + obj_name + ')'
+                        self.possibility_row[2] = poss_asp_of_obj_text
+                        print('Aspect', object_name, asp.uid, aspect_name, value_name, len(asp.supertypes)) # .kind
+                        self.possibility_row[3] = asp_supertype_name
+                        self.possibility_row[4] = community_name # of obj
+                        self.possibility_row[5] = value_name
+                        self.possibility_row[6] = uom_name
+                        if self.possibility_row not in self.possibilities_model:
+                            self.possibilities_model.append(self.possibility_row[:])
+                        else:
+                            print('Duplicate possibility row',len(self.possibilities_model), self.possibility_row)
+                        self.possibility_row  = ['','','','','','','','','','','','','','','']
+                
 ##                if value_presence == False:
-##                    value_name = '' # noValuesText[self.user.GUI_lang_index]
+##                    value_name = '' # noValuesText[self.GUI_lang_index]
 ##                    warnText  = ['  Warning: Kind of aspect','Waarschuwing: Soort aspect']
 ##                    valueMess = ['has no specification of (allowed) values.',\
 ##                                 'heeft geen specificatie van (toegelaten) waarden.']
 ##                    print('%s %s (%i) %s' % \
-##                          (warnText[self.user.GUI_lang_index],aspect_name,aspect_uid,valueMess[self.user.GUI_lang_index]))
+##                          (warnText[self.GUI_lang_index],aspect_name,aspect_uid,valueMess[self.GUI_lang_index]))
                 #print('obj_i', value_presence, obj_i.name, nr_of_aspects, aspect_name, value_name, len(self.taxon_aspect_uids))
 
                 if value_presence == True:
@@ -1533,27 +1636,27 @@ class Semantic_Network():
                                     print('Unit of measure {} ({}) of the value of {} differs from summary table header UoM {}'\
                                           .format(uom_name, uom_uid, aspect_name, self.taxon_uom_names[self.taxon_ind]))
 
-                    if self.subtype_level == 0:
-                        # Build composition_view header add a column for aspects if not yet included
-                        if value_presence == True and aspect_name not in self.possib_column_names and \
-                           len(self.possib_column_names) <= 15:
-                            #print('Compon_header', aspect_name, len(self.possib_aspect_uids))
-                            self.possib_aspect_uids.append(aspect_uid)
-                            self.possib_column_names.append(aspect_name)
-                            self.possib_uom_names.append(uom_name)
-                        self.possib_ind = 4
-                        #print('Sums:',len(self.possib_aspect_uids), self.possib_aspect_uids, self.possib_column_names, value_name)
-                        # Find column in possibility_row where value should be stored
-                        for kind_uid in self.possib_aspect_uids[5:]:
-                            self.possib_ind += + 1
-                            # Build list of values conform list of aspects.
-                            if aspect_uid == kind_uid:
-                                #print('Aspects of phys:',len(self.possib_aspect_uids), aspect_name, self.possib_ind, value_name)
-                                self.possibility_row[self.possib_ind] = value_name
-                                if uom_name != self.possib_uom_names[self.possib_ind]:
-                                    #MessagesM.insert('end','\n
-                                    print('Unit of measure {} ({}) of the value of {} differs from composition table header UoM {}'\
-                                          .format(uom_name, uom_uid, aspect_name, self.possib_uom_names[self.possib_ind]))
+##                    if self.subtype_level == 0:
+##                        # Build composition_view header add a column for aspects if not yet included
+##                        if value_presence == True and aspect_name not in self.possib_column_names and \
+##                           len(self.possib_column_names) <= 15:
+##                            #print('Compon_header', aspect_name, len(self.possib_aspect_uids))
+##                            self.possib_aspect_uids.append(aspect_uid)
+##                            self.possib_column_names.append(aspect_name)
+##                            self.possib_uom_names.append(uom_name)
+##                        self.possib_ind = 4
+##                        #print('Sums:',len(self.possib_aspect_uids), self.possib_aspect_uids, self.possib_column_names, value_name)
+##                        # Find column in possibility_row where value should be stored
+##                        for kind_uid in self.possib_aspect_uids[5:]:
+##                            self.possib_ind += + 1
+##                            # Build list of values conform list of aspects.
+##                            if aspect_uid == kind_uid:
+##                                #print('Aspects of phys:',len(self.possib_aspect_uids), aspect_name, self.possib_ind, value_name)
+##                                self.possibility_row[self.possib_ind] = value_name
+##                                if uom_name != self.possib_uom_names[self.possib_ind]:
+##                                    #MessagesM.insert('end','\n
+##                                    print('Unit of measure {} ({}) of the value of {} differs from composition table header UoM {}'\
+##                                          .format(uom_name, uom_uid, aspect_name, self.possib_uom_names[self.possib_ind]))
 
                     # Add a line of Line_type 3 to prod_model
                     subtype_level = 0 # not a subtype of object in focus
@@ -1625,7 +1728,7 @@ class Semantic_Network():
         #                        if uom_name != self.occ_uoms[self.taxon_ind]:
         #                            MessagesM.insert('end','\nUnit of measure %s (%i) of the value of %s of kind %s differs from activity table header UoM \
         #    %s' % (uom_name,uom_uid,aspect_name,aspect.kind,self.occ_uoms[self.taxon_ind]))
-                                    
+        #                            
         #        elif self.decomp_level == 0:            # if not a kind of occurrence, then build header for summaryTable
             
         # If obj is object_in_focus (thus not a part) then create one or more rows in taxon_model             
@@ -1634,7 +1737,7 @@ class Semantic_Network():
                 # Create a row in the taxonomy per direct supertype
                 for supertype in obj.supertypes:
                     lang_name, comm_name_super, preferred_name, descr = \
-                               self.Determine_name_in_language_and_community(supertype, self.user.lang_pref_uids)
+                               self.Determine_name_in_language_and_community(supertype)
                     self.taxon_row[2] = preferred_name  # of the supertype
                     if len(self.taxon_model) < self.max_nr_of_rows:
                         # If summary row is about object in focus, then make supertype of object in focus empty
@@ -1645,29 +1748,30 @@ class Semantic_Network():
 
                         # If the supertype is the object_in_focus, then make the object a sub of the inter_row
                         if self.taxon_row[2] == self.object_in_focus.name:
-                            self.taxon_row[2] = self.has_as_subtypes[self.user.GUI_lang_index]
+                            self.taxon_row[2] = self.has_as_subtypes[self.GUI_lang_index]
                         self.taxon_model.append(self.taxon_row[:])
                         
                         # If the object is the object_in_focus, then insert an inter_row header line for the subtypes
                         if self.subtype_level == 0:
-                            inter_row = [obj.uid, self.has_as_subtypes[self.user.GUI_lang_index], obj.name, '']
+                            inter_row = [obj.uid, self.has_as_subtypes[self.GUI_lang_index], obj.name, '']
                             self.taxon_model.append(inter_row)
 
             self.taxon_row = ['','','','','','','','','','','','','','']
 
-        # If not a subtype (subtype_level == 0) and for any decomp_level create a row in possibilities_model
-        if self.subtype_level == 0:
-            if len(self.possibilities_model) < self.max_nr_of_rows:
-                if obj not in self.possib_objects:
-                    self.possib_objects.append(obj)
-                    # If composition row is about object in focus, then make whole of object in focus empty
-                    # Because treeview parent should be whole of blank.
-                    if self.possibility_row[0] == self.object_in_focus.uid:
-                        self.possibility_row[2] = ''
-                    self.possibilities_model.append(self.possibility_row[:])
-                else:
-                    print('Duplicate composition row',len(self.possibilities_model), self.possibility_row)
-            self.possibility_row  = ['','','','','','','','','','','','','','','']
+##        # If not a subtype (subtype_level == 0) and for any decomp_level create a row in possibilities_model
+##        if self.subtype_level == 0:
+##            if len(self.possibilities_model) < self.max_nr_of_rows:
+####                if obj not in self.possib_objects:
+####                    self.possib_objects.append(obj)
+##                # If possibilities row is about object in focus, then make whole of object in focus empty
+##                # Because treeview parent should be whole or blank.
+##                if self.possibility_row[0] == self.object_in_focus.uid:
+##                    self.possibility_row[2] = ''
+##                if self.possibility_row not in self.possibilities_model:
+##                    self.possibilities_model.append(self.possibility_row[:])
+##                else:
+##                    print('Duplicate composition row',len(self.possibilities_model), self.possibility_row)
+##            self.possibility_row  = ['','','','','','','','','','','','','','','']
         
         return nr_of_aspects
 
@@ -1720,14 +1824,14 @@ class Semantic_Network():
                 # Insert an inter_row header for classified individual things in the taxonomy
                 # the first time only
                 if first_time == True:
-                    header_text = has_as_individuals[self.user.GUI_lang_index]+obj.name
+                    header_text = has_as_individuals[self.GUI_lang_index]+obj.name
                     inter_row = [obj.uid, header_text, obj.name, '']
                     self.taxon_model.append(inter_row)
                     first_time = False
 
                 # Create a row in the taxonomy for an individual thing under the header for individual things
                 lang_name, community_name, preferred_name, descr = \
-                           self.Determine_name_in_language_and_community(indiv, self.user.lang_pref_uids)
+                           self.Determine_name_in_language_and_community(indiv)
                 community_name = self.community_dict[indiv.names_in_contexts[0][1]] # community uid
                 self.taxon_row[0] = indiv.uid
                 self.taxon_row[1] = preferred_name
@@ -1797,8 +1901,8 @@ class Semantic_Network():
                     # There is an explicit part found; create part_header, prod_head_4, the first time only
                     if self.part_head_req == True:
                         self.line_nr += 1
-                        prod_head_4 = ['','','',self.line_nr, compHead[self.user.GUI_lang_index], partHead[self.user.GUI_lang_index],\
-                                     par3Head[self.user.GUI_lang_index], kindHead[self.user.GUI_lang_index],'','','','','']
+                        prod_head_4 = ['','','',self.line_nr, compHead[self.GUI_lang_index], partHead[self.GUI_lang_index],\
+                                     par3Head[self.GUI_lang_index], kindHead[self.GUI_lang_index],'','','','','']
                         if len(self.prod_model) < self.max_nr_of_rows:
                             self.prod_model.append(prod_head_4) # Header of part list
                         self.part_head_req = False
@@ -1811,22 +1915,23 @@ class Semantic_Network():
                     # Verify if the classification of the part is known
                     if len(part.classifiers) == 0:
                         part_kind_uid  = ''
-                        part_kind_name = kind_unknown[self.user.GUI_lang_index]
+                        part_kind_name = kind_unknown[self.GUI_lang_index]
                     else:
                         part_kind_uid  = part.classifiers[0].uid
                         # Determine name etc. of the kind that classifies the part
                         if len(part.classifiers[0].names_in_contexts) > 0:
-                            #print('Part classifier names', self.user.lang_pref_uids, part.classifiers[0].names_in_contexts)
+                            #print('Part classifier names', self.reply_lang_pref_uids, part.classifiers[0].names_in_contexts)
                             lang_name, comm_name, part_kind_name, descrOfKind = \
-                                       self.Determine_name_in_language_and_community(part.classifiers[0], self.user.lang_pref_uids)
+                                       self.Determine_name_in_language_and_community(part.classifiers[0])
                         else:
                             part_kind_name = part.classifiers[0].name
+                            #print('Part_classifier_name', part_kind_name)
                             comm_name = 'unknown'
                             
                     # Determine the preferred name of the part
                     if len(part.names_in_contexts) > 0:
                         lang_name, community_name, part_name, descrOfKind = \
-                                       self.Determine_name_in_language_and_community(part, self.user.lang_pref_uids)
+                                       self.Determine_name_in_language_and_community(part)
                     else:
                         part_name = part.name
                         community_name = 'unknown'
@@ -1876,12 +1981,14 @@ class Semantic_Network():
         # Search for kinds of parts of self.object_in_focus
         for rel_obj in obj.relations:
                 expr = rel_obj.expression
-                if expr[lh_uid_col] == obj.uid and expr[rh_role_uid_col] in self.subConcComponUIDs:
+                if expr[lh_uid_col] == obj.uid and expr[rel_type_uid_col] in self.subConcComposUIDs\
+                   and expr[phrase_type_uid_col] == '1986':
                     part_uid   = expr[rh_uid_col]
                     part_name  = expr[rh_name_col]
                     #role_uid     = expr[rh_role_uid_col]
                     #role_name    = expr[rh_role_name_col]
-                elif expr[rh_uid_col] == obj.uid and expr[lh_role_uid_col] in self.subConcComponUIDs:
+                elif expr[rh_uid_col] == obj.uid and expr[rel_type_uid_col] in self.subConcComposUIDs\
+                     and expr[phrase_type_uid_col] == '6066'  :
                     part_uid   = expr[lh_uid_col]
                     part_name  = expr[lh_name_col]
                     #role_uid     = expr[lh_role_uid_col]
@@ -1890,30 +1997,57 @@ class Semantic_Network():
                     continue
                 
                 # There is an explicit kind of part found; create part_header in kind_model, the first time only
+                #print('Kind of part', part_name)
                 if self.part_head_req == True:
                     self.line_nr += 1
-                    prod_head_4 = ['','','',self.line_nr, compHead[self.user.GUI_lang_index], partHead[self.user.GUI_lang_index],\
-                                 par3Head[self.user.GUI_lang_index], kindHead[self.user.GUI_lang_index],'','','','','']
+                    prod_head_4 = ['','','',self.line_nr, compHead[self.GUI_lang_index], partHead[self.GUI_lang_index],\
+                                 par3Head[self.GUI_lang_index], kindHead[self.GUI_lang_index],'','','','','']
                     if len(self.kind_model) < self.max_nr_of_rows:
-                        self.kind_model.append(prod_head_4) # Header of part list
+                        # Add header of part to kind_model
+                        self.kind_model.append(prod_head_4)
                     self.part_head_req = False
 
                 # Add the expression to the query_table output table
                 if len(self.query_table) < self.max_nr_of_rows:
                     self.query_table.append(expr)
 
+                # Determine preferred name of object (= kind)
+                if len(obj.names_in_contexts) > 0:
+                    lang_name, community_name, obj_name, descr_of_obj = \
+                               self.Determine_name_in_language_and_community(obj)
+                else:
+                    obj_name = obj.name
+
+                # Determine preferred name of part (= kind)
                 part = self.uid_dict[part_uid]
+                if len(part.names_in_contexts) > 0:
+                    lang_name, community_name, part_name, descr_of_part = \
+                               self.Determine_name_in_language_and_community(part)
+                else:
+                    part_name = part.name
+                    community_name = 'unknown'
+
+                # Determine preferred name of first supertype of part
                 if len(part.supertypes) > 0:
-                    part_kind_name = part.supertypes[0].name
+                    if len(part.supertypes[0].names_in_contexts) > 0:
+                        lang_name, comm_kind_name, part_kind_name, descr_of_kind = \
+                                   self.Determine_name_in_language_and_community(part.supertypes[0])
+                    else:
+                        part_kind_name = part.supertypes[0].name
                 else:
                     part_kind_name = 'unknown'
 
-                community_name = self.community_dict[part.names_in_contexts[0][1]] # community uid
+                # Create row about possible aspect of kind in possibilities_model
                 self.possibility_row[0] = part.uid
-                self.possibility_row[1] = part.names_in_contexts[0][2] # part.name
-                self.possibility_row[2] = obj.name
+                self.possibility_row[1] = part_name
+                self.possibility_row[2] = obj_name
                 self.possibility_row[3] = part_kind_name
                 self.possibility_row[4] = community_name # of part
+                # Add possibility for part to possibilities_model
+##                if part not in self.possib_objects:
+##                    self.possib_objects.append(part)
+                if self.possibility_row not in self.possibilities_model:
+                    self.possibilities_model.append(self.possibility_row[:])
 
                 # Search for aspects of the kind of part
                 nr_of_aspects = self.Find_kinds_of_aspects(part, role)
@@ -1938,8 +2072,8 @@ class Semantic_Network():
             # There is an implied part left; thus create a part_header, the first time only
             if self.part_head_req == True:
                 self.line_nr += 1
-                prod_head_4 = ['','','',self.line_nr, compHead[self.user.GUI_lang_index], partHead[self.user.GUI_lang_index],\
-                             par3Head[self.user.GUI_lang_index], kindHead[self.user.GUI_lang_index],'','','','','']
+                prod_head_4 = ['','','',self.line_nr, compHead[self.GUI_lang_index], partHead[self.GUI_lang_index],\
+                             par3Head[self.GUI_lang_index], kindHead[self.GUI_lang_index],'','','','','']
                 if len(self.kind_model) < self.max_nr_of_rows:
                     self.kind_model.append(prod_head_4) # Header of part list
                 self.part_head_req = False
@@ -2058,7 +2192,7 @@ class Semantic_Network():
             else:
                 # Determine the preferred name of the first classifier of the individual object
                 lang_name_cl, comm_name_cl, pref_cl_name, descr = \
-                              self.Determine_name_in_language_and_community(indiv.classifiers[0], self.user.lang_pref_uids)
+                              self.Determine_name_in_language_and_community(indiv.classifiers[0])
                 indiv.kind_uid  = indiv.classifiers[0].uid
                 indiv.kind_name = pref_cl_name
 
@@ -2071,9 +2205,9 @@ class Semantic_Network():
                     aspect.kind_name = 'unknown kind'
                 else:
                     # Determine the preferred name of the first classifier of the individual aspect
-                    #print('Lang_prefs for classifier of aspect', self.user.lang_pref_uids, aspect.classifiers[0].names_in_contexts)
+                    #print('Lang_prefs for classifier of aspect', self.reply_lang_pref_uids, aspect.classifiers[0].names_in_contexts)
                     lang_name_as, comm_name_as, pref_kind_name, descr = \
-                                  self.Determine_name_in_language_and_community(aspect.classifiers[0], self.user.lang_pref_uids)
+                                  self.Determine_name_in_language_and_community(aspect.classifiers[0])
                     aspect.kind_uid  = aspect.classifiers[0].uid
                     aspect.kind_name = pref_kind_name
 
@@ -2120,7 +2254,7 @@ class Semantic_Network():
                     if integer == False or (numeric_uid < 1000000000 or numeric_uid >= 3000000000):
                         value = self.uid_dict[value_uid]
                         lang_name, comm_name, value_name, descr = \
-                               self.Determine_name_in_language_and_community(value, self.user.lang_pref_uids)
+                               self.Determine_name_in_language_and_community(value)
                         
                     # Aspect value found: add expression to result table
                     if len(self.query_table) < self.max_nr_of_rows and expr not in self.query_table:
@@ -2129,14 +2263,14 @@ class Semantic_Network():
                 # Qualitative aspect found (e.g. a substance such as PVC)
                 substance = self.uid_dict['431771']     # subtance or stuff
                 lang_name, comm_name, pref_kind_name, descr = \
-                           self.Determine_name_in_language_and_community(substance, self.user.lang_pref_uids)
+                           self.Determine_name_in_language_and_community(substance)
                 aspect.kind_name = pref_kind_name
                 aspect.kind_uid  = '431771'
                 uom_uid  = ''
                 uom_name = ''
                 value_uid  = aspect.uid
                 lang_name, comm_name, value_name, descr = \
-                           self.Determine_name_in_language_and_community(aspect, self.user.lang_pref_uids)
+                           self.Determine_name_in_language_and_community(aspect)
                 #value_name = aspect.name
                 aspect_name = ''
                 
@@ -2186,12 +2320,12 @@ class Semantic_Network():
             # Verify if aspect has a known value
             if value_uid == '':
                 unknownVal = ['unknown value','onbekende waarde']
-                value_name = unknownVal[self.user.GUI_lang_index]
+                value_name = unknownVal[self.GUI_lang_index]
                 warnText  = ['  Warning: Aspect','Waarschuwing: Aspect']
                 valueMess = ['has no value.','heeft geen waarde.']
                 #self.MessagesQ.insert('end','\n
-                print('{} {} ({}) {}'.format(warnText[self.user.GUI_lang_index], aspect_name,aspect_uid, \
-                                             valueMess[self.user.GUI_lang_index]))
+                print('{} {} ({}) {}'.format(warnText[self.GUI_lang_index], aspect_name,aspect_uid, \
+                                             valueMess[self.GUI_lang_index]))
             else:
                 # Determine (in)equality symbol
                 if expr[rel_type_uid_col] == '5026':
@@ -2281,9 +2415,9 @@ class Semantic_Network():
                 # Create header line_type 8 info, only the first time for prod_model or kind_model
                 if info_header:
                     self.line_nr += + 1
-                    prod_head_8 = ['','','',self.line_nr, info_head[self.user.GUI_lang_index], dir_head[self.user.GUI_lang_index],'',\
-                                   kind_of_doc_head[self.user.GUI_lang_index]           , file_head[self.user.GUI_lang_index],\
-                                   kind_of_file_head[self.user.GUI_lang_index],'','','',status_head[self.user.GUI_lang_index]]
+                    prod_head_8 = ['','','',self.line_nr, info_head[self.GUI_lang_index], dir_head[self.GUI_lang_index],'',\
+                                   kind_of_doc_head[self.GUI_lang_index]           , file_head[self.GUI_lang_index],\
+                                   kind_of_file_head[self.GUI_lang_index],'','','',status_head[self.GUI_lang_index]]
                     #print('obj.cat',obj.category)
                     if obj.category in ['kind', 'kind of physical object', 'kind of occurrence', 'kind of aspect', \
                                         'kind of role', 'kind of relation']:
@@ -2375,7 +2509,7 @@ class Semantic_Network():
                 if presented == False:
                     # Store info about object in info_model
                     info_row = [info.uid, obj.uid, info.description, '', \
-                                info.name, super_info_name, obj.name, '',descr_avail_text[self.user.GUI_lang_index], '', '']
+                                info.name, super_info_name, obj.name, '',descr_avail_text[self.GUI_lang_index], '', '']
                     self.info_model.append(info_row)
                     
                     # Store info about object in prod_model or kind_model
@@ -2412,7 +2546,6 @@ class Semantic_Network():
         objectTypeKnown = 'unknown'
         option        = []
         options       = []
-        nr_of_candidates = 0
         unknownTerms = ['','?','any','what','which','who','where', \
                         'wat', 'welke', 'wie', 'waar']
         foundUID = ''
@@ -2433,13 +2566,13 @@ class Semantic_Network():
                 optionNr = 1
                 option.append(optionNr) 
                 option.append(whetherKnown)
-                option.append(self.user.GUI_lang_pref_uids[1])
-                option.append(self.user.comm_pref_uids[0])
+                option.append(self.GUI_lang_pref_uids[1])
+                option.append(self.comm_pref_uids[0])
                 option.append(resultString)
                 option.append(str(self.unknown_quid))
                 option.append(is_called_uid)
                 option.append(objectTypeKnown)
-                option.append(self.unknown_kind[self.user.GUI_lang_index])
+                option.append(self.unknown_kind[self.GUI_lang_index])
 
                 options.append(option)
                 foundUID = str(self.unknown_quid)
@@ -2455,62 +2588,23 @@ class Semantic_Network():
         
         # Search for full searchString in GellishDict   (was nameList in namingTable)
         candidates = self.Query_network_dict(searchString, string_commonality)
-        nr_of_candidates = len(candidates)
-                
-##    #
-##    # Determine whether searchString consist of multiple parts, separated by a space (' ')
-##    # and whether those parts (subStrings) all occur in the same name
-##        nrOfSubstrings = searchString.count(' ') + 1
-##        subStrings = searchString.split(' ')
-##        if self.test: print('subStrings:',nrOfSubstrings,subStrings)
-##        if nrOfSubstrings > 0:             # If there are > 0 (sub)strings:
-##            for name in nameList:
-##                subInName = True
-##                # Check whether the substrings are together part of the same term
-##                for subString in subStrings:
-##                    # If case insensitive; string_commonality is one of cipi, cspi, cii, csi, cifi, csfi
-##                    if string_commonality in ['cipi', 'cii', 'cifi']:
-##                        if subString.lower() not in name.lower():
-##                            subInName = False
-##                            break
-##                    else:
-##                        if subString not in name:
-##                            subInName = False
-##                            break
-##                                               # subString does appear in name
-
-##                    # If it is required that the first character of the first substring should match
-##                    if string_commonality in ['cifi', 'csfi']:
-##                        lenSub = len(subStrings[0])
-##                        if subStrings[0] != name[0:lenSub]:
-##                            #print('FirstChar:',subStrings[0],lenSub,name[0:lenSub])
-##                            subInName = False
-##                            break
-##                if subInName == True:
-##                    if fullNameFound == True and name == foundStrings[0]:
-##                        continue
-##                    nrOfFounds = nrOfFounds + 1
-##                    foundStrings.append(name)
-##                    foundIndexes.append(nameList.index(name))
-##                    #if self.test: print('    Found part string:',name,nameList.index(name))
-##
-##        if self.test: print('Nr of found strings :',nrOfFounds, searchString)
 
         # Collect found option in 'options' list for display and selection
         if len(candidates) > 0:
-            #print ("nr of candidates:",len(candidates), self.user.GUI_lang_uid)
+            print ("nr of candidates:",len(candidates), self.GUI_lang_pref_uids)
             optionNr = 0
             for candidate in candidates:
                 # Only add the candidate if uid of language corresponds with uid from GUI_lang_pref_uids
                 # because the query is in the GUI_language
-                if candidate[0][0] not in self.user.GUI_lang_pref_uids:
+                if candidate[0][0] not in self.GUI_lang_pref_uids:
                     continue
                 whetherKnown = 'known'
                 option = []
                 optionNr = optionNr + 1
                 option.append(optionNr)
                 option.append(whetherKnown)
-                for part in candidate: # add candidate fields to option (in column (2,3,4),(5,6,7)
+                # Add candidate fields to option (in column (2,3,4),(5,6,7)
+                for part in candidate:
                     for field in part:
                         option.append(field)
                 #print ("option:",len(candidates), option)
@@ -2533,17 +2627,15 @@ class Semantic_Network():
                         # Find the first name in the preferred language of the first supertype in the GUI_language
                         if len(obj.supertypes[0].names_in_contexts) > 0:
                             lang_name, comm_name_supertype, pref_kind_name, descr_of_super = \
-                                       self.Determine_name_in_language_and_community(obj.supertypes[0], \
-                                                                                     self.user.GUI_lang_pref_uids)
+                                       self.Determine_name_in_language_and_community(obj.supertypes[0])
                     elif len(obj.classifiers) > 0:
                         pref_kind_name = obj.classifiers[0].name
                         # Find the first name in the preferred language of the first classifier in the GUI_language
                         if len(obj.classifiers[0].names_in_contexts) > 0:
                             lang_name, comm_name_supertype, pref_kind_name, descr_of_super = \
-                                       self.Determine_name_in_language_and_community(obj.classifiers[0], \
-                                                                                     self.user.GUI_lang_pref_uids)
+                                       self.Determine_name_in_language_and_community(obj.classifiers[0])
 ##                        for name_in_context in obj.classifiers[0].names_in_contexts:
-##                            if name_in_context[0] == self.user.GUI_lang_uid:
+##                            if name_in_context[0] == self.GUI_lang_uid:
 ##                                pref_kind_name = name_in_context[2]
 ##                                continue
                     else:
@@ -2555,7 +2647,7 @@ class Semantic_Network():
 ##                    option.append(obj.name) #names_in_contexts[0][2])
                 else:
                     #option.append('unknown')       # objectType
-                    option.append(self.unknown_kind[self.user.GUI_lang_index])
+                    option.append(self.unknown_kind[self.GUI_lang_index])
 
                 # Add the option to the list of options 
                 options.append(option)
@@ -2573,17 +2665,17 @@ class Semantic_Network():
                 optionNr = 1
                 option.append(optionNr)
                 option.append(whetherKnown)
-                option.append(self.user.GUI_lang_pref_uids[1])
-                option.append(self.user.comm_pref_uids[0])
+                option.append(self.GUI_lang_pref_uids[1])
+                option.append(self.comm_pref_uids[0])
                 option.append(searchString)
                 option.append(str(self.unknown_quid))
                 option.append(is_called_uid)
                 option.append(objectTypeKnown)
-                option.append(self.unknown_kind[self.user.GUI_lang_index])
+                option.append(self.unknown_kind[self.GUI_lang_index])
 
                 options.append(option)
                     
-                if self.user.GUI_lang_index == 1:
+                if self.GUI_lang_index == 1:
                     #self.MessagesQ.insert('end','\n
                     print('Term <%s> is niet gevonden in het woordenboek. UID = {}. '.\
                           format(searchString,self.unknown_quid))
@@ -2642,12 +2734,12 @@ class Semantic_Network():
         comm_name = self.community_dict[comm_uid]
         lang_comm           = [lang_uid, lang_name, comm_uid, comm_name]
         lh_uid_name         = [modified_object.uid, modified_object.name]
-        rel_uid_phrase_type = ['1225', self.classification[self.user.GUI_lang_index], basePhraseUID]
+        rel_uid_phrase_type = ['1225', self.classification[self.GUI_lang_index], basePhraseUID]
         rh_role_uid_name    = ['', '']
         rh_uid_name         = [selected_object.uid, selected_object.name] # e.g. 43769 , 'dakvenster'
         uom_uid_name        = ['', '']
         description         = ''
-        intent_uid_name     = ['491285', statement[self.user.GUI_lang_index]]
+        intent_uid_name     = ['491285', statement[self.GUI_lang_index]]
         rel_type = self.uid_dict['1225']
         gellish_expr = Create_gellish_expression(lang_comm, self.idea_uid, intent_uid_name,\
                                                  lh_uid_name, rel_uid_phrase_type,\
@@ -2655,1157 +2747,10 @@ class Semantic_Network():
         relation = Relation(modified_object, rel_type, selected_object, basePhraseUID, '', gellish_expr)
         modified_object.add_relation(relation)
         selected_object.add_relation(relation)
-#--------------------------------------------------------------------
-class Query:
-    def __init__(self, Gel_net, main):
-        self.Gel_net = Gel_net
-        self.main    = main
-        self.user    = main.user
-        self.query_expr = []
-        self.test    = False
-        #self.lang_index = self.user.GUI_lang_index
-
-        self.obj_list    = []
-        
-        self.objects_in_focus   = []
-        self.UIDsInFocus        = []
-        self.namesInFocus       = []
-        self.kindUIDsInFocus    = []
-        self.kindNamesInFocus   = []
-        self.hierarchical_net      = []
-        self.hierarchical_net_uids = []
-        #self.condition_table = []
-        
-        # Options are ...
-        # options = [optionNr, whetherKnown, lang_uid, comm_uid, name, uid, is_called_uid, \
-        #           objectTypeKnown, 'unknown kind'/'onbekende soort']
-
-        self.candid_expressions = []
-        self.candidates = []
-        self.candid_uid_dict = {}
-        
-        self.lhCondVal   = []
-        self.relCondVal  = []
-        self.rhCondVal   = []
-        self.uomCondVal  = []
-        self.lhSel  = []
-        self.relSel = []
-        self.rhSel  = []
-        self.q_rel_subtype_uids = []
-
-        # Initialize 
-        self.net_uids = []
-        self.branches = []
-
-    def Specify_query_via_command_line(self):
-        ''' Specify and interpret a query (q) about things in a semantic network.
-            Search for terms in the dictionary'''
-
-        # Search in the dictionary (using a filter function), which returns values if
-        # 0) search_string is equal to the third position of the first(key) field of an item:
-        #    case sensitive identical
-        # 1) search_string is in that field:
-        #    case sensitive partially identical
-        # 2) search_string is in that field and starts with that string
-        #    case sensitive front end identical
-        # 3), 4), 5) idem, but case insensitive
-
-        # Enter a search string
-        search_string = input("\nEnter a query expression, string or quit (q): ")
-    ##    while search_string not in ["q", "quit"]:
-        while search_string not in ["s", "d", ""]:
-            
-            # Interpret the search string, being either a single term (string) or an expression (a<rel>b).
-            known_strings, interpreted = self.Interpret_query_line(search_string)
-            print('Interpreted query: ', interpreted)
-            self.main.query_spec.append(interpreted)
-            if len(interpreted) > 5:
-                # An expression was given with 6 or more fields (lh, rel, rh and possibly uom)
-                search_string = input("\nEnter a condition specification or search (s) cq display (d): ")
-            else:
-                search_string = 'd' # input("\nDisplay results (d): ")
-
-    def Interpret_query_line(self, search_string):
-        '''A query line via a command line consists either of a single term string 
-           or an expression, being lh_string < rel_string > rh_string = uom_string,
-           in which < and > mark the beging and end of a relation type phrase.
-           Resulting in a list called 'interpreted':
-           [lh_uid,lh_name,rel_uid,rel_name,rh_uid,rh_name,uom_uid,uom_name]
-        '''
-        string_commonalities = ['csi', 'cspi', 'csfi', 'cii', 'cipi', 'cifi']
-        
-        com = input("\nEnter string commonality (csi, cspi, csfi, cii, cipi, cifi): ")
-        if com not in string_commonalities:
-            print("String commonality {} unknown, 'cipi' used".format(com))
-            com = 'cipi'
-        
-        # Split search_string in lh, rel and rh strings to enable search for its component
-        strings = []
-        known_strings = []
-        # Split between lh and the rest if present
-        expr = search_string.split('<', maxsplit=1)
-        # lh_term is expr[0]
-        strings.append(expr[0].strip())             # append lh term
-        if len(expr) > 1:
-            # There is a rest, thus split it between kind of relation and rh + uom if present
-            rel_rh_uom = expr[1].split('>', maxsplit=1)
-            strings.append(rel_rh_uom[0].strip())   # append rel phrase
-            # Split third part in rh term and uom term
-            rh_uom = rel_rh_uom[1].split('=', maxsplit=1)
-            strings.append(rh_uom[0].strip())       # append rh term
-            if len(rh_uom) > 1:
-                strings.append(rh_uom[1].strip())   # append uom term
-            print('Query =', strings)
-
-        # Search for lh_string, and if present for rel_string and rh_string
-        interpreted = []
-        for string in strings:
-            known_string = True
-            print('Search for {}'.format(string))
-            candidates = self.Gel_net.Query_network_dict(string, com)
-            
-            if len(candidates) > 0:
-                # If candidates found, then show candidates for selection
-                for candidate in candidates:
-                    obj_uid  = candidate[1][0]
-                    obj_name = candidate[0][2]
-                    print("  Candidate {} {}s".format(obj_uid, obj_name))
-                    
-                sel_uid = input("\nEnter UID of selected candidate, last = 'Enter' or quit (q): ")
-                # Split sel_uid to enable multiple selection (a,b,c...) ==== to be done ====
-                int_val, integer = Convert_numeric_to_integer(sel_uid)
-                while sel_uid != 'q':
-                    # If a blank ("") is entered, then select the last candidate
-                    if sel_uid == "":
-                        sel_uid = obj_uid
-                    # If selected uid < 100 then the object is an unknown
-                    elif integer == True and int_val < 100:
-                    #elif int(sel_uid) < 100:
-                        self.Gel_net.unknown_quid += + 1
-                        obj_uid = self.Gel_net.unknown_quid
-                        obj_name = string
-                        known_string = False
-                    # If there is only one candidate, then select the last candidate
-                    elif len(candidates) == 1:
-                        sel_uid = obj_uid
-                        
-                    # Search for selected uid in network
-                    try:
-                        obj = self.Gel_net.uid_dict[sel_uid]    #= find_object(obj_uid)
-                        s = obj.show(self.Gel_net, self.user)
-                        obj_uid  = obj.uid
-                        obj_name = obj.name
-                        sel_uid = 'q'
-                    except KeyError:
-                        print("Selected UID '{}' is not known in the network.".format(sel_uid))
-                        if integer == False or int_val >= 100:
-                        #if int(sel_uid) >= 100:
-                            sel_uid = input("\nEnter a UID of a selected candidate, 'Enter' or quit (q): ")  
-            else:
-                # No candidates found: the serach_string denotes an (next) unknown
-                self.Gel_net.unknown_quid += 1
-                obj_uid = self.Gel_net.unknown_quid
-                obj_name = string
-                known_string = False
-                print("  No candidates found for ({}) {} \n".format(obj_uid, string))
-            
-            interpreted.append(obj_uid)
-            interpreted.append(obj_name)
-            known_strings.append(known_string)
-            
-        # If no UoMs specified then append interpreted query
-        if len(strings) == 3:
-            interpreted.append('')
-            interpreted.append("")
-            known_strings.append(False)
-        # interpreted is a list[lh_uid,lh_name,rel_uid,rel_name,rh_uid,rh_name,uom_uid,uom_name]
-        return known_strings, interpreted  # list of Booleans, list
-
-    def Formulate_query_spec_for_individual(self, selected_object):
-        ''' Determine from a selected individual (self.Gel_net.modified_object) a query_spec that searches for
-            subtypes of its kind (self.Gel_net.selected_object) that satisfy the aspects of the individual object.
-            Thus using the aspects of the individual as criteria for selection of options.
-        '''
-        shall_have_as_aspect_phrase = ['shall have as aspect a', 'moet als aspect hebben een']
-        shall_be_phrase          = ['shall be', 'moet als kwalitatief aspect hebben']
-        shall_be_made_of_phrase  = ['shall be made of', 'moet gemaakt zijn van']
-        # query_spec expression = lh_uid, lh_name, rel_type_uid, rel_type_name, rh_uid_rh_name, \
-        #                         uom_uid, uom_name, phrase_type_uid
-        self.main.query_spec[:] = []
-        query_expr = []
-        print('\nFormulate query spec for ',selected_object.name)
-
-        # Determine an aspect of the individual modified object and the classifier of the aspect
-        for obj_rel in self.Gel_net.modified_object.relations:
-##            expr = obj_rel.expression
-##            # Search for relation type <has as aspect> (1727) to find individual aspect_uid
-##            if expr[rel_type_uid_col] in self.Gel_net.subPossAspUIDs:
-            # Search for relation type <has as aspect> (1727) to find an individual aspect
-            if obj_rel.rel_type.uid in self.Gel_net.subPossAspUIDs:
-                if obj_rel.phrase_type_uid == basePhraseUID:     # Base phrase
-                    aspect = obj_rel.rh_obj
-                    if len(aspect.classifiers) > 0:
-                        classifier = aspect.classifiers[0]
-                    else:
-                        print('Aspect {} is not classified. Not usable for formulating a condition'.format(aspect.name))
-                        continue
-                    # Formulate expression: selected_object 'has by definition as aspect a' aspect_kind, uom
-                    query_expr = [selected_object.uid, selected_object.name, \
-                                  '4956', shall_have_as_aspect_phrase[self.user.GUI_lang_index], \
-                                  classifier.uid, classifier.name, '' , '', basePhraseUID]
-                    self.main.query_spec.append(query_expr)
-                    
-                    self.rolePlayersQTypes = 'thingsOfKinds'
-                    self.q_lh_category = 'kind'
-                    self.q_rh_category = 'kind of aspect'
-                    
-##                    print('Query line-1a: {} ({}) <{}> ({}) {} ({})'.\
-##                          format(query_expr[1], query_expr[0], query_expr[3], \
-##                                 query_expr[2], query_expr[5], query_expr[4]))
-
-                    # Formulate_condition(s) for kind from_individual aspect value
-                    for asp_rel in aspect.relations:
-                        # Search for qualification or quantification of the aspect
-                        if asp_rel.rel_type.uid in self.Gel_net.subQuantUIDs:
-                            
-                            # Quantification relation found:
-                            # Expression becomes: classifier <shall have on scale a value ...> value (on scale:) uom
-                            # Transform rel_type of individual to rel_type for requirement
-                            if asp_rel.rel_type.uid == '5025':
-                                # If rel-type is <has on scale a value equal to> (5025)
-                                #    then rel_type becomes <shall have on scale a value equal to> (5492)
-                                conceptual_rel_type = self.Gel_net.uid_dict['5492']
-
-                            elif asp_rel.rel_type.uid == '5026':
-                                # If rel-type is <has on scale a value greater than> (5026)
-                                #    then rel_type becomes <shall have on scale a value greater than> (5493)
-                                conceptual_rel_type = self.Gel_net.uid_dict['5493']
-                                
-                            elif asp_rel.rel_type.uid == '5027':
-                                # If rel-type is <has on scale a value less than> (5027)
-                                #    then rel_type becomes <shall have on scale a value less than> (5494)
-                                conceptual_rel_type = self.Gel_net.uid_dict['5494']
-
-                            elif asp_rel.rel_type.uid == '5489':
-                                # If rel-type is <has on scale a value greater than or equal to> (5489)
-                                #    then rel_type becomes <shall have on scale a value greater than or equal to> (5632)
-                                conceptual_rel_type = self.Gel_net.uid_dict['5632']
-
-                            elif asp_rel.rel_type.uid == '5490':
-                                # If rel-type is <has on scale a value less than or equal to> (5490)
-                                #    then rel_type becomes <shall have on scale a value less than or equal to> (5633)
-                                conceptual_rel_type = self.Gel_net.uid_dict['5633']
-
-                            else:
-                                continue
-                            # Conversion from qualification to conceptual qualification found:
-                            # thus formulate condition in query_spec
-                            # Determine base phrase of relation type in GUI language
-                            #print('Condition rel_type', conceptual_rel_type.name, len(conceptual_rel_type.basePhrases_in_context))
-                            if len(conceptual_rel_type.basePhrases_in_context) > 0:
-                                rel_type_name = conceptual_rel_type.basePhrases_in_context[0][2]
-                                for phrase_in_context in conceptual_rel_type.basePhrases_in_context:
-                                    if phrase_in_context[0] == self.user.GUI_lang_uid:
-                                        rel_type_name = phrase_in_context[2]
-                                        continue
-                                #print('Rel_type_name', rel_type_name, self.user.GUI_lang_uid, conceptual_rel_type.basePhrases_in_context)
-                                # Formulate condition expression:
-                                #   kind_of)aspect 'shall have on scale a value ...' value, uom
-                                print('Condition: {} <{}> {} {}'.\
-                                      format(classifier.name, rel_type_name, \
-                                             asp_rel.rh_obj.name, asp_rel.uom.name))
-                                condition = [classifier.uid, classifier.name, \
-                                             conceptual_rel_type.uid, rel_type_name, \
-                                             asp_rel.rh_obj.uid, asp_rel.rh_obj.name, \
-                                             asp_rel.uom.uid, asp_rel.uom.name, basePhraseUID]
-                                self.main.query_spec.append(condition)
-                                #self.condition_table.append(condition)
-                                
-                            else:
-                                print('No conversion base phrase available for {} ({})'.\
-                                      format(conceptual_rel_type.name, conceptual_rel_type.uid))
-                elif obj_rel.rel_type.uid == '4853':
-                    # Object is classified/qualified by a qualitative aspect (<is>)
-                    # results in requirement: <shall be> (5791)
-                    qual_aspect = obj_rel.rh_obj
-                    # Formulate expression: selected_object 'is by definition qualified as' qualitative aspect, uom
-                    query_expr = [selected_object.uid, selected_object.name, \
-                                  '5791', shall_be_phrase[self.user.GUI_lang_index], \
-                                  qual_aspect.uid, qual_aspect.name, '' , '', basePhraseUID]
-##                    print('Query line-1b: {} ({}) <{}> ({}) {} ({})'.\
-##                          format(query_expr[1], query_expr[0], query_expr[3], \
-##                                 query_expr[2], query_expr[5], query_expr[4]))
-                    self.main.query_spec.append(query_expr)
-                    
-                    self.rolePlayersQTypes = 'thingsOfKinds'
-                    self.q_lh_category = 'kind'
-                    self.q_rh_category = 'kind of aspect'
-
-                elif obj_rel.rel_type.uid == '5423':
-                    # Expression found: Object <is made of> construction material
-                    # results in requirement: <shall be made of> (4995)
-                    qual_aspect = obj_rel.rh_obj
-                    # Formulate expression: selected_object 'is by definition qualified as' qualitative aspect, uom
-                    query_expr = [selected_object.uid, selected_object.name, \
-                                  '4995', shall_be_made_of_phrase[self.user.GUI_lang_index], \
-                                  qual_aspect.uid, qual_aspect.name, '' , '', basePhraseUID]
-                    print('Query line-1c: {} ({}) <{}> ({}) {} ({})'.\
-                          format(query_expr[1], query_expr[0], query_expr[3], \
-                                 query_expr[2], query_expr[5], query_expr[4]))
-                    self.main.query_spec.append(query_expr)
-                    
-                    self.rolePlayersQTypes = 'thingsOfKinds'
-                    self.q_lh_category = 'kind'
-                    self.q_rh_category = 'kind of aspect'
-
-    def Interpret_query_spec(self):
-        ''' Interpret a query_spec, consisting of one or more lines
-            and if a single object is requested, then build product model and view
-            or when possibly multiple objects are resulting, then execute the query
-            and build the various product models and views.
-        '''
-        self.obj_list[:] = []
-        #print('Query_spec:', self.main.query_spec)
-        # If the query interpretation found a single known object (no query expression and not an unknown),
-        # thus the first spec line has <= 2 fields and the uid >= 100,
-        # then find the object by uid and show/display its data and its subtypes when applicable.
-        int_uid, integer = Convert_numeric_to_integer(self.main.query_spec[0][0])
-        if len(self.main.query_spec[0]) <= 2 and (integer == False or int_uid >= 100):
-            # Single known object (uid) found. Find obj with uid in dictionary
-            uid = self.main.query_spec[0][0]
-            obj = self.Gel_net.uid_dict[uid]
-            
-            # If obj is a kind of role, then build model of kind of role player (if known) instead of kind of role
-            if obj.category == 'kind of role':
-                player_found = False
-                for rel_obj in obj.relations:
-                    expr = rel_obj.expression
-                    # Determine whether the relation defines a kind of role player (5343 = is by def a role of a)
-                    if expr[lh_uid_col] == obj.uid and expr[rel_type_uid_col] == by_def_role_of_ind:
-                        role_player_uid = expr[rh_uid_col]
-                        role_player = self.Gel_net.uid_dict[role_player_uid]
-                        player_found = True
-                        print('Role {} replaced by role player {}'.format(obj.name, role_player.name))
-                        continue
-                if player_found == False:
-                     role_player = obj
-                # Append role_player to list of objects to be displayed
-                self.obj_list.append(role_player)    
-            else:
-                # Append object to list of objects to be displayed
-                self.obj_list.append(obj)
-                
-            # Build single product model (list with one element)
-            self.Gel_net.Build_product_views(self.obj_list)
-
-        else:
-            # Query is an expression
-            self.Execute_query()
-
-    def Create_query_file(self):
-        ''' Create a file in Gellish Expression format on the basis of self.main.query_spec'''
-        #print('Query_spec example:', self.main.query_spec)
-        # Query_spec example:
-        # [['251691', 'three core cable', '4956', 'moet als aspect hebben een', '550206', 'outside diameter', '', '', '6066'],
-        #  ['550206', 'outside diameter', '5492', 'shall have as scale value', '2000000030', '30',    '570423', 'mm', '6066']]
-        self.gel_expressions = []
-        idea_uid = 100
-        lang_uid  = '910037'
-        lang_name = 'Nederlands'
-        comm_uid  = ''
-        comm_name = ''
-        lang_comm = [lang_uid, lang_name, comm_uid, comm_name]
-        intent_uid_name = ['790665','vraag']
-    
-        for row in self.main.query_spec:
-            idea_uid += +1
-            if len(row) == 9:
-                lh_uid_name         = [row[0], row[1]]         # e.g. '251691', 'three core cable'
-                rel_uid_phrase_type = [row[2], row[3], row[8]] # e.g. '4956'  , 'moet als aspect hebben een'
-                rh_role_uid_name    = ['', '']
-                rh_uid_name         = [row[4], row[5]]         # e.g. '550206', 'outside diameter'
-                uom_uid_name        = [row[6], row[7]]
-                description         = ''
-                gellish_expr = Create_gellish_expression(lang_comm, str(idea_uid), intent_uid_name,\
-                                                         lh_uid_name, rel_uid_phrase_type,\
-                                                         rh_role_uid_name, rh_uid_name, \
-                                                         uom_uid_name, description)
-                #print('Gellish_expr1:', gellish_expr)
-                self.gel_expressions.append(gellish_expr)
-
-        # Save gel_expressions in query_file
-        subject_name = ['query_spec', 'vraagspecificatie']
-        file_lang_name = 'Nederlands'
-        serialization = 'csv'
-        Open_output_file(self.gel_expressions, 'query', file_lang_name, serialization)
-        
-    def Execute_query(self):
-        """ Execute a query on the network for the relation type and its subtypes.
-            Store resulting candidate objects in a list (self.candidates)
-            with expressions in self.candid_expressions with the same table definition.
-
-            - Options list definition:
-              OptionNr, whetherKnown, lang_uid, comm_uid, resultString, self.Gel_net.unknown_quid
-        """
-        self.query_expr = self.main.query_spec[0]
-        self.q_lh_uid      = self.query_expr[0]
-        self.q_lh_name     = self.query_expr[1]
-        self.q_rel_uid     = self.query_expr[2]
-        self.q_rel_name    = self.query_expr[3]
-        self.q_rh_uid      = self.query_expr[4]
-        self.q_rh_name     = self.query_expr[5]
-        self.phrase_type_uid = self.query_expr[8]
-                    
-        # query item: [self.q_lh_uid, self.q_lh_name, self.q_rel_uid, self.q_rel_name,
-        #              self.q_rh_uid, self.q_rh_name, self.q_uom_uid, self.uom_name, self.q_phrase_type_uid]
-        q_lh_uid_index   = 0
-        q_lh_name_index  = 1
-        q_rel_uid_index  = 2
-        q_rel_name_index = 3 # Not used
-        q_rh_uid_index   = 4
-        q_rh_name_index  = 5
-        #self.q_phrase_type_index = 8 # Not used
-        #indOrMixRelUID= 6068      # 6068 binary relation between an individual thing and something (indiv or kind)
-        
-        self.Gel_net.sub_level = 0
-        self.Gel_net.all_subtypes[:] = []
-
-        list_of_categories = ['kind', 'kind of aspect', 'kind of occurrence']
-        
-    # Consistency check on query
-        # If relation type specifies a relation between individual physical objects and the lh_object is known
-        # then lh_object may not be a kind or kind of occurrence; idem for rh_object
-        int_q_lh_uid, lh_integer = Convert_numeric_to_integer(self.q_lh_uid)
-        int_q_rh_uid, rh_integer = Convert_numeric_to_integer(self.q_rh_uid)
-        if self.rolePlayersQTypes == 'individuals' and \
-           (((lh_integer == False or int_q_lh_uid >= 100) and self.q_lh_category in list_of_categories) or \
-            ((rh_integer == False or int_q_rh_uid >= 100) and self.q_rh_category in list_of_categories)):
-            print('Warning: Relation type <{}> relates individual things, \
-but one or both related things are kinds of things. Try again.'.\
-                                  format(self.q_rel_name, self.q_lh_uid, self.q_lh_category,\
-                                         self.q_rh_uid  , self.q_rh_category))
-            #return
-
-        # If relation type specifies a relation between kinds and the lh_object is known
-        # then lh_object shall be a kind or kind of occurrence; idem for rh_object   
-        elif (self.rolePlayersQTypes == 'hierOfKinds' or self.rolePlayersQTypes == 'thingsOfKinds') and \
-             (((lh_integer == False or int_q_lh_uid >= 100) and self.q_lh_category not in list_of_categories) or \
-              ((rh_integer == False or int_q_rh_uid >= 100) and self.q_rh_category not in list_of_categories)):
-            print('Warning: Relation type <{}> relates kinds of things, \
-but left {} ({}) or right {} ({}) related things are not kinds. Try again.'.\
-                                  format(self.q_rel_name, self.q_lh_uid, self.q_lh_category,\
-                                         self.q_rh_uid  , self.q_rh_category))
-            #return
-            
-        elif self.rolePlayersQTypes == 'individualAndKind':
-            if ((lh_integer == False or int_q_lh_uid >= 100) and self.q_lh_category in list_of_categories):
-                print('Warning: Relation type <{}> relates an individual thing to a kind, \
-but the left hand object {} ({}) is a kind. Try again.'.format(self.q_rel_name, self.q_lh_uid, self.q_lh_category))
-                
-        elif self.rolePlayersQTypes == 'kindAndIndividual':
-            if ((rh_integer == False or int_q_rh_uid >= 100) and self.q_rh_category in list_of_categories):
-                print('Warning: Relation type <{}> relates a kind to an individual thing, \
-but the right hand object {} ({}) is a kind. Try again.'.format(self.q_rel_name, self.q_rh_uid, self.q_rh_category))
-                
-        elif self.rolePlayersQTypes == 'individualAndMixed':
-            if ((lh_integer == False or int_q_lh_uid >= 100) and self.q_lh_category in list_of_categories):
-                print('Warning: Relation type <{}> relates an individual thing to an individual or kind, \
-but the left hand object {} ({}) is a kind. Try again.'.format(self.q_rel_name, self.q_lh_uid, self.q_lh_category))
-
-        # Determine UIDs of subtypes of relation type to enable searching also the subtypes of the relation type
-        self.q_rel_subtype_uids[:] = []
-        
-        self.q_rel_subtype_uids.append(self.query_expr[q_rel_uid_index])
-        
-        # If relUID of query (self.query_expr) known then determine rel_type object and its list of subtypes
-        int_q_rel_uid, rel_integer = Convert_numeric_to_integer(self.query_expr[q_rel_uid_index])
-        if rel_integer == False or int_q_rel_uid >= 100:
-            rel_type = self.Gel_net.uid_dict[self.query_expr[q_rel_uid_index]]
-            # Find subtypes of specified relation type
-            self.q_rel_subtypes, self.q_rel_subtype_uids = self.Gel_net.Determine_subtypes(rel_type)  
-            #print('Subtypes of relation',self.query_expr[q_rel_uid_index],':',subRels)
-            self.q_rel_subtype_uids.append(self.query_expr[q_rel_uid_index])
-        #print('Relation type and subtypes:',self.q_rel_subtype_uids)
-                
-        # Candidate answers ========
-        cand_text = ['Candidate answers:','Kandidaat antwoorden:']
-        print('\n{}'.format(cand_text[self.user.GUI_lang_index]))
-
-        # Initialize whether types are known
-        self.q_lh_category = 'unknown'
-        self.q_rh_category = 'unknown'
-        # If lh object is a known, then ...
-        
-        if lh_integer == False or int_q_lh_uid >= 100:
-            # If lh is possibly a kind then determine its subtypes
-            if self.rolePlayersQTypes in ['kindAndIndividual', 'mixedAndIndividual', 'hierOfKinds',\
-                                           'thingsOfKinds']:
-                self.q_lh_category = 'kind'
-                self.q_lh_subtypes, self.q_lh_subtype_uids = self.Gel_net.DetermineSubtypeList(self.q_lh_uid)
-                
-                # If relation type is a transitive relation type then
-                # determine hierarchical network (chain) of rh_uids that relate to the q_lh_uid of the query
-                if self.q_rel_uid in self.Gel_net.transitiveRelUIDs:
-                    self.Transitive_hier_network(self.q_lh_subtypes, self.q_rel_subtype_uids, self.q_phrase_type_uid)
-                    self.rh_hierarchical_net_uids = self.net_uids
-            else:
-                self.q_lh_category = 'individual'
-                self.q_lh_subtypes[0] = self.q_lh_obj
-
-        # If rh object is a known and is possibly a kind then determine its subtypes
-        if rh_integer == False or int_q_rh_uid >= 100:
-            if self.rolePlayersQTypes in ['individualAndKind', 'individualAndMixed', 'hierOfKinds',\
-                                          'thingsOfKinds']:
-                self.q_rh_category = 'kind'
-                self.q_rh_subtypes, self.q_rh_subtype_uids = self.Gel_net.DetermineSubtypeList(self.q_rh_uid)
-                
-                # If relation type is a transitive relation type then
-                # determine hierarchical network (chain) of lh_uids that relate to the q_rh_uid of the query
-                if self.q_rel_uid in self.Gel_net.transitiveRelUIDs:
-                    self.Transitive_hier_network(self.q_rh_subtypes, self.q_rel_subtype_uids, self.q_phrase_type_uid)
-                    self.lh_hierarchical_net_uids = net_uids
-            else:
-                self.q_rh_category = 'individual'
-                self.q_rh_subtypes[0] = self.q_rh_obj
-
-        # Build list of candidates and candid_uid_dict
-        # Collect expressions that match first self.query_expr expression in candid_expressions table.
-        
-        self.about  = ['about' ,'over']
-        indeed = ['Indeed','Inderdaad']
-        
-        # If q_lh_object of query is unknown, (q_lh_uid < 100) ('what-1')
-        if lh_integer == False or int_q_lh_uid < 100:
-            # rh_object of query is known (q_rh_uid > 99) while q_lh object is unknown
-            if rh_integer == False or int_q_rh_uid >= 100: 
-                # If relation_type object of query is known (q_rel_uid > 99) is known, then
-                if int_q_rel_uid >= 100:                  
-                    # If self.q_rh_category == 'individual' then search for matches for the individual
-                    # If self.q_rh_category == 'kind' then search for matches for the kind and its subtypes
-                    # Search in the relations of rhq_object 
-                    # for expressions with the specified relation type(s) or one of its subtypes
-                    if self.q_rh_category == 'kind':
-                        for rh_sub in self.q_rh_subtypes:
-                            self.Find_candidates(rh_sub)
-                    else:
-                        # self.q_rh_category == 'individual'
-                        self.Find_candidates(self.q_rh_obj)
-                else:
-                    # Relation type q_rel of query is unknown.
-                    # Determine whether lh and rh objects (and their subtypes) are related
-                    #           and if yes, by which kinds of relations
-                    print('=== to be done === by which kinds of relations are lh object {} and rh object {} related?'.\
-                          format(self.query_expr[q_lh_name_index], self.query_expr[q_rh_name_index]))
-            
-            # If rh_object of query is also unknown (q_rh_uid < 100) ('what-2') then error meassage
-            else:
-                # rh_object of query in also unknown (self.query_expr[q_rh_uid_index] < 100)
-                # Both q_lh and q_rh object are unknown
-                if self.user.GUI_lang_index == 1:
-                    print('\n  Fout: Ofwel de linker term of de rechter term moet bekend zijn. Probeer opnieuw')
-                else:
-                    print('\n  Error: Either left hand term or right hand term should be known. Try again')
-                return
-                    
-        # lhUID is in vocabulary (thus lh is known) because self.query_expr[q_lh_uid_index] >= 100.
-        else:
-            # For the self.q_lh object and its subtypes find expressions that match the first query expression 
-            for q_lh_sub in self.q_lh_subtypes:
-                # Search in the relations of lh_object for a relation type that corresponds with q_rel or its subtypes
-                for lh_obj_rel in q_lh_sub.relations:
-                    expr = lh_obj_rel.expression
-                    if expr[rel_type_uid_col] in self.q_rel_subtype_uids:
-                        # If rh object is also known (q_rh_uid >= 100) then verify whether expression complies with query 
-                        if int_q_rh_uid >= 100:
-                            # If also the rh or its subtype correpond with the q_rh
-                            # (the expression complies with the self.query_expr),
-                            #  then display message: confirm that the expression complies.
-                            # === This does not hold for the inverse. Transitive!!! roles should comply (=== to be added ===)
-                            if expr[rh_uid_col] in self.q_rh_subtype_uids:
-                                print('  {}: {} <{}> {} {}'.\
-                                      format(indeed[self.user.GUI_lang_index],expr[intent_name_col],\
-                                             expr[lh_name_col],expr[rel_type_name_col],expr[rh_name_col]))
-                                # Create candidate object and add object to list of candidates and expressions, if not yet present
-                                self.Record_and_verify_candidate_object(expr)
-                    
-                            # If rh not in subtype list, but self.q_rel_uid is a transitive relation type
-                            # then verify whether the transitive relation is satisfied.
-                            elif self.q_rel_uid in self.Gel_net.transitiveRelUIDs:
-                                if expr[rh_uid_col] in self.rh_hierarchical_net_uids:
-                                    # Indeed, rh_object is by transitive chain related to lh_object
-                                    print('\n  {}: {} {} {} {}'.\
-                                          format(indeed[self.user.GUI_lang_index],expr[intent_name_col],\
-                                                 expr[lh_uid_col],expr[rel_type_name_col],expr[rh_name_col]))
-                                    # Create candidate object and add object to list of candidates, if not yet present
-                                    # Add expression to the list of candidate expressions, if not yet present
-                                    self.Record_and_verify_candidate_object(expr)
-                                
-    ##                # if self.q_lh_uid and self.q_rh_uid are both known, then: is the question confirmed?
-    ##                if self.query_expr[q_lh_uid_index] > 99 and self.query_expr[q_rh_uid_index] > 99:
-    ##                    if self.q_lh_uid == expr[lh_uid_col]:
-    ##                        matchChain = TransitiveMatchChain(self.query_expr[q_lh_uid_index],self.query_expr[q_rh_uid_index],self.q_phrase_type_uid)
-    ##                    elif self.q_lh_uid == expr[rh_uid_col]:
-    ##                        matchChain = TransitiveMatchChain(self.query_expr[q_rh_uid_index],self.query_expr[q_lh_uid_index],self.q_phrase_type_uid)
-    ##                    if matchChain[0]:
-    ##                        because    = ['because...','omdat...']
-    ##                        print('\n  {}: {} {} {} {} {}'.\
-    ##                              format(indeed[self.user.GUI_lang_index],expr[intent_name_col],\
-    ##                                     self.query_expr[q_lh_name_index],self.q_rel_name,self.query_expr[q_rh_name_index],\
-    ##                                     because[self.user.GUI_lang_index]))
-    ##                        for step in reversed(matchChain[1:]):
-    ##                            print('\n    {} <{}> {}'.format(step[1],self.q_rel_name,step[3]))
-    ##                    else:
-    ##                        denial  = ['No, it is not true that','Nee, het niet waar dat']
-    ##                        print('\n  {}: {} {} {}'.\
-    ##                              format(denial[self.user.GUI_lang_index],\
-    ##                              self.query_expr[q_lh_name_index],self.q_rel_name,self.query_expr[q_rh_name_index]))
-    ##                        return
-    ##            else:                   # self.q_lh_uid not on expr
-    ##                #if self.rolePlayersQTypes == 'kindAndIndividual' or self.rolePlayersQTypes == 'mixedAndIndividual' \
-    ##                #   or self.rolePlayersQTypes == 'hierOfKinds' or self.rolePlayersQTypes == 'thingsOfKinds':
-    ##                if self.rolePlayerQTypeLH == 'kind':
-    ##                    if expr[lh_uid_col] in self.q_lh_subtype_uids or expr[rh_uid_col] in self.q_lh_subtype_uids:
-    ##                        self.Record_and_verify_candidate_object(expr)
-
-        # Unknown relation type: Any relation type is O.K. self.q_rel_uid not in vocabulary ('what')
-        if rel_integer == False or int_q_rel_uid < 100: 
-            if lh_integer == False or int_q_lh_uid >= 100:              # is self.q_lh_uid of self.query_expr in vocabulary?
-                # Search for facts about self.q_lh_uid
-                for lh_obj_rel in self.q_lh_obj.relations:
-                    expr = lh_obj_rel.expression   
-                    if self.rolePlayersQTypes in ['mixed', 'individualAndKind', 'kindAndIndividual']:
-                        self.Record_and_verify_candidate_object(expr)
-            else:
-                # self.q_lh_uid of self.query_expr not in vocabulary ('what')
-                if rh_integer == False or int_q_rh_uid >= 100:          # is self.q_rh_uid of self.query_expr in vocabulary?
-                    if self.q_rh_uid == row[rh_uid_col]:
-                        for rel_rh_obj in self.q_rh_obj.relations:
-                            expr = rel_rh_obj.expression 
-                            if self.rolePlayersQTypes in ['mixed', 'individualAndKind', 'kindAndIndividual']:
-                                self.Record_and_verify_candidate_object(expr)
-
-        if len(self.candidates) == 0:
-        #if len(self.candid_expressions) == 0:
-            noExpressions = ['No candidates found','Geen kandidaten gevonden']
-            print('\n{}'.format(noExpressions[self.user.GUI_lang_index]))
-            return
-        else: 
-            # Candidates found
-            satisText  = ['Confirmed','Bevestigd']
-            #satisText2 = ['satisfies the query and conditions','voldoet aan de vraag en de voorwaarden']
-
-            # If there are candidate expressions then show complying candidate expression
-            if len(self.candid_expressions) > 0:
-                for candid_expr in self.candid_expressions:
-                    self.answer_expressions.append(candid_expr)
-                    # Report confirmed candidate lh_name, rel_type_name, rh_name
-                    print('\n    {} {}: <{}> <{}> <{}>'.\
-                          format(satisText[self.user.GUI_lang_index],len(self.answer_expressions),candid_expr[lh_name_col],\
-                                 candid_expr[rel_type_name_col], candid_expr[rh_name_col]))
-##            if len(self.main.query_spec) > 1:
-##                # Verify conditions on candidates (self.candidates / self.candid_expressions)
-##                # and storeresults in self.answer_expressions
-##                for candid in self.candidates:
-##                    self.Verify_conditions(candid, candid_expr)
-            
-        print('Start generating views of {} candidate objects. Role player types: {}.'\
-              .format(len(self.candid_expressions), self.rolePlayersQTypes))
-
-        # Determine the objects_in_focus.
-        # If lh and rh role players of query expression might be individual things
-        # and not a kind or occurrence, then
-        # if lh_object is known then the lh_object is the object_in_focus.
-        if self.rolePlayersQTypes in ['individuals', 'individualAndMixed', 'mixedAndIndividual']:
-            # if lhUID and lhName is known in namingTable, then determine object in focus
-            if self.lhSel[1] == 'known':
-                if self.q_lh_category != 'kind' and self.q_lh_category != 'occurrence':
-                    # The left hand object in self.query_expr is the object in focus
-                    object_in_focus = self.Gel_net.uid_dict[self.q_lh_uid]
-                    self.objects_in_focus.append(object_in_focus)
-##                    self.UIDsInFocus.append(self.q_lh_uid)
-##                    self.namesInFocus.append(self.q_lh_name)
-            elif self.rhSel[1] == 'known':
-                # if lhUID is not known, and rhUID (and rhName) is known in namingTable, then:
-                if self.q_rh_category != 'kind' and self.q_rh_category != 'occurrence':
-                    # The right hand object in self.query_expr is the object in focus
-                    object_in_focus = self.Gel_net.uid_dict[self.q_rh_uid]
-                    self.objects_in_focus.append(object_in_focus)
-##                    self.UIDsInFocus.append(self.q_rh_uid)
-##                    self.namesInFocus.append(self.q_rh_name)
-            else:
-                if self.user.GUI_lang_index == 1:
-                    print('\n  Fout: Zowel linker object <%s> als ook rechter object <%s> is onbekend; \
-Probeer opnieuw.' % (self.q_lh_name,self.q_rh_name))
-                else:
-                    print('\n  Error: Left hand object <%s> as well as right hand object <%s> unknown; \
-Try again.' % (self.q_lh_name,self.q_rh_name))
-                return
-            if self.test: print('UIDs in Focus:', self.rolePlayersQTypes, object_in_focus.name,\
-                                self.q_lh_category, self.q_rh_category)
-            self.categoryInFocus = 'individual'
-            self.Gel_net.Build_single_product_view(object_in_focus)
-
-        # Else if lh and rh role players of query expression are an individual and a kind    
-        elif self.rolePlayersQTypes in ['mixed', 'individualAndKind', 'kindAndIndividual']:
-            obj_list = []
-            for expr in self.answer_expressions:
-                object_in_focus = self.Gel_net.uid_dict[expr[lh_uid_col]]
-                obj_list.append(object_in_focus)
-            self.categoryInFocus = 'individual'
-
-            # Start building product models about found self.candid_expressions
-            self.Gel_net.Build_product_views(obj_list)
-
-        # Build models/views for kinds
-        elif self.rolePlayersQTypes in ['hierOfKinds', 'thingsOfKinds']:
-            if self.lhSel[1] == 'known':
-                # The left hand object in the self.query_expr is the object in focus
-                object_in_focus = self.Gel_net.uid_dict[self.q_lh_uid]
-                self.objects_in_focus.append(object_in_focus)
-##                self.UIDsInFocus.append(self.q_lh_uid)
-##                self.namesInFocus.append(self.q_lh_name)
-            elif self.rhSel[1] == 'known':
-                # The right hand object in the self.query_expr is the object in focus
-                object_in_focus = self.Gel_net.uid_dict[self.q_rh_uid]
-                self.objects_in_focus.append(object_in_focus)
-##                self.UIDsInFocus.append(self.q_rh_uid)
-##                self.namesInFocus.append(self.q_rh_name)
-            else:
-                print('\n  Error: Left hand kind <{}> as well as \
-right hand kind <{}> unknown; Try again.'.format(self.q_lh_name,self.q_rh_name))
-                return
-            self.categoryInFocus = 'kind'
-            obj_list = []
-            obj_list.append(object_in_focus)
-            self.Gel_net.Build_product_views(obj_list)
-        else:
-            self.Other_views()
-
-    def Record_and_verify_candidate_object(self, expr):
-        ''' Identify candidate object and add object to list of candidates, if not yet present
-            Then verify additional conditions, if present
-        '''
-        candid_uid = expr[lh_uid_col]
-        if candid_uid not in self.candid_uid_dict:
-            candid = self.Gel_net.uid_dict[candid_uid]
-            self.candidates.append(candid)
-            self.candid_uid_dict[candid_uid] = candid
-        else:
-            candid = self.candid_uid_dict[candid_uid]
-            
-        if expr not in self.candid_expressions:
-            self.candid_expressions.append(expr)
-            print('  {} {} {} [{}]: <{}> <{}> <{}>. '.\
-                  format(expr[intent_name_col], len(self.candid_expressions),\
-                         self.about[self.user.GUI_lang_index], self.q_lh_name,\
-                         expr[lh_name_col], expr[rel_type_name_col], expr[rh_name_col]))
-
-            # If additional conditions are specified then verify conditions
-            if len(self.main.query_spec) > 1:
-                self.Verify_conditions(candid, expr)
-
-    def Find_candidates(self, rhq):
-        ''' Search for relations with object rhq that comply with the kind of relation in the query
-            and collect the relations in self.candid_expressions
-        '''
-        for obj_rel in rhq.relations:
-            expr = obj_rel.expression
-            # If relation of q_rh_obj is equal to self.q_rel_uid or one of its subtypes
-            if expr[rel_type_uid_col] in self.q_rel_subtype_uids:
-                self.candid_expressions.append(expr)
-                print('\n  {} {} {} [{}]: <{}> <{}> <{}>.'.\
-                      format(expr[intent_name_col], len(self.candid_expressions), self.about[self.user.GUI_lang_index],\
-                             self.q_rh_name, expr[lh_name_col], expr[rel_type_name_col], expr[rh_name_col]))
-    
-##                        #if row[rh_uid_col] in self.q_rh_subtype_uids or row[lh_uid_col] in self.q_rh_subtype_uids: 
-##                            if self.rolePlayersQTypes == 'mixed' or self.rolePlayersQTypes == 'individualAndKind' \
-##                               or self.rolePlayersQTypes == 'kindAndIndividual' or row[rel_type_uid_col] == classifUID\
-##                               or self.rolePlayersQTypes == 'hierOfKinds' or self.rolePlayersQTypes == 'thingsOfKinds': 
-##                                self.candid_expressions.append(row)
-##                                #self.UIDsInFocus.append (row[lh_uid_col])  # To be moved to condition verification
-##                                #self.namesInFocus.append(row[lh_name_col]) # To be moved to condition verification
-##                            print('\n  {} {} {} [{}]: <{}> <{}> <{}>.'.\
-##                                  format(row[intent_name_col], len(self.candid_expressions), self.about[self.user.GUI_lang_index],\
-##                                         self.q_rh_name, row[lh_name_col], row[rel_type_name_col], row[rh_name_col]))
-        
-            # If self.q_rel_uid is a transitive relation type 
-            if self.q_rel_uid in self.Gel_net.transitiveRelUIDs:
-                if expr[rh_uid_col] in self.hierarchical_net_uids: 
-                    #print ('candidate:', self.q_rel_name,row[rh_uid_col],row[rh_name_col])
-                    self.candid_expressions.append(expr)
-                    print('\n  {} {} {} [{}]: <{}> <{}> <{}>.'.\
-                          format(expr[intent_name_col], len(self.candid_expressions), self.about[self.user.GUI_lang_index],\
-                                 self.q_rh_name, expr[lh_name_col], expr[rel_type_name_col], expr[rh_name_col]))
-                
-##                        # self.q_rh_uid of Query is not equal l/rhUIDEx; maybe a classification by a subtype
-##                        else:
-              # if not a relation between individual things
-##                            if not self.rolePlayersQTypes == 'individuals':      
-                  # 'what' is related by a <is related to (a)> or its subtypes.
-##                                if self.q_rel_uid in self.Gel_net.indOrMixRelUIDs:              
-##                                    #print('row[rh_uid_col]:',row[rh_uid_col])
-##                                    if self.rolePlayerQTypeRH == 'kind':
-                          # If rhUID is a subtype of known kind (= self.q_rh_uid of self.query_expr)
-##                                        if row[rh_uid_col] in self.q_rh_subtype_uids:
-                              # 'what' <is classified as a> 'subtype of known kind'           
-##                                            #self.rolePlayersQTypes == 'mixed':  # individual related to kind
-##                                            self.candid_expressions.append(row)
-##                                            #self.UIDsInFocus.append (row[lh_uid_col])  # To be moved to condition verification
-##                                            #self.namesInFocus.append(row[lh_name_col]) # To be moved to condition verification
-##                                            print('\n  {} {} {} [{}]: <{}> <{}> <{}>.'.\
-##                                                  format(row[intent_name_col], len(self.candid_expressions), self.about[self.user.GUI_lang_index],\
-##                                                         self.q_rh_name, row[lh_name_col], row[rel_type_name_col], row[rh_name_col]))
-#--------------------------------------------------
-    def Transitive_hier_network(self, base_objects, rel_subtype_uids, phrase_type_uid): # ,target_uid
-        """ Search recursively for a chain (hierarchical network) of objects and uids
-            that relate to base_uid and that are related by a relation of type q_rel_uid (or its subtypes)
-            to a possible target_uid, in the required search direction (indicated by the phrase_type_uid).
-            First a tree of branches may be found. When the target objects is found in a branch, then the inverse route
-            is followed to find the chain.
-            The resulta are a list of objects and a list of uids that are the chain of objects from base to target
-        """
-        self.net_uids[:] = []
-        self.branches[:] = []
-        self.Transitive_match(base_objects, rel_subtype_uids, phrase_type_uid)         
-
-    def Transitive_match(self, base_objects, rel_subtype_uids, phrase_type_uid):
-        #base_phrase_type_uid = '6066'
-        new_direct_related_uids = []
-        for obj in base_objects:
-            for rel_obj in obj.relations:
-                expr = rel_obj.expression
-                # Search in relations of obj for expressions of type q_rel or its subtypes 
-                if expr[rel_type_uid_col] in rel_subtype_uids:
-                    if expr[lh_uid_col] == obj.uid and expr[phrase_type_uid_col] == phrase_type_uid:
-                        related_uid = expr[rh_uid_col]
-                        if related_uid not in self.net_uids:
-                            self.net_uids.append(related_uid)
-                            new_direct_related_uids.append(related_uid)
-                        branch = [expr[lh_uid_col],expr[lh_name_col],expr[rh_uid_col],expr[rh_name_col]]
-                        self.branches.append(branch)
-                        
-                    # Search for relations in inverse expressions        
-                    elif expr[rh_uid_col] == obj.uid and expr[phrase_type_uid_col] != phrase_type_uid:
-                        related_uid = expr[lh_uid_col]
-                        if related_uid not in self.net_uids:
-                            self.net_uids.append(related_uid)
-                            new_direct_related_uids.append(related_uid)
-                        branch = [expr[rh_uid_col],expr[rh_name_col],expr[lh_uid_col],expr[lh_name_col]]
-                        self.branches.append(branch)
-                            
-        if new_direct_related_uids > 0:
-            self.Transitive_match(new_direct_related_uids, rel_subtype_uids, phrase_type_uid)
-
-#----------------------------------------------------------------
-    def Other_views(self):
-        print('Otherviews')
-        
-    def Formulate_conditions_from_gui(self):
-        """ Determine conditions for GUI
-        """
-        self.answer_expressions = []
-        condition = []
-        #self.condition_table[:] = []
-        condText = ['Condition','Voorwaarde']
-        cond_satified = True
-        
-        # Get conditions and find condition UIDs
-        for condNr in range(0,3):
-            lh_cond_name  = self.lhCondVal[condNr].get()
-            # Empty lh condition name marks the end of the conditions
-            if lh_cond_name == '':
-                continue
-            string_commonality = 'csi' # case sensitive identical
-            # Find uid, name and description of lh_cond_name
-            unknown_lh, lh_uid_name_desc = self.Gel_net.Find_object_by_name(lh_cond_name, string_commonality)
-            if unknown_lh == False:
-                lh_cond_uid = lh_uid_name_desc[0]
-            else:
-                lh_cond_uid = 0
-                print('Error: object {} not found'.format(lh_cond_name))
-                      
-            rel_cond_name = self.relCondVal[condNr].get()
-            unknown_rel, rel_uid_name_desc = self.Gel_net.Find_object_by_name(rel_cond_name, string_commonality)
-            #print('Condition name, known, uid-name-descr', rel_cond_name, unknown_rel, rel_uid_name_desc)
-            if unknown_rel == False:
-                rel_cond_uid = rel_uid_name_desc[0]
-            else:
-                rel_cond_uid = 0
-                print('Error: object {} not found'.format(rel_cond_name))
-
-            rh_cond_name  = self.rhCondVal[condNr].get()
-            unknown_rh, rh_uid_name_desc = self.Gel_net.Find_object_by_name(rh_cond_name, string_commonality)
-            if unknown_rh == False:
-                rh_cond_uid = rh_uid_name_desc[0]
-            else:
-                rh_cond_uid = 0
-                print('Error: object {} not found'.format(rh_cond_name))
-
-            uom_cond_name = self.uomCondVal[condNr].get()
-            if uom_cond_name != '':
-                unknown_uom, uom_uid_name_desc = self.Gel_net.Find_object_by_name(uom_cond_name, string_commonality)
-                if unknown_uom == False:
-                    uom_cond_uid = uom_uid_name_desc[0]
-                else:
-                    uom_cond_uid = 0
-                    print('Error: object {} not found'.format(uom_cond_name))
-            else:
-                uom_cond_uid = 0
-            condition   = [lh_cond_uid, lh_cond_name, rel_cond_uid, rel_cond_name,\
-                           rh_cond_uid, rh_cond_name, uom_cond_uid, uom_cond_name]
-            print('\n{} {} {} ({}) {} ({}) {} ({}) {} ({})'.\
-                  format(condText[self.user.GUI_lang_index],condNr+1, lh_cond_name,lh_cond_uid,\
-                         rel_cond_name,rel_cond_uid,rh_cond_name,rh_cond_uid, uom_cond_name, uom_cond_uid))
-            #self.condition_table.append(condition[:])
-            self.main.query_spec.append(condition[:])
-        
-    def Verify_conditions(self, candid_obj, candidate_expr):
-        ''' Conditions found thus
-            verify whether the candidate object identified by self.candid_expressions
-            satisfies the entered conditions, if any,
-            and store the results in the self.answer_expressions
-            with the same column definitions as the expressions.
-        '''
-        candid_expr = candidate_expr
-        # Conditions found thus check candidate expressions on conditions
-        answerHead  = ['Answer','Antwoord']
-        answerText  = ['Candidate','Kandidaat']
-        conditText  = ['Candidate aspect','Kandidaadaspect']
-        nothing_satisfies  = ['There are no expressions found that satisfy the condition(s).',\
-                       'Er zijn geen uitdrukkingen gevonden die aan de voorwaarde(n) voldoen.']
-        
-        print('\n{}:'.format(answerHead[self.user.GUI_lang_index]))
-        candidNr = 0 
-
-        # Verify for the candidate object whether it satisfies the other conditions.
-##        for candid_expr in self.candid_expressions:
-##            candid_obj = self.candid_uid_dict[candid_expr[lh_uid_col]]
-        
-##        for candid_rel in candid_obj.relations:
-##            candid_expr = candid_rel.expression
-        
-        candidNr = candidNr + 1
-        condNr   = 0
-        candidAspectExpr = []
-        rhCandidRoleUIDs = []
-        rhCandidUIDs     = []
-        condit_rel_subs  = []
-        condit_rel_sub_uids = []
-
-        # Verify the conditions
-        # condit = [lh_cond_uid, lh_cond_name, rel_cond_uid, rel_cond_name,\
-        #           rh_cond_uid, rh_cond_name, uom_cond_uid, uom_cond_name, phrase_type_uid]
-        for condit in self.main.query_spec[1:]:
-            condNr += + 1
-            #print('\nVerify condition on', candid_obj.uid, candid_obj.name, condit)
-            condit_rel_subs, condit_rel_sub_uids = self.Gel_net.DetermineSubtypeList(condit[2])
-            #print('Condit_rel_subs', condit_rel_sub_uids)
-
-            cond_obj = self.Gel_net.uid_dict[condit[0]]
-            condit_lh_subs, condit_lh_sub_uids = self.Gel_net.DetermineSubtypeList(condit[0])
-            if candid_obj.uid in condit_lh_sub_uids:
-                # A new condition for the same object is identified.
-                # Determine whether there is a relation that satisfies the condition
-                satisfied_cond = False
-                for obj_rel in candid_obj.relations:
-                    candid_expr = obj_rel.expression
-                    if candid_expr[rel_type_uid_col] in condit_rel_sub_uids:
-                        #print('candid_expr[rel_type_uid_col]', candid_expr[rel_type_uid_col], candid_expr[rh_uid_col])
-                        if candid_expr[rh_uid_col] == condit[4]:
-                            # Condition is satisfied by expression
-                            print('Candidate {} <{}> {} <with role player> {} and uom {}'.\
-                                  format(candid_expr[lh_name_col], candid_expr[rel_type_name_col], \
-                                         candid_expr[rh_role_name_col], candid_expr[rh_name_col], \
-                                         candid_expr[uom_name_col]))
-                            satisfied_cond = True
-                            break
-                if satisfied_cond == False:
-                    print('No expression found that satisfies condition nr {}.'.format(condNr))
-            else:
-                # A condition on another object is detected. Possibly a qualification of the rh_role
-                cond_satified = False
-                candid_rh_role_uid = candid_expr[rh_role_uid_col]
-                if candid_rh_role_uid == '':
-                    print('** Warning: candidate expression {} <{}> {} does not have an intrinsic aspect defined'.\
-                          format(candid_expr[lh_name_col], candid_expr[rel_type_name_col], candid_expr[rh_name_col]))
-            
-                
-##                if condNr > 1:
-##                    rhCandIndex = -1
-##                    for rh_cand_uid in rhCandidUIDs:
-##                        rhCandIndex = rhCandIndex + 1
-##                        if condit[0] == rh_cand_uid:
-##                            candid_rh_role_uid = rhCandidRoleUIDs[rhCandIndex]
-##                            break
-                else:
-                    # rh_role_uid is not ''
-                    # Does rh_role object have a (e.g. qualification) relation that satisfies condition
-                    role_obj = self.Gel_net.uid_dict[candid_rh_role_uid]
-                    for role_obj_rel in role_obj.relations:
-                        expr = role_obj_rel.expression
-                        #print('Lh_name and cond_name <{}> <{}> and lh_rel and cond_rel <{}> <{}>.'.\
-                        #      format(expr[lh_name_col], candid_expr[rh_role_name_col], expr[rel_type_name_col], condit[3]))
-
-                        # Verify whether the relation type of expression about the lh_uid object
-                        # is 5737 <has by definition on scale a value equal to>
-                        if expr[lh_uid_col] == candid_rh_role_uid and expr[rel_type_uid_col] == '5737':
-                            # rh object should be a number; check that
-                            #print('Verify equality of RH_value and condition value <{}>, <{}> and of both uoms {} {}?'.\
-                            #      format(expr[rh_name_col], condit[5], expr[uom_name_col], condit[7]))
-                            us_notation = expr[rh_name_col].replace(',','.')
-                            value = us_notation.replace(' ','')
-                            test_string = value.replace('.','')
-                            if not test_string.isdecimal():
-                                print('Warning: Value {} is not a number'.format(expr[rh_name_col]))
-                            # Verify whether unit of measure differs from UoM of condition
-                            if expr[uom_uid_col] != condit[6]:
-                                print('** Warning: Unit of measure {} differs from condition unit {}.'.\
-                                      format(expr[uom_name_col], condit[7]))
-                                
-                            # Verify required (in)equality depending on required kind of relation
-                            int_condit_2, integer = Convert_numeric_to_integer(condit[2])
-                            
-                            # 5492 = shall have on scale a value equal to;
-                            # 5737 = has by definition on scale a value equal to;
-                            # 5025 = has on scale a value equal to
-                            if condit[2] in ['5492', '5737', '5025']:
-                                if float(value) == float(condit[5]):
-                                    print('Condition satisfied that {} = {}'.format(float(expr[rh_name_col]),float(condit[5])))
-                                    cond_satified = True
-
-                            # 5493 = shall have on scale a value greater than;
-                            # 6049 = has by definition on scale a value greater than;
-                            # 5026 = has on scale a value greater than
-                            if condit[2] in ['5493', '6049', '5026']:
-                                if float(value) > float(condit[5]):
-                                    print('Condition satisfied that {} > {}'.format(float(expr[rh_name_col]),float(condit[5])))
-                                    cond_satified = True
-                                    
-                            # 5632 = shall have on scale a value greater than or equal to;
-                            # 5978 = has by definition a value greater than or equal to;
-                            # 5489 = has on scale a value greater than of equal to
-                            elif condit[2] in ['5632', '5978', '5489']:
-                                if float(expr[rh_name_col]) >= float(condit[5]):
-                                    print('Condition satisfied that {} >= {}'.format(float(expr[rh_name_col]),float(condit[5])))
-                                    cond_satified = True
-
-                            # 5494 = shall have on scale a value less than;
-                            # 6052 = has by definition on scale a value less than;
-                            # 5027 = has on scale a value less than 
-                            elif condit[2] in ['5494', '6052', '5027']:
-                                if float(expr[rh_name_col]) < float(condit[5]):
-                                    print('Condition satisfied that {} < {}'.format(float(expr[rh_name_col]),float(condit[5])))
-                                    cond_satified = True
-                                    
-                            # 5633 = shall have on scale a value less than or equal to;
-                            # 5979 = has by definition a value less than or equal to;
-                            # 5490 = has on scale a value less than or equal to
-                            elif condit[2] in ['5633', '5979', '5490']:
-                                if float(expr[rh_name_col]) <= float(condit[5]):
-                                    print('Condition satisfied that {} <= {}'.format(float(expr[rh_name_col]),float(condit[5])))
-                                    cond_satified = True
-                            
-                            # Verify for lh_uid whether an expression with the correct relation type (or its subtype)
-                            #        has an identical rh_uid
-                            # condit[2] <= 99 means rh_cond_uid is an unknown.
-                            elif expr[rh_uid_col] == condit[2] or int_condit_2 < 100:
-                                cond_satified = True
-        ##                    if expr[lh_uid_col] == candid_rh_role_uid and expr[rel_type_uid_col] in condit_rel_sub_uids and \
-        ##                       (expr[rh_uid_col] == condit[4] or condit[4] < 100) or\
-        ##                       expr[rh_uid_col] == candid_rh_role_uid and expr[rel_type_uid_col] in condit_rel_sub_uids and \
-        ##                       (expr[lh_uid_col] == condit[4] or condit[4] < 100):
-                                
-                            if cond_satified == True:
-                                candidAspectExpr.append(expr)
-                                rhCandidRoleUIDs.append(expr[rh_role_uid_col])
-                                rhCandidUIDs.append(expr[rh_uid_col])
-                                print('    {} {}: <{}> <{}> <{}> <{}>'.format\
-                                      (conditText[self.user.GUI_lang_index], condNr, expr[lh_name_col],\
-                                       expr[rel_type_name_col], expr[rh_name_col], expr[uom_name_col]))
-                                int_condit_4, integer = Convert_numeric_to_integer(condit[4])
-                                if int_condit_4 >= 100:
-                                    break
-
-            if cond_satified == False:
-                # If rel_cond_uid is a transitive relation type then: is the condition satisfied?
-                if condit[2] in self.Gel_net.transitiveRelUIDs:
-                    #if expr[lh_uid_col] == ? :
-                    matchChain = TransitiveMatchChain(expr[lh_uid_col],condit_rel_subs,condit[4])
-                    #elif expr[rh_uid_col] == ? :
-                    #    matchChain = TransitiveMatchChain(expr[rh_uid_col],condit[2],condit[4])
-                    if matchChain[0]:
-                        indeed  = ['Indeed','Inderdaad']
-                        because = ['because...','omdat...']
-                        print('    {}: {} {} {} {}'.\
-                              format(indeed[self.user.GUI_lang_index], expr[lh_name_col], condit[3],\
-                                     condit[5], because[self.user.GUI_lang_index]))
-                        for step in reversed(matchChain[1:]):
-                            print('      {} <{}> {}'.format(step[1],condit[3],step[3]))
-                        cond_satified = True
-                        continue
-                    else:
-                        # Condition is not satisfied (even being transitive)
-                        break
-                else:
-                    # Condition is not satisfied (cond_satified == False) and relation type is not transitive.
-                    break
-            
-        # if last condition is also true, then:
-        if cond_satified:
-            self.answer_expressions.append(expr)
-            satisText   = ['Confirmed','Bevestigd']
-            becauseText = ['    because:','     omdat:']
-            andText     = ['        and:','        en:']
-            print('    {} {}: <{}> <{}> <{}> {}'.\
-                  format(satisText[self.user.GUI_lang_index],len(self.answer_expressions), \
-                         condit[1], condit[3], condit[5], condit[7]))
-            first = True
-            for candidAspect in candidAspectExpr:
-                if first == True:
-                    print('    {} <{}> <{}> <{}> <{}>'.\
-                          format(becauseText[self.user.GUI_lang_index],    candidAspect[lh_name_col],\
-                                 candidAspect[rel_type_name_col], candidAspect[rh_name_col],\
-                                 candidAspect[uom_name_col]))
-                    first = False
-                else:
-                    print('    {} <{}> <{}> <{}> <{}>'.\
-                          format(andText[self.user.GUI_lang_index],candidAspect[lh_name_col],\
-                                 candidAspect[rel_type_name_col],candidAspect[rh_name_col],\
-                                 candidAspect[uom_name_col]))
-        else:
-            denial  = ['No, the condition is not satisfied that','Nee, er is niet voldaan aan de voorwaarde dat']
-            print('    {}: {} {} {}'.\
-                  format(denial[self.user.GUI_lang_index],expr[lh_name_col],condit[3],condit[5]))
-            if candid_obj not in self.Gel_net.ex_candids:
-                self.Gel_net.ex_candids.append(candid_obj)
-        if len(self.answer_expressions) == 0:
-            print('\n  {}'.format(nothing_satisfies[self.user.GUI_lang_index]))
-
-    #-------------------------------------------------------------------------------
-    def Verify_model(self):
-        """ Build the model of an individual thing
-            that is specified in a classification relation (of a query)
-            and verify that model against the requirements about the kind.
-        """
-
-        shallUID = 5735
-        subtypesOfShall, subShallUIDs = self.Gel_net.DetermineSubtypeList(shallUID)
-        for obj in self.objects_in_focus:
-            print('Verify model of %s on requirements about %s' % (nameInF, self.kindName))
-            for obj_rel in obj.relations:
-                expr = obj_rel.expression
-                if expr[rel_type_uid_col] in subtypesOfShall:
-                    lh  = expr[lh_name_col]
-                    rel = expr[rel_type_name_col]
-                    rh  = expr[rh_name_col]
-                    #print('\n* Requirement for {}: {} <{}> {}'.format(nameInF,lh,rel,rh))
-# Transform and search for satisfaction in query_table
-# To be written
 
 #-------------------------------------------------------------
 if __name__ == "__main__":
     from DatabaseAPI import Database
-    from SystemUsers import Language
     from SystemUsers import User
     
 ##    # Connect to an existing database
@@ -3820,9 +2765,8 @@ if __name__ == "__main__":
     
     # Choose GUI language and formal language
     formal_language = "English"
-    Gellish  = Language(formal_language)
     user = User('Andries')
-    user.GUI_lang_name = "English"
+    network.GUI_lang_name = "English"
 
     # Create a naming dictionary
     dict_name = 'Gellish Multilingual Taxonomic Dictionary'

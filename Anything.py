@@ -1,6 +1,6 @@
 from Bootstrapping import *
 from Expr_Table_Def import *
-from Expression_list import *
+#from Expression_list import *
 from tkinter import filedialog
 from tkinter import *
 from tkinter.ttk import *
@@ -188,7 +188,6 @@ class Relation(Anything):
 if __name__ == "__main__":   
     import TestData.TestDBcontent as Exprs
     
-    lang = Language("English")
     GUI = GUI_Language("English")
     net_name = 'Semantic network'
     Gel_net = Semantic_Network(net_name)

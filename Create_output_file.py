@@ -164,3 +164,9 @@ def Convert_numeric_to_integer(numeric_text):
             integer = False
             return numeric_text, integer
     return int_val, integer
+
+def Message(GUI_lang_index, mess_text_EN, mess_text_NL):
+    if GUI_lang_index == 1:
+        print(mess_text_NL)
+    else:
+        print(mess_text_EN)

@@ -7,11 +7,13 @@ import pickle
 from tkinter import *
 from tkinter.ttk import *
 from SystemUsers import System, User
-from GUI_views import Main_view, Query_view, Display_views
+from MainView import Main_view
 from Expression_list import Expression_list
 from DatabaseAPI import Database
 from GellishDict import GellishDict
-from SemanticNetwork import Semantic_Network, Query
+from SemanticNetwork import Semantic_Network
+from QueryModule import Query
+from QueryViews import Query_view
 from Bootstrapping import *
 
 #-------------------------------------------------
@@ -21,7 +23,7 @@ class Main():
         self.db_opened = False
         self.net_name  = "Gellish semantic network"
         self.db_name   = "GellishDB"
-        self.file_name = "Gel_net_db"
+        self.file_name = "Gellish_net_db"
         self.query_spec = []
 
         self.use_GUI = False
@@ -36,6 +38,22 @@ class Main():
         sesam = self.user.Providing_Access(party, system)
         if sesam == False:
             exit(0)
+
+    def Start_net(self):
+        self.GUI_lang_names = ("English", "Nederlands")
+        self.lang_uid_dict  = {"English": '910036', "Nederlands": '910037'}
+
+        # Import Gel_net semantic network from Pickle or create new network from files
+        self.Load_net()
+        if not self.Gel_net_open:
+            # Initialize a Semantic Network with a given name
+            self.Create_net()
+
+        # Initialized expression list
+        self.exprs = Expression_list(main.Gel_net)
+
+        # Set GUI language default = Dutch: GUI_lang_names[1]
+        self.Gel_net.Set_GUI_Language(self.GUI_lang_names[0])
     
     def Create_net(self):
         # Create (c) means create a new network and a new database from files
@@ -58,6 +76,7 @@ class Main():
     def Dump_net(self):
         # Dump semantic network as pickle binary file.
         self.Gel_net.Pickle_Dump(self.file_name)
+        #self.Pickle_Dump(self.file_name)
         print("Network '{}' is saved in file {}.".format(self.net_name, self.file_name))
 
     def Load_net(self):
@@ -65,6 +84,20 @@ class Main():
         self.Pickle_Load(self.file_name)
         print("Network '{}' is loaded.".format(self.file_name))
         self.net_built = True
+
+    def Pickle_Load(self, fname):
+        self.Gel_net_open = False
+        try:
+            f = open(fname, "br")
+            try:
+                self.Gel_net = pickle.load(f)
+                #self = pickle.load(f)
+                self.Gel_net_open = True
+            except EOFError:
+                pass
+            f.close()
+        except FileNotFoundError:
+            pass
 
     def Read_db(self):
 ##        self.Verify_presence_db_and_net()
@@ -95,7 +128,7 @@ class Main():
             # Network is based on database with filename db_name
             self.Gel_net.db_name = self.db_name
             # Build a new network from files
-            Gel_net.Create_base_reltype_objects()
+            self.Gel_net.Create_base_reltype_objects()
             self.exprs.Build_new_network(self.Gel_net) #, self.Gel_db)
             self.net_built = True
         if self.net_built == False:
@@ -135,16 +168,7 @@ class Main():
             db_connect = sqlite3.connect("%s.db3"% db_name)
         self.db_cursor  = db_connect.cursor()
 
-    #-------------------------------------  
-    def Pickle_Load(self, fname):
-            f = open(fname, "br")
-            try:
-                self.Gel_net = pickle.load(f)
-            except EOFError:
-                pass
-            f.close()
-    #-----------------------------------------------------------------
-        
+    #-----------------------------------------------------------------        
     def Create_new_database(self):
         '''Create new database and load database with a language definition
            and build a semantic network.
@@ -189,7 +213,8 @@ sys.setrecursionlimit(100000)
 system = System()
 main = Main()
 main.Start_up(system)
-main.exprs = Expression_list(main.user)
+main.Start_net()
+#Expression_list(main.Gel_net)
 
 if main.use_GUI:
     main.root = Tk()
@@ -201,7 +226,9 @@ else:
     \n  Modify existing db (m) \n  Verify user table  (v) \n  Query existing db  (q) \
     \n  Dump network db    (d) \n  Load network db    (l) \n  Stop and Exit      (s): ")
     while action != "s":
-        if action == 'c': main.Create_net()
+        if action == 'c':
+            main.Gel_net = Semantic_Network(self.net_name, self.user)
+            main.Create_net()
         if action == 'r': main.Read_db()
         if action == 'm': main.Modify_db()
         if action == 'v': main.Verify_table()
