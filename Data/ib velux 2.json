@@ -1,0 +1,157 @@
+{
+   "ibCode":2609783,
+   "matchCode":null,
+   "parentIbCode":null,
+   "articleId":"GPU P06 0073G",
+   "description":"Velux Dakvenster aluminium veiligheidsglas 94x118 cm GPU P06 0073G",
+   "extendedInfo":"Onbelemmerd uitzicht dankzij de scharnierpunten aan de bovenzijde en grote, traploze openingshoek van 45° ten opzichte van de dakhelling. Houten kern (100% PEFC gecertificeerd) met daaromheen een naadloze onderhoudsarme, wit afgelakte coating. Standaard voorzien van zelfreinigende HR++ veiligheidsbeglazing. Toe te passen bij dakhelling tussen de 15° - 55°.\n\nHR++ zelfreinigende veiligheidsbeglazing",
+   "availability":"92E",
+   "modified":"2017-04-05T18:20:58+0200",
+   "supplier":{
+      "id":"velux",
+      "name":"Velux Nederland B.V.",
+      "modified":"2017-06-13T12:19:32+0200",
+      "lastArticleUpdate":"2017-06-12T13:50:53+0200",
+      "href":"https://croonwolterendros.ib.nl/api/bulk/v1/companies/velux"
+   },
+   "manufacturer":{
+      "id":"velux",
+      "name":"Velux Nederland B.V.",
+      "modified":"2017-06-13T12:19:32+0200",
+      "lastArticleUpdate":"2017-06-12T13:50:53+0200",
+      "href":"https://croonwolterendros.ib.nl/api/bulk/v1/companies/velux"
+   },
+   "units":[
+      {
+         "unitLabel":"1 st",
+         "eanCode":5702321490076,
+         "unitAmount":1,
+         "packageName":"st",
+         "unitName":"st",
+         "orderable":true
+      }
+   ],
+   "images":[
+      {
+         "fileName":"GPL_GPU_100582-01.jpg",
+         "mimeType":"image/jpeg",
+         "fileSize":4046672,
+         "width":3072,
+         "height":2304,
+         "download":"https://www.ib.nl/_api/download/image/i1wkcm/gpn?apikey=5bbd2ed93e1c8a6a5802",
+         "thumb":"https://www.ib.nl/media/cache/resolve/search_thumb_list/article_files/1e9f76d7-7c71-4766-b32b-d5ed7504ae49/GPL_GPU_100582-01.jpg",
+         "summary":null
+      },
+      {
+         "fileName":"GPU_106055.jpg",
+         "mimeType":"image/jpeg",
+         "fileSize":17087290,
+         "width":2304,
+         "height":3072,
+         "download":"https://www.ib.nl/_api/download/image/i1wkcm/gpo?apikey=5bbd2ed93e1c8a6a5802",
+         "thumb":"https://www.ib.nl/media/cache/resolve/search_thumb_list/article_files/1e9f76d7-7c71-4766-b32b-d5ed7504ae49/GPU_106055.jpg",
+         "summary":null
+      }
+   ],
+   "documents":[
+
+   ],
+   "properties":{
+      "urlFabrikant":{
+         "label":"URL fabrikant",
+         "name":"url_fabrikant",
+         "value":"http://www.velux.nl/"
+      },
+      "urlPrestatieverklaring":{
+         "label":"URL Prestatieverklaring (DoP)",
+         "name":"url_prestatieverklaring",
+         "value":"http://www.velux.nl/particulieren/producten/dakramen/ce_markering"
+      },
+      "fabrikant":{
+         "label":"Merk",
+         "name":"fabrikant",
+         "value":"Velux"
+      },
+      "artikelgroep":{
+         "label":"Artikelgroep",
+         "name":"artikelgroep",
+         "value":"Dakramen"
+      },
+      "ibProductnaam":{
+         "label":"Productnaam",
+         "name":"ib_productnaam",
+         "value":"Dakvenster aluminium veiligheidsglas"
+      },
+      "ibType1":{
+         "label":"Type 1",
+         "name":"ib_type_1",
+         "value":"GPU"
+      },
+      "kortingsgroep":{
+         "label":"Kortingsgroep",
+         "name":"kortingsgroep",
+         "value":"Productgroep 1"
+      },
+      "ibHoofdgroepProduct":{
+         "label":"Hoofdgroep product",
+         "name":"ib_hoofdgroep_product",
+         "value":"Kozijnen / Ramen / Deuren"
+      },
+      "ibProductsoort":{
+         "label":"Productsoort",
+         "name":"ib_productsoort",
+         "value":"Dakramen|Ramen"
+      },
+      "uitgebreideToelichting1":{
+         "label":"Uitgebreide toelichting 1",
+         "name":"uitgebreide_toelichting_1",
+         "value":"Onbelemmerd uitzicht dankzij de scharnierpunten aan de bovenzijde en grote, traploze openingshoek van 45° ten opzichte van de dakhelling. Houten kern (100% PEFC gecertificeerd) met daaromheen een naadloze onderhoudsarme, wit afgelakte coating. Standaard voorzien van zelfreinigende HR++ veiligheidsbeglazing. Toe te passen bij dakhelling tussen de 15° - 55°."
+      },
+      "uitgebreideToelichting2":{
+         "label":"Uitgebreide toelichting 2",
+         "name":"uitgebreide_toelichting_2",
+         "value":"HR++ zelfreinigende veiligheidsbeglazing"
+      },
+      "breedteMm":{
+         "label":"Breedte (mm)",
+         "name":"breedte_mm",
+         "value":"940",
+         "unit":"mm"
+      },
+      "hoogteMm":{
+         "label":"Hoogte (mm)",
+         "name":"hoogte_mm",
+         "value":"1180",
+         "unit":"mm"
+      },
+      "afmeting":{
+         "label":"Afmeting",
+         "name":"afmeting",
+         "value":"94x118 cm"
+      },
+      "gewichtKg":{
+         "label":"Gewicht (kg)",
+         "name":"gewicht_kg",
+         "value":"56,23",
+         "unit":"kg"
+      },
+      "gewichtEenheid":{
+         "label":"Gewicht eenheid",
+         "name":"gewicht_eenheid",
+         "value":"st"
+      },
+      "kleurcode":{
+         "label":"Kleurcode",
+         "name":"kleurcode",
+         "value":"0073G"
+      }
+   },
+   "availability_label":"Vervallen",
+   "prices":[
+
+   ],
+   "id":"pvHaiBDrm0BcgWLXgzIlLVQQ1VHcfZVEGJFCjAsreHSuz6GXyG32q6IWZXOt22rbb8sKc2eD_dHsp8kGxjCjs-qIrAOrQninYgZFpbzowA3OWW5QlA1686r59tygJkuKe",
+   "siteLink":"https://croonwolterendros.ib.nl/article/i1wkcm_velux_dakvenster_aluminium_veiligheidsglas_94x118_cm_gpu_p06_0073g",
+   "href":"https://croonwolterendros.ib.nl/api/bulk/v1/companies/velux/articles/pvHaiBDrm0BcgWLXgzIlLVQQ1VHcfZVEGJFCjAsreHSuz6GXyG32q6IWZXOt22rbb8sKc2eD_dHsp8kGxjCjs-qIrAOrQninYgZFpbzowA3OWW5QlA1686r59tygJkuKe",
+   "parent":null
+}
