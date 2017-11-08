@@ -1,30 +1,31 @@
 # Base ontology and domain dictionaries directories
-dict_dirs = ["../GellishData"]
+dict_dirs = ["../GellishDictionary"]
 
 # Base ontology file
 base_onto_file_name = "Formal language definition base-UTF-8.csv"
 
 # Taxonomic Dictionary files
-dict_file_names = [
-##                   "extended language definition-UTF-8.csv",\
+dict_file_names = ["extended language definition-UTF-8.csv",\
                    "units of measures & currencies-UTF-8.csv",\
-##                   "units of measures - Special symbols-UTF-8.csv",\
-##                   "aspects & properties & qualities & laws-UTF-8.csv",\
-##                   "information & documents & rules & identification & symbols.csv",\
-##                   "qualitative aspects & qualitative information.csv",\
-##                   "activities & events & processes.csv",\
-##                   "buildings & civil & infrastructure & furniture-UTF-8.csv",\
-##                   "biology & biochemistry & agriculture.csv",\
-##                   "electrical & instrumentation & control & IT-UTF-8.csv",\
-##                   "facilities & static eq & process units & piping & protection & connection.csv",\
-##                   "Chinese - fasteners-UTF-8.csv",\
-##                   "geography & countries & businesses & persons & organizations.csv",\
-##                   "mathematics & shapes.csv",\
-##                   "roles of aspects.csv",\
-##                   "roles of physical objects.csv",\
-##                   "rotating equipment & transport & solids handling.csv",\
-##                   "substances & materials of construction, fluids and solids.csv",\
-##                   "colors - RAL codes and names - multilingual.csv",\
+                   "units of measures - Special symbols-UTF-8.csv",\
+                   "aspects & properties & qualities & laws-UTF-8.csv",\
+##                   "information & documents & rules & identification & symbols-UTF-8.csv",\
+##                   "qualitative aspects & qualitative information-UTF-8.csv",\
+##                   "activities & events & processes-UTF-8.csv",\
+                   "buildings & civil & infrastructure & furniture-UTF-8.csv",\
+##                   "biology & biochemistry & agriculture-UTF-8.csv",\
+                   "electrical & instrumentation & control & IT-UTF-8.csv",\
+                   "facilities & static eq & process units & piping & protection & connection-UTF-8.csv",\
+                   "Chinese - fasteners-UTF-8.csv",\
+##                   "geography & countries & businesses & persons & organizations-UTF-8.csv",\
+##                   "mathematics & shapes-UTF-8.csv",\
+##                   "roles of aspects-UTF-8.csv",\
+##                   "roles of physical objects-UTF-8.csv",\
+##                   "rotating equipment & transport & solids handling-UTF-8.csv",\
+##                   "substances & materials of construction, fluids and solids-UTF-8.csv",\
+##                   "colors - RAL codes and names - multilingual-UTF-8.csv",\
+                   "RDF, RDFS, OWL concepts-UTF-8.csv",\
+                   "EN 16323-2010 - Multi lingual Glossary of wastewater terms-UTF-8.csv"
                    ]
 
 # Knowledge, Requirements and Product type file paths
@@ -36,10 +37,10 @@ model_file_names = ["Kennisboek WEGEN - v5-UTF-8.csv"]
 # Product & Processes Models file paths
 #prod_dirs  = ["EN models", "Product and process models",]
 prod_dirs  = ["NL modellen", "Product en procesmodellen",]
-prod_file_names = [] #["Semantisch model van een wegennet-UTF-8.csv"]
+prod_file_names = [] #["Semantisch model van een WEG - v5.2.csv"]
 
 # Default output path name
-ini_out_path = r"../GellishData"
+ini_out_path = r"C:\Users\Andries\CloudStation\Gellish Software\Gellish Model Server\NL modellen"
 
 # Bootstrapping phrases and UIDs
 boot_base_phrasesEN    = ["is a kind of", "is a specialization of",\
@@ -98,6 +99,7 @@ physObjUID       = '730044'  # physical object
 infoUID          = '970002'  # information
 informativeUID   = '4173'    # role of informative qualitative information about an individual thing
 occurrenceUID    = '193671'  #
+concComposUID    = '1261'    # conceptual composition relation
 concComponUID    = '3829'    # conceptual component role
 involvedUID      = '4546'    # 4546 = <involved> being a second role in an <involvement in an occurrence> relation
 nextUID          = '5333'    # 5333 next element (role)

@@ -75,7 +75,8 @@ class Main_view():
         # Define header row with language selector
         lang_text = ['Language:', 'Taal:']
         self.lang_label   = Label(self.main_frame, text=lang_text[self.lang_index], width=10)
-        self.lang_default = StringVar(value=self.GUI_lang_names[0])
+        # Set default language: GUI_lang_names[0] = English, [1] = Nederlands
+        self.lang_default = StringVar(value=self.GUI_lang_names[1])
         self.lang_box     = ttk.Combobox(self.main_frame, textvariable=self.lang_default,\
                                          values=self.GUI_lang_names, width=10)
         self.lang_label.grid(column=0, row=0, sticky=NW)

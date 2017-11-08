@@ -373,36 +373,38 @@ class Display_views():
         parents = []
         for possib_line in self.possibilities_model:
             if possib_line[2] == '' or possib_line[2] in parents:
-                print('Possib_line', possib_line)
-                self.possib_tree.insert(possib_line[2],index='end',values=possib_line,tags='sumTag',iid=possib_line[1],\
-                                      text=possib_line[1], open=True)  # possib_line[2] is the whole
+                #print('Possib_line', possib_line)
+                self.possib_tree.insert(possib_line[2], index='end', values=possib_line,\
+                                        tags='sumTag' , iid=possib_line[1],\
+                                        text=possib_line[1], open=True)  # possib_line[2] is the whole
                 parents.append(possib_line[1])
 
     def Define_possibilities_sheet(self):
         ''' Define a possibilities_sheet for display of possibilities_model (a list of possib_rows)
             for display in a tab of Notebook
         '''
-        self.possib_frame  = Frame(self.views_noteb)
-        self.possib_frame.grid (column=0, row=0,sticky=NSEW, rowspan=2) #pack(fill=BOTH, expand=1)  
+        self.possib_frame = Frame(self.views_noteb)
+        self.possib_frame.grid(column=0, row=0, sticky=NSEW, rowspan=2) #pack(fill=BOTH, expand=1)  
         self.possib_frame.columnconfigure(0, weight=1)
-        self.possib_frame.rowconfigure(0,weight=0)
-        self.possib_frame.rowconfigure(1,weight=1)
+        self.possib_frame.rowconfigure(0, weight=0)
+        self.possib_frame.rowconfigure(1, weight=1)
         
         possib_text = ['Possibilities','Mogelijkheden']
         self.views_noteb.add(self.possib_frame, text=possib_text[self.lang_index], sticky=NSEW)
         self.views_noteb.insert("end", self.possib_frame, sticky=NSEW)
 
-        possib_head  = ['Possible aspects per object of a particular kind','Mogelijke aspecten per object van een bepaalde soort']
+        possib_head  = ['Possible aspects per object of a particular kind',\
+                        'Mogelijke aspecten per object van een bepaalde soort']
         possib_label = Label(self.possib_frame,text=possib_head[self.lang_index])
-        headings = ['UID','Name','Parent','Kind','Community','Aspect1','Aspect2','Aspect3','Aspect4','Aspect5'  ,\
-                                 'Aspect6','Aspect7','Aspect8','Aspect9','Aspect10']
+        headings = ['UID','Name','Parent','Kind','Community','Aspect1','Aspect2','Aspect3','Aspect4',\
+                    'Aspect5'   ,'Aspect6','Aspect7','Aspect8','Aspect9','Aspect10']
         nr_of_cols = len(self.possib_column_names)
         display_cols = headings[3:nr_of_cols]
 ##        self.possib_tree = Treeview(self.possib_frame,columns=('Community','Aspect1','Aspect2','Aspect3','Aspect4'  ,\
 ##                                                     'Aspect5'  ,'Aspect6','Aspect7','Aspect8','Aspect9','Aspect10'),\
 ##                                  displaycolumns='#all', selectmode='browse', height=30)
-        self.possib_tree = Treeview(self.possib_frame,columns=(headings[0:nr_of_cols]),\
-                                  displaycolumns=display_cols, selectmode='browse', height=30)
+        self.possib_tree = Treeview(self.possib_frame, columns=(headings[0:nr_of_cols]),\
+                                    displaycolumns=display_cols, selectmode='browse', height=30)
                         
         self.possib_tree.heading('UID'       ,text='UID'      , anchor=W)
         self.possib_tree.heading('Name'      ,text='Name'     , anchor=W)

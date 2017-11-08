@@ -58,27 +58,27 @@ class Expression_list:
         self.files_read  = []
         self.interpreted_lines = []
 
-    def Build_new_network(self, Gel_net): #, Gel_db):
+    def Build_new_network(self): #, Gel_db):
         ''' Build network from files as specified in Bootstrapping.py:
             First read a base ontology from a file 
             Then read UoMs and other dictionary files, knowledge files and model files
         '''
-        self.Import_Base_Ontology(Gel_net) #, Gel_db)
-        #Gel_net.Create_base_reltype_objects()
-        Gel_net.Build_Base_Semantic_Network() #Gel_db.db_cursor) # incl. collecting rel_type_uids for validation
+        self.Import_Base_Ontology() #, Gel_db)
+        #self.Gel_net.Create_base_reltype_objects()
+        self.Gel_net.Build_Base_Semantic_Network() #Gel_db.db_cursor) # incl. collecting rel_type_uids for validation
         
         # Import domain dictionaries in db from files (specified in Bootstrapping)
-        self.Import_Model_Files(dict_file_names, dict_dirs, Gel_net) #, Gel_db)
+        self.Import_Model_Files(dict_file_names, dict_dirs) #, Gel_db)
         
         # Import product and process models in db from files (specified in Bootstrapping)
         # and extend the network with domain dictionaries and product models (if any)
         if len(prod_file_names) > 0:
-            self.Import_Model_Files(prod_file_names, prod_dirs, Gel_net) #, Gel_db)
-##        Gel_net.Extent_Semantic_Network() #Gel_db.db_cursor)
+            self.Import_Model_Files(prod_file_names, prod_dirs) #, Gel_db)
+##        self.Gel_net.Extent_Semantic_Network() #Gel_db.db_cursor)
 
-        Gel_net.Verify_network()
+        self.Gel_net.Verify_network()
 
-    def Import_Base_Ontology(self, Gel_net): #, Gel_db):
+    def Import_Base_Ontology(self): #, Gel_db):
         ''' Read a base ontology CSV file and
             import its content in the base_ontology table of the database.
             The base_onto_path is specified in the bootstrapping module.
@@ -93,12 +93,12 @@ class Expression_list:
         #print('Ontology path:', onto_path)
         
         # Create file object
-        file = Gellish_file(onto_path, Gel_net)
+        file = Gellish_file(onto_path, self.Gel_net)
         
-        self.Import_Gellish_from_file(file, Gel_net) #, Gel_db)
+        self.Import_Gellish_from_file(file) #, Gel_db)
         #print('Imported: base ontology')
 
-    def Import_Model_Files(self, file_names, model_dirs, Gel_net): #, Gel_db): # model_path
+    def Import_Model_Files(self, file_names, model_dirs): #, Gel_db): # model_path
         ''' Read models in CSV file(s) as specified in the bootstrapping module
             and import their content in the appropriate database table.
         '''
@@ -114,31 +114,31 @@ class Expression_list:
                 path_and_name.append(dir)
             path_and_name.append(file_name)
             model_path = os.path.join(*path_and_name)
-            file = Gellish_file(model_path, Gel_net)
+            file = Gellish_file(model_path, self.Gel_net)
             #print('Model file: ', file.path_and_name)
             model_files.append(file)
 
         # Read model files and import their content in the applicable table(s)
         for file in model_files:
-            self.Import_Gellish_from_file(file, Gel_net) #, Gel_db)
+            self.Import_Gellish_from_file(file) #, Gel_db)
 
-    def Read_verify_and_merge_files(self, Gel_net):
+    def Read_verify_and_merge_files(self):
         # Read one or more files, verify their content
 ##        # and load them in the various tables in :memory: database
         # and combine them with the semantic network
-##        if Gel_net.db_name != ":memory:":
+##        if self.Gel_net.db_name != ":memory:":
 ##            self.Gel_db = Database(":memory:")   # create an in-memory database
 ##            self.Gel_db.Create_tables()          # create empty tables
 ##            self.db_cursor = self.Gel_db.db_cursor
 ##            #print("Database: %s created." % (self.Gel_db.name))
-        self.Combine_Files_with_Network(Gel_net) #, self.Gel_db)
+        self.Combine_Files_with_Network() #, self.Gel_db)
         addition = 'n'  # 'y' means option for importing more input files
         while addition == 'y':
             addition = input("More import files? (y/n):")
             if addition == 'y':
-                self.Combine_Files_with_Network(Gel_net) #, self.Gel_db)
+                self.Combine_Files_with_Network() #, self.Gel_db)
 
-    def Combine_Files_with_Network(self, Gel_net): #, Gel_db):
+    def Combine_Files_with_Network(self): #, Gel_db):
         """Select one or more Gellish files in a dialog and import files into the database tables,
         after syntactic verification, but without consistency verification.
         """
@@ -147,7 +147,7 @@ class Expression_list:
                                                              ("All files","*.*")], title="Select file")
         #print('Selected file(s):',modelFiles)
         if file_path_names == '':
-            Message(Gel_net.GUI_lang_index, \
+            Message(self.Gel_net.GUI_lang_index, \
                 '\nThe file name is blank or the inclusion is cancelled. There is no file read.',\
                 '\nDe file naam is blanco of het inlezen is gecancelled. Er is geen file ingelezen.')
             return
@@ -157,30 +157,30 @@ class Expression_list:
             # Split file_path_and_name in file path and file name
             path_name = file_path_and_name.rsplit('/', maxsplit=1)
             if len(path_name) == 2:
-                Message(Gel_net.GUI_lang_index, \
+                Message(self.Gel_net.GUI_lang_index, \
                         '\nReading file <{}> from directory {}.'.format(path_name[1], path_name[0]),\
                         '\nLees file <{}> van directory {}.'.format(path_name[1], path_name[0]))
                 file_name = path_name[1]
                 file_path = path_name[0]
             else:
-                Message(Gel_net.GUI_lang_index, \
+                Message(self.Gel_net.GUI_lang_index, \
                         '\nReading file <{}> from current directory.'.format(file_path_and_name),\
                         '\nLees file <{}> van actuele directory.'.format(file_path_and_name))
                 file_name = file_path_and_name
                 file_path = ''
                 
             # Create file object
-            file = Gellish_file(file_path_and_name, Gel_net)
+            file = Gellish_file(file_path_and_name, self.Gel_net)
 
             # Import expressions from file
-            self.Import_Gellish_from_file(file, Gel_net) #, Gel_db)
+            self.Import_Gellish_from_file(file) #, Gel_db)
             self.files_read.append(file)
                 
-##            Message(Gel_net.GUI_lang_index, \
+##            Message(self.Gel_net.GUI_lang_index, \
 ##                    '\nRead file   : %s is added to list of read files.'              % (file.path_and_name),\
 ##                    '\nGelezen file: %s is toegevoegd aan lijst van gelezen files.\n' % (file.path_and_name))
 
-    def Import_Gellish_from_file(self, file, Gel_net): #, Gel_db):
+    def Import_Gellish_from_file(self, file): #, Gel_db):
         """ Read file file_name in a Gellish Expression Format.
         Rearrange the expressions,
         Verify the quality and
@@ -190,7 +190,8 @@ class Expression_list:
         try:
             f = open(file.path_and_name, "r", encoding="utf-8")
         except IOError:
-            Message(Gel_net.GUI_lang_index, \
+            self.Gel_net.GUI_lang_index = 1
+            Message(self.Gel_net.GUI_lang_index, \
                     "File '%s' does not exist or is not readable." % (file.name), \
                     "File '%s' bestaat niet of is niet leesbaar."  % (file.name))
             sys.exit()
@@ -223,7 +224,7 @@ class Expression_list:
         # Read first line and determine whether it is a Gellish file or not
         #print('Header line:', self.header)
         if self.header[0] != "Gellish":
-            Message(Gel_net.GUI_lang_index, \
+            Message(self.Gel_net.GUI_lang_index, \
                     "File {} is not in Gellish expression format, \
 bacause the first field has not as content 'Gellish'.".format(file.name), \
                     "File {} is niet in Gellish expressie formaat, \
@@ -231,7 +232,7 @@ want het eerste veld heeft niet als inhoud 'Gellish'.".format(file.name))
             if file.extension == 'json':
                 self.Interpret_non_gellish_JSON_file()
         else:
-            self.Import_expressions_from_Gellish_file(file, Gel_net) #, Gel_db)
+            self.Import_expressions_from_Gellish_file(file) #, Gel_db)
 
     def Interpret_non_gellish_JSON_file(self):
         ''' Read a non-Gellish JSON file and convert it into a Gellish file
@@ -362,7 +363,7 @@ want het eerste veld heeft niet als inhoud 'Gellish'.".format(file.name))
         serialization = 'csv'
         Open_output_file(self.gel_expressions, subject_name[lang_index], lang_name, serialization)
 
-    def Import_expressions_from_Gellish_file(self, file, Gel_net): #, Gel_db):
+    def Import_expressions_from_Gellish_file(self, file): #, Gel_db):
         file.lang_ind = 0 # Default: 'English'
         
         # Initialize expressions table
@@ -417,30 +418,30 @@ want het eerste veld heeft niet als inhoud 'Gellish'.".format(file.name))
             return
 
         # Create language object if not yet existing
-        if file.lang_uid not in Gel_net.lang_uid_dict:
+        if file.lang_uid not in self.Gel_net.lang_uid_dict:
             lang = Anything(file.lang_uid, file.lang_name)
-            Gel_net.languages.append(lang)
-            Gel_net.lang_uid_dict[file.lang_uid] = file.lang_name
+            self.Gel_net.languages.append(lang)
+            self.Gel_net.lang_uid_dict[file.lang_uid] = file.lang_name
 
         # Determine the UID ranges for new objects and relations in this file
         if len(self.header) > 10:
-            Gel_net.unknown_obj_uid     = self.UID_range_limit(self.header[7] , 100)
-            Gel_net.upper_obj_range_uid = self.UID_range_limit(self.header[8] , 499)
-            Gel_net.unknown_rel_uid     = self.UID_range_limit(self.header[9] , 500)
-            Gel_net.upper_rel_range_uid = self.UID_range_limit(self.header[10], 999)
+            self.Gel_net.unknown_obj_uid     = self.UID_range_limit(self.header[7] , 100)
+            self.Gel_net.upper_obj_range_uid = self.UID_range_limit(self.header[8] , 499)
+            self.Gel_net.unknown_rel_uid     = self.UID_range_limit(self.header[9] , 500)
+            self.Gel_net.upper_rel_range_uid = self.UID_range_limit(self.header[10], 999)
             
-            if Gel_net.upper_obj_range_uid <= Gel_net.unknown_obj_uid or\
-               Gel_net.unknown_rel_uid     <= Gel_net.upper_obj_range_uid or\
-               Gel_net.upper_rel_range_uid <= Gel_net.unknown_rel_uid :
+            if self.Gel_net.upper_obj_range_uid <= self.Gel_net.unknown_obj_uid or\
+               self.Gel_net.unknown_rel_uid     <= self.Gel_net.upper_obj_range_uid or\
+               self.Gel_net.upper_rel_range_uid <= self.Gel_net.unknown_rel_uid :
                 print('Object range UIDs not in proper position or sequence')
             print('Obj_range_UIDs: {}, {}; Rel_range_UIDs: {} {}'.\
-                  format(Gel_net.unknown_obj_uid, Gel_net.upper_obj_range_uid, \
-                         Gel_net.unknown_rel_uid, Gel_net.upper_rel_range_uid))
+                  format(self.Gel_net.unknown_obj_uid, self.Gel_net.upper_obj_range_uid, \
+                         self.Gel_net.unknown_rel_uid, self.Gel_net.upper_rel_range_uid))
         else:
-            Gel_net.unknown_obj_uid     = 100
-            Gel_net.upper_obj_range_uid = 499
-            Gel_net.unknown_rel_uid     = 500
-            Gel_net.upper_rel_range_uid = 999
+            self.Gel_net.unknown_obj_uid     = 100
+            self.Gel_net.upper_obj_range_uid = 499
+            self.Gel_net.unknown_rel_uid     = 500
+            self.Gel_net.upper_rel_range_uid = 999
         
         # Read 2nd line ==== with field codes and convert them to integers
         row2 = next(self.reader)
@@ -496,12 +497,12 @@ want het eerste veld heeft niet als inhoud 'Gellish'.".format(file.name))
                     #print('Col nr of alt_name', lang_name_col_id[source_id])
                     
                     # If language uid not in uid_dict then create language object
-                    if str_id not in Gel_net.uid_dict:
-                        lang = Anything(str_id, Gel_net.lang_dict_EN[str_id])
+                    if str_id not in self.Gel_net.uid_dict:
+                        lang = Anything(str_id, self.Gel_net.lang_dict_EN[str_id])
                         lang.defined = False
-                        Gel_net.objects.append(lang)
-                        Gel_net.uid_dict[lang.uid] = lang.name
-                        Gel_net.lang_uid_dict[lang.uid] = lang.name
+                        self.Gel_net.objects.append(lang)
+                        self.Gel_net.uid_dict[lang.uid] = lang.name
+                        self.Gel_net.lang_uid_dict[lang.uid] = lang.name
                 elif source_id >= 1910036 and source_id < 1912000:
                     lang_descr_col_id[source_id] = source_ids.index(source_id)
                 else:
@@ -543,23 +544,23 @@ want het eerste veld heeft niet als inhoud 'Gellish'.".format(file.name))
 
             # Verify existence and uniqueness of idea_uid
             if idea_uid == '':
-                Gel_net.unknown_rel_uid += 1
-                if str(Gel_net.unknown_rel_uid) not in Gel_net.idea_uids and \
-                   Gel_net.unknown_rel_uid <= Gel_net.upper_rel_range_uid:
-                    idea_uid = str(Gel_net.unknown_rel_uid)
+                self.Gel_net.unknown_rel_uid += 1
+                if str(self.Gel_net.unknown_rel_uid) not in self.Gel_net.idea_uids and \
+                   self.Gel_net.unknown_rel_uid <= self.Gel_net.upper_rel_range_uid:
+                    idea_uid = str(self.Gel_net.unknown_rel_uid)
                     db_row[idea_uid_col] = idea_uid
-                    Gel_net.idea_uids.append(idea_uid)
+                    self.Gel_net.idea_uids.append(idea_uid)
                     #print('Idea_uid {} added'.format(idea_uid))
                 else:
-                    print('UID {} already used in network'.format(Gel_net.unknown_rel_uid))
-            elif idea_uid not in Gel_net.idea_uids:
-                    Gel_net.idea_uids.append(idea_uid)
+                    print('UID {} already used in network'.format(self.Gel_net.unknown_rel_uid))
+            elif idea_uid not in self.Gel_net.idea_uids:
+                    self.Gel_net.idea_uids.append(idea_uid)
             else:
                 print('Error: Duplicate idea UID {}. Latter idea ignored.'.format(idea_uid))
                 continue
 
             # VERIFY input row values, amend where applicable
-            correct, db_row = self.Verify_row(file, db_row, Gel_net)
+            correct, db_row = self.Verify_row(file, db_row)
 
             names_and_descriptions = []
             if correct:
@@ -568,19 +569,19 @@ want het eerste veld heeft niet als inhoud 'Gellish'.".format(file.name))
                 #print('Col_ids',lang_name_col_id)
                 for col_id in lang_name_col_id:
                     # Only for rows with a specialization and alias relation
-                    if (db_row[rel_type_uid_col] in Gel_net.specialRelUIDs or \
-                        db_row[rel_type_uid_col] in Gel_net.alias_uids):
+                    if (db_row[rel_type_uid_col] in self.Gel_net.specialRelUIDs or \
+                        db_row[rel_type_uid_col] in self.Gel_net.alias_uids):
                         # Check whether column value (name of object) is not blank,
                         # then include name_in_context in the dictionary (if not yet present)
                         if in_row[lang_name_col_id[col_id]] != '':
-                            if db_row[rel_type_uid_col] in Gel_net.alias_uids:
+                            if db_row[rel_type_uid_col] in self.Gel_net.alias_uids:
                                 naming_uid = db_row[rel_type_uid_col]
                                 
                                 # Collect base_phrase or inverse_phrase of additional language column
                                 if db_row[rel_type_uid_col] == '6066':
-                                    Gel_net.base_phrases.append(in_row[lang_name_col_id[col_id]])
+                                    self.Gel_net.base_phrases.append(in_row[lang_name_col_id[col_id]])
                                 elif db_row[rel_type_uid_col] == '1986':
-                                    Gel_net.inverse_phrases.append(in_row[lang_name_col_id[col_id]])
+                                    self.Gel_net.inverse_phrases.append(in_row[lang_name_col_id[col_id]])
                             else:
                                 naming_uid = '5117'
                             # Note: col_id is integer, whereas lang_uid should be a string
@@ -593,9 +594,9 @@ want het eerste veld heeft niet als inhoud 'Gellish'.".format(file.name))
                             else:
                                 lang_descr = ''
                                 
-                            if name_in_context not in Gel_net.dictionary:
+                            if name_in_context not in self.Gel_net.dictionary:
                                 value_triple = (db_row[lh_uid_col], naming_uid, lang_descr)
-                                Gel_net.dictionary[name_in_context] = value_triple
+                                self.Gel_net.dictionary[name_in_context] = value_triple
                                 name_and_descr = [str(col_id), db_row[comm_uid_col],\
                                                   in_row[lang_name_col_id[col_id]], naming_uid, lang_descr]
                                 names_and_descriptions.append(name_and_descr)
@@ -611,11 +612,11 @@ want het eerste veld heeft niet als inhoud 'Gellish'.".format(file.name))
 
             # Add expressions to the semantic network, except for queries
             if self.content_type != 'queries':
-                Gel_net.Add_row_to_network(db_row, names_and_descriptions)
+                self.Gel_net.Add_row_to_network(db_row, names_and_descriptions)
                 names_and_descriptions.clear()
 ##            # Add non-language defining expressions to the language defining semantic network from DB
 ##            if self.content_type in ['mapping', 'product_model', 'unknown']:
-##                Gel_net.Add_row_to_network(db_row, names_and_descriptions)
+##                self.Gel_net.Add_row_to_network(db_row, names_and_descriptions)
 ##
 ##            # Store batch of 2000 db_rows in database table provided that idea uids are present 
 ##            if len(db_rows) > 2000 and table_name != 'none':
@@ -631,7 +632,7 @@ want het eerste veld heeft niet als inhoud 'Gellish'.".format(file.name))
 ##                Gel_db.InsertRowsInTable(table_name, db_rows)
 
         #if self.content_type in ['mapping', 'product_model', 'unknown']:
-##        Gel_net.Verify_rh_objects()
+##        self.Gel_net.Verify_rh_objects()
 
         print('=== File {} read ==='.format(file.name))
 
@@ -645,7 +646,7 @@ want het eerste veld heeft niet als inhoud 'Gellish'.".format(file.name))
 
         # If file contains a query then create a query object and query_spec
         if self.content_type == 'queries':
-            query = Query(Gel_net, main)
+            query = Query(self.Gel_net, main)
             # Create query_spec
             query.query_spec = self.interpreted_lines
             query.Interpret_query_spec()
@@ -702,7 +703,7 @@ want het eerste veld heeft niet als inhoud 'Gellish'.".format(file.name))
         #self.test = False
         return db_row
 
-    def Verify_row(self, file, db_row, Gel_net):
+    def Verify_row(self, file, db_row):
         ''' Verify values in db_row before loading in database and amend where applicable.
             Per rel_type and kind first role and kind of second role add/verify kind of role players. 
             Collect rows in expressions table.
@@ -715,24 +716,24 @@ want het eerste veld heeft niet als inhoud 'Gellish'.".format(file.name))
         if lang_uid != '':
             # If file language is Dutch then lang_uid and name must be in or added to lang_dict_NL
             if file.lang_ind == 1:
-                if lang_uid not in Gel_net.lang_dict_NL:
-                   Gel_net.lang_dict_NL[lang_uid] = db_row[lang_name_col]
+                if lang_uid not in self.Gel_net.lang_dict_NL:
+                   self.Gel_net.lang_dict_NL[lang_uid] = db_row[lang_name_col]
                 try:
-                    if db_row[lang_name_col] == Gel_net.lang_dict_NL[lang_uid]:
+                    if db_row[lang_name_col] == self.Gel_net.lang_dict_NL[lang_uid]:
                         pass
                 except KeyError:
                     print('  Waarschuwing: Naam van de taal {} correspondeert niet met eerdere naam {} voor UID {}'.\
-                          format(db_row[lang_name_col], Gel_net.lang_dict_NL[lang_uid], lang_uid))
+                          format(db_row[lang_name_col], self.Gel_net.lang_dict_NL[lang_uid], lang_uid))
             elif file.lang_ind == 0:
                 # If file language is English then lang_uid and name must be in or added to lang_dict_EN
-                if lang_uid not in Gel_net.lang_dict_EN:
-                   Gel_net.lang_dict_EN[lang_uid] = db_row[lang_name_col]
+                if lang_uid not in self.Gel_net.lang_dict_EN:
+                   self.Gel_net.lang_dict_EN[lang_uid] = db_row[lang_name_col]
                 try:
-                    if db_row[lang_name_col] == Gel_net.lang_dict_EN[lang_uid]:
+                    if db_row[lang_name_col] == self.Gel_net.lang_dict_EN[lang_uid]:
                         pass
                 except KeyError:
                     print('  Warning: Language name {} does not correspond to earlier name {} for UID {}'.\
-                          format(db_row[lang_name_col], Gel_net.lang_dict_EN[lang_uid], lang_uid))
+                          format(db_row[lang_name_col], self.Gel_net.lang_dict_EN[lang_uid], lang_uid))
             else:
                 print('Language of file {} is not English or Nederlands'.format(file.lang_name))
         else:
@@ -741,13 +742,13 @@ want het eerste veld heeft niet als inhoud 'Gellish'.".format(file.name))
                 recognized = False
                 if file.lang_ind == 1:
                     # Find the lang_uid for a given lang_name in db_row[lang_name_col]
-                    for key,value in Gel_net.lang_dict_NL.items():
+                    for key,value in self.Gel_net.lang_dict_NL.items():
                         if db_row[lang_name_col] == value:
                             db_row[lang_uid_col] = key
                             recognized = True
                             continue
                 else:
-                    for key,value in Gel_net.lang_dict_EN.items():
+                    for key,value in self.Gel_net.lang_dict_EN.items():
                         if db_row[lang_name_col] == value:
                             db_row[lang_uid_col] = key
                             recognized = True
@@ -766,17 +767,17 @@ want het eerste veld heeft niet als inhoud 'Gellish'.".format(file.name))
         comm_uid = db_row[comm_uid_col]
         if comm_uid != '':
             if file.lang_ind == 1:
-                if comm_uid not in Gel_net.comm_dict_NL:
-                    Gel_net.comm_dict_NL[comm_uid] = db_row[comm_name_col]
-                if db_row[comm_name_col] != Gel_net.comm_dict_NL[comm_uid]:
+                if comm_uid not in self.Gel_net.comm_dict_NL:
+                    self.Gel_net.comm_dict_NL[comm_uid] = db_row[comm_name_col]
+                if db_row[comm_name_col] != self.Gel_net.comm_dict_NL[comm_uid]:
                     print('  Warning: Community name {} does not correspond to earlier name {} for UID {}.'.\
-                          format(db_row[comm_name_col], Gel_net.comm_dict_NL[comm_uid], comm_uid))
+                          format(db_row[comm_name_col], self.Gel_net.comm_dict_NL[comm_uid], comm_uid))
             else:
-                if comm_uid not in Gel_net.comm_dict_EN:
-                    Gel_net.comm_dict_EN[comm_uid] = db_row[comm_name_col]
-                if db_row[comm_name_col] != Gel_net.comm_dict_EN[comm_uid]:
+                if comm_uid not in self.Gel_net.comm_dict_EN:
+                    self.Gel_net.comm_dict_EN[comm_uid] = db_row[comm_name_col]
+                if db_row[comm_name_col] != self.Gel_net.comm_dict_EN[comm_uid]:
                     print('  Warning: Community name {} does not correspond to earlier name {} for UID {}.'.\
-                          format(db_row[comm_name_col], Gel_net.comm_dict_EN[comm_uid], comm_uid))
+                          format(db_row[comm_name_col], self.Gel_net.comm_dict_EN[comm_uid], comm_uid))
 
         else:
             # No community_uid present: check whether comm_name present
@@ -784,26 +785,26 @@ want het eerste veld heeft niet als inhoud 'Gellish'.".format(file.name))
                 comm_recignized = False
                 # Find the comm_uid for a given comm_name in db_row[comm_name_col]
                 if file.lang_ind == 1:
-                    for key,value in Gel_net.comm_dict_NL.items():
+                    for key,value in self.Gel_net.comm_dict_NL.items():
                         if db_row[comm_name_col] == value:
                             db_row[comm_uid_col] = key
                             comm_recignized = True
                             continue
                 else:
-                    for key,value in Gel_net.comm_dict_EN.items():
+                    for key,value in self.Gel_net.comm_dict_EN.items():
                         if db_row[comm_name_col] == value:
                             db_row[comm_uid_col] = key
                             comm_recignized = True
                             continue
                 if comm_recignized == False:
-                    Gel_net.unknown_obj_uid += 1
+                    self.Gel_net.unknown_obj_uid += 1
                     print('Community name {} is not yet known. New UID {} and name added'\
-                          .format(db_row[comm_name_col], Gel_net.unknown_obj_uid))
-                    db_row[comm_uid_col] = str(Gel_net.unknown_obj_uid)
+                          .format(db_row[comm_name_col], self.Gel_net.unknown_obj_uid))
+                    db_row[comm_uid_col] = str(self.Gel_net.unknown_obj_uid)
                     if file.lang_ind == 1:
-                        Gel_net.comm_dict_NL[db_row[comm_uid_col]] = db_row[comm_name_col]
+                        self.Gel_net.comm_dict_NL[db_row[comm_uid_col]] = db_row[comm_name_col]
                     else:
-                        Gel_net.comm_dict_EN[db_row[comm_uid_col]] = db_row[comm_name_col]
+                        self.Gel_net.comm_dict_EN[db_row[comm_uid_col]] = db_row[comm_name_col]
             else:
                 db_row[comm_uid_col] = '492014'
                 db_row[comm_name_col] = 'Gellish'
@@ -823,7 +824,7 @@ want het eerste veld heeft niet als inhoud 'Gellish'.".format(file.name))
             
         # REL_uid: If rel_type_uid is unknown, then find it from its phrase (name)
         if db_row[rel_type_uid_col] == '' and db_row[rel_type_name_col] != '':
-            uid_new, rel_map = Gel_net.Find_object_by_name(db_row[rel_type_name_col], string_commonality)
+            uid_new, rel_map = self.Gel_net.Find_object_by_name(db_row[rel_type_name_col], string_commonality)
             db_row[rel_type_uid_col] = rel_map[0]
             mapping = True
             #print('rel_map:', rel_map)
@@ -843,7 +844,7 @@ want het eerste veld heeft niet als inhoud 'Gellish'.".format(file.name))
 
         # RH_uid (in case of alias relation, rel_type_phrase_uid == 6066 is assumed) *** check later ***
         if db_row[rh_uid_col] == '' and db_row[rh_name_col] != '':
-            uid_new, rh_map = Gel_net.Find_object_by_name(db_row[rh_name_col], string_commonality)
+            uid_new, rh_map = self.Gel_net.Find_object_by_name(db_row[rh_name_col], string_commonality)
             db_row[rh_uid_col] = rh_map[0]
             mapping = True
             #print('rh_map :', rh_map)
@@ -862,13 +863,13 @@ want het eerste veld heeft niet als inhoud 'Gellish'.".format(file.name))
         if db_row[lh_uid_col] == '' and db_row[lh_name_col] != '':
             new_name = False
             # If alias relation type lh uid = rh uid
-            if db_row[rel_type_uid_col] in Gel_net.alias_uids:
+            if db_row[rel_type_uid_col] in self.Gel_net.alias_uids:
                 db_row[lh_uid_col] = db_row[rh_uid_col]
                 lh_map = [db_row[lh_uid_col], db_row[lh_name_col], '']
                 new_name = True
             else:
                 # Not an alias relation: find lh_map = [uid, name, description]
-                new_name, lh_map = Gel_net.Find_object_by_name(db_row[lh_name_col], string_commonality)
+                new_name, lh_map = self.Gel_net.Find_object_by_name(db_row[lh_name_col], string_commonality)
                 db_row[lh_uid_col] = lh_map[0] 
                 new_name = True
             #print('lh_map :', lh_map)
@@ -876,11 +877,11 @@ want het eerste veld heeft niet als inhoud 'Gellish'.".format(file.name))
                 # Add unknown name to the dictionary
                 name_in_context = (db_row[lang_uid_col], db_row[comm_uid_col], db_row[lh_name_col])
                 value_triple = (db_row[lh_uid_col], 5117, db_row[part_def_col])
-                Gel_net.dictionary[name_in_context] = value_triple
+                self.Gel_net.dictionary[name_in_context] = value_triple
         else:
             # lh_uid is known
             # If alias relation type, then check whether indeed lh_uid == rh_uid
-            if db_row[rel_type_uid_col] in Gel_net.alias_uids:
+            if db_row[rel_type_uid_col] in self.Gel_net.alias_uids:
                 if db_row[lh_uid_col] != db_row[lh_uid_col]:
                     print('** Error: Alias relation of idea {} requires that left hand uid {} is equal to right hand uid {}'\
                           .format(db_row[idea_uid_col], db_row[lh_uid_col], db_row[rh_uid_col]))
@@ -889,7 +890,7 @@ want het eerste veld heeft niet als inhoud 'Gellish'.".format(file.name))
         # UOM
         if db_row[uom_uid_col] == '' and db_row[uom_name_col] != '':
             # find uom_map = [uid, name, description] via name of uom
-            new_name, uom_map = Gel_net.Find_object_by_name(db_row[uom_name_col], string_commonality)
+            new_name, uom_map = self.Gel_net.Find_object_by_name(db_row[uom_name_col], string_commonality)
             if new_name:
                 print('**Error: Unit of measure name {} in idea {} is unknown.'.\
                       format(db_row[uom_name_col], db_row[idea_uid_col]))
@@ -922,17 +923,17 @@ want het eerste veld heeft niet als inhoud 'Gellish'.".format(file.name))
 
         # Verify whether the relation type UID is known in the current language definition:
         rel_type_uid = db_row[rel_type_uid_col]
-        if rel_type_uid not in Gel_net.rel_type_uids:
-            print("  Error: Relation type uid ({}) '{}' is not (yet) defined as a binary relation. Idea {} ignored.".\
+        if rel_type_uid not in self.Gel_net.rel_type_uids:
+            print("  Error: Relation type ({}) '{}' is not (yet) defined as a binary relation. Idea {} ignored.".\
                   format(rel_type_uid, db_row[rel_type_name_col], db_row[idea_uid_col]))     
-            db_row[rel_type_uid_col] = 5935 # binary relation
+            db_row[rel_type_uid_col] = '5935' # binary relation
             correct = False
 
         # Collect base_phrases and inverse_phrases in list
         elif db_row[rel_type_uid_col] == '6066':
-            Gel_net.base_phrases.append(db_row[lh_name_col])
+            self.Gel_net.base_phrases.append(db_row[lh_name_col])
         elif db_row[rel_type_uid_col] == '1986':
-            Gel_net.inverse_phrases.append(db_row[lh_name_col])
+            self.Gel_net.inverse_phrases.append(db_row[lh_name_col])
         
         # If phrase_type == 0 (unknown) then determine the phrase type;
         # base_phrase_type_uid = 6066 inverse_phrase_type_uid = 1986.
@@ -940,9 +941,9 @@ want het eerste veld heeft niet als inhoud 'Gellish'.".format(file.name))
         # the base_phrases are the collection of bootstrapping phrases: base_boot_phrases
         # and inverse_phrases are the initial inverse_boot_phrases.
         elif db_row[phrase_type_uid_col] == '':
-            if db_row[rel_type_name_col] in Gel_net.base_phrases:
+            if db_row[rel_type_name_col] in self.Gel_net.base_phrases:
                 db_row[phrase_type_uid_col] = '6066'
-            elif db_row[rel_type_name_col] in Gel_net.inverse_phrases:
+            elif db_row[rel_type_name_col] in self.Gel_net.inverse_phrases:
                 db_row[phrase_type_uid_col] = '1986'
             else:
                 print("Error: Phrase <{}> ({}) not yet defined. Idea {} ignored".\

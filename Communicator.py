@@ -19,7 +19,7 @@ from Bootstrapping import *
 #-------------------------------------------------
 class Main():
     def __init__(self):
-        self.net_built = False
+        self.Gel_net_built = False
         self.db_opened = False
         self.net_name  = "Gellish semantic network"
         self.db_name   = "GellishDB"
@@ -45,32 +45,43 @@ class Main():
 
         # Import Gel_net semantic network from Pickle or create new network from files
         self.Load_net()
-        if not self.Gel_net_open:
+        if not self.Gel_net_built:
             # Initialize a Semantic Network with a given name
             self.Create_net()
-
-        # Initialized expression list
-        self.exprs = Expression_list(main.Gel_net)
-
-        # Set GUI language default = Dutch: GUI_lang_names[1]
-        self.Gel_net.Set_GUI_Language(self.GUI_lang_names[0])
+        else:
+            # Initialized expression list
+            self.exprs = Expression_list(self.Gel_net)
     
     def Create_net(self):
-        # Create (c) means create a new network and a new database from files
-        # Initialize a Semantic Network with a given name
+        try:
+            del(self.Gel_net)
+            Gel_net_built = False
+        except AttributeError:
+                pass
+
+        # Create (c) means create a new network by
+        # initializing a Semantic Network with a given name
         self.Gel_net = Semantic_Network(self.net_name, self.user)
+
+        # Set GUI language default = Dutch: GUI_lang_names[1]
+        self.Gel_net.Set_GUI_Language(self.GUI_lang_names[1])
+
+        # Initialized expression list
+        self.exprs = Expression_list(self.Gel_net)
         
 ##        # Create a new database
 ##        self.Create_new_database()
 ##        self.db_opened = True
 ##        # Network is based on database with filename db_name
 ##        self.Gel_net.db_name = self.db_name
-        # Create base dictionary of kinds of relations from bootstrapping
+        
+        # Create a base dictionary of kinds of relations from bootstrapping
         self.Gel_net.Create_base_reltype_objects()
+        
         # Build a new network from files that contain a language definition
         # and store the content of the files in the database
-        self.exprs.Build_new_network(self.Gel_net) #, self.Gel_db)
-        self.net_built = True
+        self.exprs.Build_new_network() #, self.Gel_db)
+        self.Gel_net_built = True
         print("Network '{}' is built.".format(self.net_name))
 
     def Dump_net(self):
@@ -82,17 +93,18 @@ class Main():
     def Load_net(self):
         # Load semantic network from pickle binary file.
         self.Pickle_Load(self.file_name)
-        print("Network '{}' is loaded.".format(self.file_name))
-        self.net_built = True
+        if self.Gel_net_built == True:
+            print("Network '{}' is loaded.".format(self.file_name))
+        else:
+            print("Network '{}' is not loaded. File is not found".format(self.file_name))
 
     def Pickle_Load(self, fname):
-        self.Gel_net_open = False
         try:
             f = open(fname, "br")
             try:
                 self.Gel_net = pickle.load(f)
                 #self = pickle.load(f)
-                self.Gel_net_open = True
+                self.Gel_net_built = True
             except EOFError:
                 pass
             f.close()
@@ -107,7 +119,7 @@ class Main():
 
     def Modify_db(self):
 ##        self.Verify_presence_db_and_net()
-        # Modify or extent an existing network and database
+        # Modify or extent an existing network
         # by loading knowledge and/or product model files
         self.db_cursor.Import_Model_Files(model_files, model_dirs, self.Gel_net, self.user)
         
@@ -116,7 +128,7 @@ class Main():
         # Verify file(s) means read one or more files, verify their content
         # and load them in various tables in an in-:memory: database
         # and extent the semantic network with its content
-        self.exprs.Read_verify_and_merge_files(self.Gel_net)
+        self.exprs.Read_verify_and_merge_files()
 
     def Verify_presence_db_and_net(self):
         # Verify presence of database and network, if not present then create them
@@ -129,16 +141,16 @@ class Main():
             self.Gel_net.db_name = self.db_name
             # Build a new network from files
             self.Gel_net.Create_base_reltype_objects()
-            self.exprs.Build_new_network(self.Gel_net) #, self.Gel_db)
-            self.net_built = True
-        if self.net_built == False:
+            self.exprs.Build_new_network() #, self.Gel_db)
+            self.Gel_net_built = True
+        if self.Gel_net_built == False:
             # Build a Semantic Network from database content
             self.Ensure_network_built()
-            self.net_built = True
+            self.Gel_net_built = True
 
     def Query_net(self):
         # Query the semantic network
-        if self.net_built == True:
+        if self.Gel_net_built == True:
             # Create a query object
             main.query = Query(self.Gel_net, main)
             # Enter and Interpret query
