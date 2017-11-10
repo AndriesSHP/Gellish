@@ -5,27 +5,28 @@ dict_dirs = ["../GellishDictionary"]
 base_onto_file_name = "Formal language definition base-UTF-8.csv"
 
 # Taxonomic Dictionary files
-dict_file_names = ["extended language definition-UTF-8.csv",\
-                   "units of measures & currencies-UTF-8.csv",\
-                   "units of measures - Special symbols-UTF-8.csv",\
-                   "aspects & properties & qualities & laws-UTF-8.csv",\
-##                   "information & documents & rules & identification & symbols-UTF-8.csv",\
-##                   "qualitative aspects & qualitative information-UTF-8.csv",\
-##                   "activities & events & processes-UTF-8.csv",\
-                   "buildings & civil & infrastructure & furniture-UTF-8.csv",\
-##                   "biology & biochemistry & agriculture-UTF-8.csv",\
-                   "electrical & instrumentation & control & IT-UTF-8.csv",\
-                   "facilities & static eq & process units & piping & protection & connection-UTF-8.csv",\
-                   "Chinese - fasteners-UTF-8.csv",\
-##                   "geography & countries & businesses & persons & organizations-UTF-8.csv",\
-##                   "mathematics & shapes-UTF-8.csv",\
-##                   "roles of aspects-UTF-8.csv",\
-##                   "roles of physical objects-UTF-8.csv",\
-##                   "rotating equipment & transport & solids handling-UTF-8.csv",\
-##                   "substances & materials of construction, fluids and solids-UTF-8.csv",\
-##                   "colors - RAL codes and names - multilingual-UTF-8.csv",\
-                   "RDF, RDFS, OWL concepts-UTF-8.csv",\
-                   "EN 16323-2010 - Multi lingual Glossary of wastewater terms-UTF-8.csv"
+dict_file_names = [
+##    "extended language definition-UTF-8.csv",\
+    "units of measures & currencies-UTF-8.csv",\
+##    "units of measures - Special symbols-UTF-8.csv",\
+    "aspects & properties & qualities & laws-UTF-8.csv",\
+##    "information & documents & rules & identification & symbols-UTF-8.csv",\
+##    "qualitative aspects & qualitative information-UTF-8.csv",\
+##    "activities & events & processes-UTF-8.csv",\
+##    "buildings & civil & infrastructure & furniture-UTF-8.csv",\
+##    "biology & biochemistry & agriculture-UTF-8.csv",\
+##    "electrical & instrumentation & control & IT-UTF-8.csv",\
+##    "facilities & static eq & process units & piping & protection & connection-UTF-8.csv",\
+##    "Chinese - fasteners-UTF-8.csv",\
+##    "geography & countries & businesses & persons & organizations-UTF-8.csv",\
+##    "mathematics & shapes-UTF-8.csv",\
+##    "roles of aspects-UTF-8.csv",\
+##    "roles of physical objects-UTF-8.csv",\
+##    "rotating equipment & transport & solids handling-UTF-8.csv",\
+##    "substances & materials of construction, fluids and solids-UTF-8.csv",\
+##    "colors - RAL codes and names - multilingual-UTF-8.csv",\
+    "RDF, RDFS, OWL concepts-UTF-8.csv",\
+##    "EN 16323-2010 - Multi lingual Glossary of wastewater terms-UTF-8.csv"
                    ]
 
 # Knowledge, Requirements and Product type file paths
