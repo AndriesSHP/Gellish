@@ -1,4 +1,7 @@
-# Mapping tables for IB: JSON
+''' This file contains Mapping tables that are required as input for the procedure 
+    that reads JSON files with product data that are retrieved from a product supplier database
+    and that converts those files into Gellish expressions that can be further processed or exported. 
+'''
 
 # Main keys list
 #                   IB               Gellish
