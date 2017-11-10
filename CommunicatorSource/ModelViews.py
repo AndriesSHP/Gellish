@@ -26,7 +26,7 @@ class Display_views():
         self.possibilities_model = Gel_net.possibilities_model
         self.indiv_model  = Gel_net.indiv_model
         self.query_table  = Gel_net.query_table
-##        self.hierarchy   = Gel_net.hierarchy
+        self.occ_model    = Gel_net.occ_model
 
         #self.summ_of_aspect_uids = Gel_net.summ_of_aspect_uids
         self.taxon_column_names  = Gel_net.taxon_column_names
@@ -118,7 +118,7 @@ class Display_views():
             self.Display_data_sheet_view()
             
     # Activities view = = = = = = = = = = = = = = = = = = = = =
-        if len(self.Gel_net.occ_model) > 0:
+        if len(self.occ_model) > 0:
             # Destroy earlier activity sheet
             try:
                 self.act_frame.destroy()
@@ -130,7 +130,7 @@ class Display_views():
             # Display activities and occurrences in self.act_tree
             #if self.test: print('==self.Gel_net.nr_of_occurrencies:',self.Gel_net.nr_of_occurrencies)
             self.act_tree.tag_configure('headTag', option=None, background='#dfd')
-            if len(self.Gel_net.occ_model) > 0:
+            if len(self.occ_model) > 0:
                 occText  = ['Occurrence'     ,'Gebeurtenis']
                 partText = ['Part occurrence','Deelgebeurtenis']
                 strText  = ['Involved'       ,'Betrokkene']
@@ -145,8 +145,8 @@ class Display_views():
                                        strText[self.lang_index],uidText[self.lang_index],kindText[self.lang_index],\
                                        roleText[self.lang_index],uidRText[self.lang_index]),\
                                tags='headTag')                                          
-                for occ_line in self.Gel_net.occ_model:
-                    if testOcc: print('==OccTree:',occ_line)
+                for occ_line in self.occ_model:
+                    print('==OccTree:',occ_line)
                     #wholes = []
                     level  = 0
                     # Display self.act_tree      occName   ,occUID

@@ -1126,17 +1126,19 @@ class Semantic_Network():
             # Determine name etc. of the kind of the self.object_in_focus
             lang_name, comm_name, kindName, descrOfKind = \
                        self.Determine_name_in_language_and_community(classifier)
-                
-##            if kindUID in self.DetermineSubtypeList(occurrenceUID):     # Verify whether the individual is an occurrence. occurrenceUID
-##                self.categoryInFocus = 'occurrence'
 
-##        if self.categoryInFocus == 'occurrence' or self.categoryInFocus == 'kind of occurrence':
-##            self.nr_of_occurrencies += + 1
-##            occRow[0] = self.nr_of_occurrencies
-##            occRow[1] = self.object_in_focus.name
-##            occRow[2] = self.object_in_focus
-##            occRow[3] = kindName
-##            occ_model.append(occRow[:])
+            # Verify whether the individual is an occurrence.
+            if kindUID in self.subOccurrenceUIDs:
+                obj.category = 'occurrence'
+
+        # If obj is an occurrence then store occurrence in occ_model
+        if obj.category == 'occurrence' or obj.category == 'kind of occurrence':
+            self.nr_of_occurrencies += + 1
+            occRow[0] = self.nr_of_occurrencies
+            occRow[1] = self.obj.name
+            occRow[2] = self.object_in_focus
+            occRow[3] = kindName
+            occ_model.append(occRow[:])
     
         # Search for aspects of the whole self.object_in_focus and their values and UoMs
 
@@ -1878,21 +1880,11 @@ class Semantic_Network():
                 if expr[phrase_type_uid_col]   == basePhraseUID:     # base
                     if obj.uid == expr[rh_uid_col]:
                         part_uid = expr[lh_uid_col]
-##                    else:
-##                        # The lh object in focus is itself a part of a rh whole
-##                        # Add the relation with the whole to info about the object in focus
-##                        if expr not in self.query_table:
-##                            self.query_table.append(expr)
                         
                 # If inverse phrase <has as part> and left hand is the object in focus then rh is a part
                 elif expr[phrase_type_uid_col] == invUID:     # inverse
                     if obj.uid == expr[lh_uid_col]:
                         part_uid = expr[rh_uid_col]
-##                    else:
-##                        # The rh object in focus is itself a part of a lh whole
-##                        # Add the relation with the whole to info about the object in focus
-##                        if expr not in self.query_table:
-##                            self.query_table.append(expr)
                 else:
                     print('Phrase type uid {} incorrect'.format(expr[phrase_type_uid_col]))
                     continue
