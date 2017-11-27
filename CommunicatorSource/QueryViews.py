@@ -215,7 +215,7 @@ class Query_view():
         lhOptScroll.grid (column=0,row=0,sticky=NS+E)
         self.lh_options_tree.config(yscrollcommand=lhOptScroll.set)
 
-        self.lh_options_tree.bind(sequence='<Double-1>', func=self.Set_selected_q_lh_term)
+        self.lh_options_tree.bind(sequence='<Button-1>', func=self.Set_selected_q_lh_term)
     # = = = = = = = = =
     # rel Options frame in query_frame for rel options Treeview
         relOptFrame = ttk.Frame(self.query_frame,borderwidth=3,relief='ridge')
@@ -255,7 +255,7 @@ class Query_view():
         relOptScroll.grid (column=0,row=0,sticky=NS+E)
         self.rel_options_tree.config(yscrollcommand=relOptScroll.set)
 
-        self.rel_options_tree.bind(sequence='<Double-1>', func=self.Set_selected_q_rel_term)
+        self.rel_options_tree.bind(sequence='<Button-1>', func=self.Set_selected_q_rel_term)
     # = = = = = = = = =
     # rh Options frame in query_frame for rh options Treeview
         rhOptFrame  = ttk.Frame(self.query_frame,borderwidth=3,relief='ridge')
@@ -295,7 +295,7 @@ class Query_view():
         rhOptScroll.grid (column=0,row=0,sticky=NS+E)
         self.rh_options_tree.config(yscrollcommand=rhOptScroll.set)
 
-        self.rh_options_tree.bind(sequence='<Double-1>', func=self.Set_selected_q_rh_term)
+        self.rh_options_tree.bind(sequence='<Button-1>', func=self.Set_selected_q_rh_term)
     # = = = = = = = = = = = = =
     # Buttons definition
         search = ['Search' ,'Zoek']

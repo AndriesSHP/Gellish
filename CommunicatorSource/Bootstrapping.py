@@ -76,7 +76,7 @@ subtypeRoleUID   = '3818'    # UID of 'subtype' (role)
 supertypeRoleUID = '3817'    # UID of 'supertype' (role)
 synUID           = '1981'    # synonym relation
 basePhraseUID    = '6066'    # base phrase for relation
-invUID           = '1986'    # inverse phrase for relations
+inversePhraseUID = '1986'    # inverse phrase for relations
 qualSubtypeUID   = '4328'    #
 indOrMixRelUID   = '6068'    #
 indivRelUID      = '4658'    #
@@ -103,6 +103,7 @@ occurrenceUID    = '193671'  #
 concComposUID    = '1261'    # conceptual composition relation
 concComponUID    = '3829'    # conceptual component role
 involvedUID      = '4546'    # 4546 = <involved> being a second role in an <involvement in an occurrence> relation
+involvUID        = '4767'    # involvement in an occurrence (relation)
 nextUID          = '5333'    # 5333 next element (role)
 shallUID         = '5735'    #
 roleUID          = '160170'  #

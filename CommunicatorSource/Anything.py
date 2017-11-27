@@ -26,8 +26,8 @@ class Anything:
         self.subtypes    = [] # direct subtype objects that duplicate the uid refs in specialization relations (subset), invalid for individuals
         self.classifiers = [] # kinds, duplicate of uid refs in classification relations (subset)
         self.individuals = [] # individuals, duplicate of uid refs in classification relations (subset), invalid for individuals
-        #self.parts          = [] # parts of kinds or individual things (duplicate part-whole relations)
-        #self.aspects        = [] # aspects and intrinsic aspects of kinds or individual things (duplicate part-whole relations)
+        self.parts       = [] # parts of kinds or of individual things (duplicates part-whole relations)
+        #self.aspects        = [] # aspects and intrinsic aspects of kinds or individual things (duplicates possession relations)
 
     # add name or alias to collection of names:
     # name_in_context = (lanuageUID, communityUID, naming_relationUID, name).
@@ -57,6 +57,10 @@ class Anything:
     def add_individual(self, individual):   # only applicable for kinds
         if individual not in self.individuals:
             self.individuals.append(individual)
+
+    def add_part(self, part):   # applicable for individual things and for kinds
+        if part not in self.parts:
+            self.parts.append(part)
     
     def add_first_role(self, kind_of_role):
         self.first_role = kind_of_role
@@ -99,7 +103,7 @@ class Anything:
                 rh_pref_name = rh.names_in_contexts[0][2] # name should be determined by preferences
             else:
                 rh_pref_name = rh.name 
-            print('  Idea %i: (%i) %s (%i) %s (%i) %s' % \
+            print('  Idea {}: ({}) {} ({}) {} ({}) {}'.format\
                   (rel.uid, \
                    rel.expression[lh_uid_col]      , lh_pref_name,\
                    rel.expression[rel_type_uid_col], rel.expression[rel_type_name_col], \
@@ -116,7 +120,7 @@ class Anything:
 
     def __repr__(self):
         #return(self.uid, self.names_in_contexts)
-        return(" (%i) %s" % (self.uid, self.names_in_contexts))
+        return(' ({}) {}'.format(self.uid, self.names_in_contexts))
 
     def add_base_phrase(self, phrase_in_context):
         self.basePhrases_in_context.append(phrase_in_context)

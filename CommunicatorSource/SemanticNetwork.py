@@ -56,6 +56,8 @@ class Semantic_Network():
         self.inverse_phrases = boot_inverse_phrasesEN + boot_inverse_phrasesNL
         self.specialRelUIDs  = ['1146']   # 1146 base UID for 'is a kind of'
         self.classifUIDs     = []       # 1225 base UID for 'is classified as a'
+        self.subComposUIDs   = []
+        self.subConcComposUIDs = []
         #self.names_in_contexts = [] # list of [lang_uid, comm_uid, name, naming_rel_uid, description]
         self.alias_uids      = boot_alias_uids
         #self.allBinRel_types = [] # initialize and collect all binary relation types
@@ -68,6 +70,7 @@ class Semantic_Network():
         self.unknowns    = []   # The list(s) unkown objects that are denoted by an unknown in a query
         self.names_of_unknowns   = []
         self.unknown_kind        = ['unknown kind' ,'onbekende soort']
+        self.base_ontology = False
 
         self.lh_options  = [] 
         self.rel_options = []
@@ -105,6 +108,9 @@ class Semantic_Network():
         self.info_model     = []
         self.all_subtypes   = []
         self.occ_model      = []
+        self.involv_table   = []
+        self.seq_table      = []
+        self.part_whole_occs = []
 
         self.taxon_row    = ['','','','','','','','','','','','','','']
         self.summary_row  = ['','','','','','','','','','','','','','']
@@ -192,7 +198,7 @@ class Semantic_Network():
             #self.object_uids.append(rel_type_uid)
     
     def Build_Base_Semantic_Network(self): #, db_cursor):
-        ''' Build a Semantic Network from 'base_ontology' database table,
+        ''' Build a Semantic Network from 'base_ontology' table,
             primarily to add defined kinds of relations to list(rel_type_uids).
             Then complete and verify base semantic network
         '''
@@ -224,10 +230,48 @@ class Semantic_Network():
         # Determine lists of various kinds and their subtypes
         self.BuildHierarchies()
 
-        # Add role_players_types requirements to relation types because of relation types
+        # Add kinds of roles
+        # Add kinds of role_players to kinds of binary relations because of relation types
         for rel_type in self.rel_types:
+##            self.Determine_inherited_kind_of_role(rel_type)
             rel_type.role_players_types, rel_type.role_player_type_lh, rel_type.role_player_type_rh \
                                          = self.Determine_role_players_types(rel_type.uid)
+
+##    def Determine_inherited_kind_of_role(self, kind_of_relaton):
+##        ''' Given the kind of relation object
+##            verify whether it has a first and second kind of role,
+##            if not, then determine the kind of role that is inherited
+##            from its nearest supertype kind of relation
+##        '''
+##        kinds = []
+##        if kind_of_relaton.first_role.name == '': #'relator':
+##            for supertype in kind_of_relaton.supertypes:
+##                if supertype.first_role:
+##                    kind_of_relaton.first_role = supertype.first_role
+##                    print('kind_of_relaton', kind_of_relaton.name, kind_of_relaton.first_role.name)
+##                    break
+##                else:
+##                    kinds.append(supertype)
+##            if not kind_of_relaton.first_role:
+##                for kind in kinds:
+##                    for supertype_1 in kind.supertypes:
+##                        if supertype_1.first_role:
+##                            kind_of_relaton.first_role = supertype_1.first_role
+##                            print('kind_of_relaton-1', kind_of_relaton.name, kind_of_relaton.first_role.name)
+##                            break
+##                        else:
+##                            kinds.append(supertype_1)
+##                    if kind_of_relaton.first_role:
+##                        break
+##                if not kind_of_relaton.first_role:
+##                    print('No supertype of <{}> ({}) found'.format(kind_of_relaton.name, kind_of_relaton.uid))
+##
+##        else:
+##            print('First role:', kind_of_relaton.name, kind_of_relaton.uid, kind_of_relaton.first_role.name)
+##
+##        #if not kind_of_relaton.second_role:
+        
+        self.base_ontology = True
     
     def Extent_Semantic_Network(self): #, db_cursor):
         '''Build a Semantic Network from database db_cursor'''
@@ -480,6 +524,7 @@ class Semantic_Network():
             # Add rh to list of rh_objects for later verification of the presence of a definition
             self.rh_objects.append(rh)
 
+        # rh object is known
         else:
             # Find rh object in the uid dictionary
             rh = self.uid_dict[rh_uid]
@@ -496,7 +541,7 @@ class Semantic_Network():
 
         # UOM
         # Verify existence of unit of measure
-        if uom_uid != '':
+        if uom_uid != '' and uom_uid != '0':
             if uom_uid not in self.uid_dict:
                 print('Unit of measure {} ({}) is not yet known'.format(uom_name, uom_uid))
                 uom = Anything(uom_uid, uom_name)
@@ -519,6 +564,26 @@ class Semantic_Network():
         # and add the relation between objects to both objects, except when lh == rh
         if rh_uid != lh_uid:
             rel_type = self.uid_dict[rel_type_uid]
+
+            # If base_ontology is created, then kinds of relations have kinds of roles
+            if self.base_ontology == True:
+                # If no lh or rh kinds of roles are given then allocate kind of role
+                # conform first and second role of kind of relation
+                if row[lh_role_uid_col] == '':
+                    if phrase_type_uid == basePhraseUID: 
+                        row[lh_role_uid_col] = rel_type.first_role.uid
+                        row[lh_role_name_col] = rel_type.first_role.name
+                    else:
+                        row[lh_role_uid_col] = rel_type.second_role.uid
+                        row[lh_role_name_col] = rel_type.second_role.name
+                if row[rh_role_uid_col] == '':
+                    if phrase_type_uid == basePhraseUID:
+                        row[rh_role_uid_col] = rel_type.second_role.uid
+                        row[rh_role_name_col] = rel_type.second_role.name
+                    else:
+                        row[rh_role_uid_col] = rel_type.first_role.uid
+                        row[rh_role_name_col] = rel_type.first_role.name
+                
             # Default: category == None
             relation = Relation(lh, rel_type, rh, phrase_type_uid, uom, row)
 ##            # Verify whether phrase corresponds to uid
@@ -559,7 +624,7 @@ class Semantic_Network():
                     rh.add_supertype(lh)
 
             # If classification relation (1225 or one of its subtypes), then add classifier and classified to objects
-            elif rel_type_uid in classifUIDs:
+            elif rel_type_uid in self.classifUIDs:
                 if phrase_type_uid == basePhraseUID:
                     lh.name = lh_name
                     lh.add_classifier(rh)
@@ -586,6 +651,14 @@ class Semantic_Network():
                 else:
                     lh.add_individual(rh)
                     rh.add_classifier(lh)
+
+            # If part-whole relation (composUID 1260 or concComposUID 1261 or one of their subtypes),
+            # then add part to collection of parts of the whole object
+            elif rel_type_uid in self.subComposUIDs or rel_type_uid in self.subConcComposUIDs:
+                if phrase_type_uid == basePhraseUID:
+                    rh.add_part(lh)
+                else:
+                    lh.add_part(rh)
 
             # If rel_type_uid == uid of <has by definition as first/second role a> relation
             # then add first/second kind of role to the kind of relation
@@ -618,24 +691,22 @@ class Semantic_Network():
                 lh.add_base_phrase(phrase_in_context)
                 lh.basePhrases.append(lh_name)
                 self.base_phrases.append(lh_name)
-            elif rel_type_uid == invUID:
+            elif rel_type_uid == inversePhraseUID:
                 phrase_in_context = [lang_uid, comm_uid, lh_name]
                 lh.add_inverse_phrase(phrase_in_context)
                 lh.inversePhrases.append(lh_name)
                 self.inverse_phrases.append(lh_name)
 
     def BuildHierarchies(self):
-        ''' Build a naming table (extend the language vocabulary) and expression table
-        Extent the information model by data entry and extending namingTable,
-        Append model file
-        Search in ontology and informationm model (on-line or via GUI)
+        ''' Build lists of subtype concepts and subtype concept_uids of various kinds,
+            including the kinds themselves
         '''
         
         # Determine lists of various kinds and their subtypes
         self.sub_classifs,    self.sub_classif_uids    = self.DetermineSubtypeList(classifUID)
         self.subClassifieds,  self.subClassifiedUIDs   = self.DetermineSubtypeList(classifiedUID)
         self.indOrMixRels,    self.indOrMixRelUIDs     = self.DetermineSubtypeList(indOrMixRelUID)
-        self.indivBinRels,    self.indivBinRelUIDs     = self.DetermineSubtypeList(indivRelUID)     # 4658
+        self.indivBinRels,    self.indivBinRelUIDs     = self.DetermineSubtypeList(indivRelUID)     # 4658 binary relation between individual things
         self.kindHierRels,    self.kindHierRelUIDs     = self.DetermineSubtypeList(kindHierUID)
         self.kindKindRels,    self.kindKindRelUIDs     = self.DetermineSubtypeList(kindKindUID)
         self.kindBinRels,     self.kindBinRelUIDs      = self.DetermineSubtypeList(kindRelUID)
@@ -659,8 +730,9 @@ class Semantic_Network():
         self.subCompons,      self.subComponUIDs       = self.DetermineSubtypeList(componUID)     # component role and its subtypes
         self.subConcComposs,  self.subConcComposUIDs   = self.DetermineSubtypeList(concComposUID) # conceptual composition relation and its subtypes
         self.subConcCompons,  self.subConcComponUIDs   = self.DetermineSubtypeList(concComponUID) # conceptual component role and its subtypes
-        self.subInvolveds,    self.subInvolvedUIDs     = self.DetermineSubtypeList(involvedUID)
-        self.subNexts,        self.subNextUIDs         = self.DetermineSubtypeList(nextUID)
+        #self.subInvolveds,    self.subInvolvedUIDs     = self.DetermineSubtypeList(involvedUID)   # 4546 = being a second role in an <involvement in an occurrence> relation
+        self.subInvolvs,      self.subInvolvUIDs       = self.DetermineSubtypeList(involvUID)     # 4767 = involvement in an occurrence (relation)
+        self.subNexts,        self.subNextUIDs         = self.DetermineSubtypeList(nextUID)       # 5333 next element (role)
         self.subtypesOfShall, self.subtypesOfShall     = self.DetermineSubtypeList(shallUID)
         self.aliass,          self.alias_uids          = self.DetermineSubtypeList(aliasUID)
         self.concWholes,      self.concWholeUIDs       = self.DetermineSubtypeList(concWholeUID)
@@ -734,24 +806,7 @@ class Semantic_Network():
                     
                     # If sub belongs to taxonomy of relations then inherit by definition first and second kinds of roles
                     if rel_taxonomy == True:
-                        sub.category = 'kind of relation'
-                        try:
-                            if sub.first_role != None:
-                                # Check whether supertype of kind of role == role of supertype
-                                if sub.first_role.supertype.first_role != supertype.first_role:
-                                    print('Supertype of first kind of role {} not equal role of supertype {}'\
-                                          .format(sub.first_role.supertype.first_role, supertype.first_role))
-                        except AttributeError:
-                            sub.first_role = supertype.first_role
-                            
-                        try:
-                            if sub.second_role != None:
-                                # check whether supertype of kind of role == role of supertype
-                                if sub.second_role.supertype.second_role != supertype.second_role:
-                                    print('Supertype of second kind of role {} not equal role of supertype {}'\
-                                          .format(sub.second_role.supertype.second_role, supertype.second_role))
-                        except AttributeError:
-                            sub.second_role = supertype.second_role
+                        self.Inherit_kinds_of_roles(sub, supertype)
                 #print ('Supertype:',supertype.uid,"Subtypes:",subs,subtypeRow)
 
             # For each subtype determine the further subtypes                
@@ -765,28 +820,52 @@ class Semantic_Network():
                         # Increase the list of subs that is current
                         subs.append(sub)
 
-                        # If sub belongs to taxonomy of relations then inherit by definition first and second kinds of roles
+                        # If sub belongs to taxonomy of relations
+                        # then inherit by definition first and second kinds of roles
                         if rel_taxonomy == True:
-                            sub.category = 'kind of relation'
-                            try:
-                                if sub.first_role != None:
-                                    # Check whether supertype of kind of role == role of supertype
-                                    if sub.first_role.subX.first_role != subX.first_role:
-                                        print('Supertype of first kind of role {} not equal role of supertype {}'\
-                                              .format(sub.first_role.subX.first_role, subX.first_role))
-                            except AttributeError:
-                                sub.first_role = subX.first_role
-
-                            try:
-                                if sub.second_role != None:
-                                    # check whether supertype of kind of role == role of supertype
-                                    if sub.second_role.subX.second_role != subX.second_role:
-                                        print('Supertype of second kind of role {} not equal role of supertype {}'\
-                                              .format(sub.second_role.subX.second_role, subX.second_role))
-                            except AttributeError:
-                                sub.second_role = subX.second_role
-                            #print('Roles of relations:', sub.name, sub.first_role.name, sub.second_role.name)
+                            self.Inherit_kinds_of_roles(sub, subX)
+                            
         return all_subtypes, all_subtype_uids
+
+    def Inherit_kinds_of_roles(self, sub, supertype):
+        sub.category = 'kind of relation'
+        try:
+            if sub.first_role: # != None:
+                # Check whether supertype of kind of role == role of supertype
+                equality = False
+                if len(sub.first_role.supertypes) > 0:
+                    for supertype_role in sub.first_role.supertypes:
+                        if supertype_role == supertype.first_role:
+                            equality = True
+                            break
+                    if equality == False:
+                        print('Supertype of first kind of role {} not equal role of supertype {}'\
+                              .format(supertype_role.name, supertype.first_role.name))
+                else:
+                    print('First kind of role {} has no supertypes'.format(sub.first_role.name))
+                #print('sub.first_role_def:', sub.first_role.name)
+            #else:
+                #print('sub.first_role_inh:', sub.first_role.name)
+        except AttributeError:
+            sub.first_role = supertype.first_role
+            #print('sub.inherited first_role', sub.name, sub.uid, sub.first_role.name)
+            
+        try:
+            if sub.second_role != None:
+                # Check whether supertype of kind of role == role of supertype
+                equality = False
+                if len(sub.second_role.supertypes) > 0:
+                    for supertype_role in sub.second_role.supertypes:
+                        if supertype_role == supertype.second_role:
+                            equality = True
+                            break
+                    if equality == False:
+                        print('Supertype of second kind of role {} not equal role of supertype {}'\
+                              .format(supertype_role.name, supertype.second_role.name))
+                else:
+                    print('Second kind of role {} has no supertypes'.format(sub.second_role.name))
+        except AttributeError:
+            sub.second_role = supertype.second_role
 #----------------------------------------------------------------
     def Determine_role_players_types(self, rel_uid):  #, phrase):
         # Individual or kind? Determine whether the query relation type denotes:
@@ -1044,6 +1123,9 @@ class Semantic_Network():
         self.query_table[:]   = []
         self.info_model[:]    = []
         self.occ_model[:]     = []
+        self.involv_table[:]  = []
+        self.seq_table[:]     = []
+        self.part_whole_occs[:]= []
         self.all_subtypes[:]  = []
         self.summ_aspect_uids[:]   = ['','','','']
         self.summ_column_names[:]  = ['','','','']
@@ -1087,6 +1169,7 @@ class Semantic_Network():
         
         self.implied_parts_dict = {}
         self.nr_of_occurrencies = 0
+        self.occ_in_focus = 'no'
         nr_of_occ_aspect_kinds  = 3
         self.decomp_level = 0
         role = ''
@@ -1095,7 +1178,7 @@ class Semantic_Network():
 
         if obj.category in ['kind', 'kind of physical object', 'kind of occurrence', \
                             'kind of aspect', 'kind of role', 'kind of relation', 'number']:
-            # Search for the first supertype relation that generalizes the self.object_in_focus
+            # Search for the first supertype relation that generalizes the obj (= self.object_in_focus)
             if len(obj.supertypes) == 0:
                 # No supertypes found for kind: report omission
                 kindUID  = 0
@@ -1112,35 +1195,36 @@ class Semantic_Network():
                             if len(self.query_table) < self.max_nr_of_rows:
                                 self.query_table.append(expr)
 
-        # Object category is not a kind, thus indicates an individual thing.
+        # Individual thing: Object category is not a kind, thus indicates an indiv.
         # Verify whether the individual thing is classified (has one or more classifiers)
         elif len(obj.classifiers) == 0:
             print('For object {} neither a supertype nor a classifier is found'.format(obj.name))
         else:
             # The object_in_focus is classified (once or more times)
             # thus it is indeed an individual, such as an individual physical object or occurrence:
-            # Search for classifying kind and classification relation that classifies the self.object_in_focus
+            # Search for classifying kind and classification relation that classifies the object_in_focus
             classifier = obj.classifiers[0]
             # kindUID is the kind that classifies the self.object_in_focus
-            kindUID    = classifier.uid
-            # Determine name etc. of the kind of the self.object_in_focus
-            lang_name, comm_name, kindName, descrOfKind = \
+            kind_uid   = classifier.uid
+            # Determine name etc. of the kind of the object_in_focus
+            lang_name, comm_name, kind_name, descrOfKind = \
                        self.Determine_name_in_language_and_community(classifier)
 
             # Verify whether the individual is an occurrence.
-            if kindUID in self.subOccurrenceUIDs:
+            if kind_uid in self.subOccurrenceUIDs:
                 obj.category = 'occurrence'
 
         # If obj is an occurrence then store occurrence in occ_model
         if obj.category == 'occurrence' or obj.category == 'kind of occurrence':
             self.nr_of_occurrencies += + 1
-            occRow[0] = self.nr_of_occurrencies
-            occRow[1] = self.obj.name
-            occRow[2] = self.object_in_focus
-            occRow[3] = kindName
-            occ_model.append(occRow[:])
+
+            #self.occ_model.append([occ.uid, occ.name, higher.name, involv.uid, kind_occ.uid,\
+            #                       occ.name, part_occ.name, \
+            #                       involv.name, kind_part_occ.name, role_of_involved])
+            self.occ_model.append([obj.uid, '', '', '', '', \
+                                   obj.name, '', '', kind_name, ''])
     
-        # Search for aspects of the whole self.object_in_focus and their values and UoMs
+        # Search for aspects of the whole object_in_focus and their values and UoMs
 
         # Find kinds of aspects and their values of kind_in_focus (and implied parts)
         if obj.category in ['kind', 'kind of physical object', 'kind of occurrence', \
@@ -1161,13 +1245,13 @@ class Semantic_Network():
             else:
                 supertype_name = 'unknown'
 
-            self.possibility_row[0] = obj.uid
-            self.possibility_row[1] = obj_name
-            self.possibility_row[2] = ''
-            self.possibility_row[3] = supertype_name
-            self.possibility_row[4] = comm_name     # of obj (not of supertype)
-            # Add object_in_focus to possibilities_model
-            self.possibilities_model.append(self.possibility_row[:])
+##            self.possibility_row[0] = obj.uid
+##            self.possibility_row[1] = obj_name
+##            self.possibility_row[2] = ''
+##            self.possibility_row[3] = supertype_name
+##            self.possibility_row[4] = comm_name     # of obj (not of supertype)
+            # Add object_in_focus to possibilities_model with comm_name of obj (not of supertype)
+            self.possibilities_model.append([obj.uid, obj_name, '', supertype_name, comm_name])
             
             nr_of_aspects = self.Find_kinds_of_aspects(obj, role)
             
@@ -1193,13 +1277,13 @@ class Semantic_Network():
             community_name = self.community_dict[obj.names_in_contexts[0][1]] # community uid
             self.summary_row[0] = obj.uid
             self.summary_row[1] = obj.name
-            self.summary_row[2] = kindName
+            self.summary_row[2] = kind_name
             self.summary_row[3] = community_name
             
             self.indiv_row[0] = obj.uid
             self.indiv_row[1] = obj.name
             self.indiv_row[2] = ''
-            self.indiv_row[3] = kindName
+            self.indiv_row[3] = kind_name
             self.indiv_row[4] = community_name
             
             # Find aspects of individual object_in_focus
@@ -1212,17 +1296,11 @@ class Semantic_Network():
         else:
             print("Object category '{}' not programmed for searching for aspects".format(obj.category))
                 
-    ##    seqTable = []
-    ##    ioTable  = []
-    ##    pOccTable= []       # parts of occurrence in focus
-    ##    involvedUID     = 4546        # 4546 = <involved> being a second role in an <involvement in an occurrence> relation
-    ##    subInvolveds, subInvolvedUIDs = self.DetermineSubtypeList(involvedUID)
-    ##    nextUID         = 5333        # 5333 next element (role)
-    ##    subNexts, subNextUIDs     = self.DetermineSubtypeList(nextUID)
-    ##    if obj.category != 'occurrence':
-    ##        # Search for occurrences about the self.object_in_focus and other involved objects in those occurrences.
-    ##        self.decomp_level = 0
-    ##        OccursAndInvolvs(self.object_in_focus, self.object_in_focus.name,obj.category)    
+        #self.parts_of_occ_table= []       # parts of occurrence in focus
+        if obj.category != 'occurrence':
+            # Search for occurrences about the object_in_focus and other involved objects in those occurrences.
+            self.decomp_level = 0
+            self.OccursAndInvolvs(obj)    
     
 ##    def Create_prod_model_subtypes(self, obj):
 ##        ''' Create header in prod_model for subtypes of obj and
@@ -1268,7 +1346,7 @@ class Semantic_Network():
 ##            for sub in subs:
 ##                if sub in self.ex_candids or sub.uid in self.coll_of_subtype_uids:
 ##                    continue
-##                # Summary_row = [uid, community_name, object_in_focus.name, supertype name]
+##                # Summary_row = [uid, community_name, obj.name, supertype name]
 ##                community_name = self.community_dict[obj.names_in_contexts[0][1]] # community uid
 ##                self.summary_row[0] = obj.uid
 ##                self.summary_row[1] = obj.names_in_contexts[0][2] # obj.name
@@ -1279,6 +1357,288 @@ class Semantic_Network():
 ##                nr_of_aspects = self.Find_kinds_of_aspects(sub, role)
 ##                # Determine sub-subtypes
 ##                Subtypes_of_kinds(sub)
+
+    def OccursAndInvolvs(self, obj):
+        """ Search for occurrences in which the obj (in focus) is involved.
+            The occurrences are related with an involver role or one of its subtypes to the (physical) object_in_focus
+            and search for (physical) objects that are involved in those occurrences in various roles.
+            Search for aspects of the occurrences (such as duration).
+            Store results in prod_model and the composition in partWholeOcc.
+        """
+
+        occur_head   = ['Occurrences' ,'Gebeurtenissen']
+        role_head    = ['Role'        ,'Rol']
+        involv_head  = ['Involved object','Betrokken object']
+        kind_head    = ['Kind'        ,'Soort']
+        #print('**** OccursAndInvolvs:',obj.uid, obj.name, obj.category)
+
+        nr_of_occur = 0
+        self.occ_in_focus = 'no'
+        self.line_nr += + 1
+        
+        # Search for UID and <involved> role or its subtypes to find occurrences (involver role players)
+        for rel_obj in obj.relations:
+            expr = rel_obj.expression
+            if (expr[rh_uid_col] == obj.uid and expr[rel_type_uid_col] in self.subInvolvUIDs):
+                occ_uid   = expr[lh_uid_col]
+                #occ_name  = expr[lh_name_col]
+            elif expr[lh_uid_col] == obj.uid and expr[rel_type_uid_col] in self.subInvolvUIDs:
+                occ_uid   = expr[rh_uid_col]
+                #occ_name  = expr[rh_name_col]
+            else:
+                continue
+
+            # An occurrence is found
+            nr_of_occur += + 1
+            occ = self.uid_dict[occ_uid]
+            occ_name = occ.name
+            self.decomp_level = 1
+            #print('Occ     :',obj.name, occ_uid, occ_name,'roles:', expr[rel_type_name_col],\
+            #      expr[lh_role_name_col], expr[rh_role_name_col])
+            
+            # Display occurrences header, only the first time
+            if nr_of_occur == 1:
+                prod_head_5 = ['', '', '', self.line_nr, \
+                               occur_head[self.GUI_lang_index] , role_head[self.GUI_lang_index], \
+                               involv_head[self.GUI_lang_index], kind_head[self.GUI_lang_index],'','','','','']
+                self.prod_model.append(prod_head_5)
+            
+            if len(self.query_table) < self.max_nr_of_rows:
+                self.query_table.append(expr)
+
+            # Record the role playing occurrence in occ_model
+            # Find classifying kind of occurrence
+            if len(occ.classifiers) > 0:
+                occ_kind = occ.classifiers[0]
+                occ_kind_name = occ_kind.name
+                occ_kind_uid = occ_kind.uid
+            else:
+                print('Occurrence {} classifier is unknown'.format(occ.name))
+                occ_kind_name = 'unknown'
+                occ_kind_uid = ''
+
+            #self.occ_model.append([occ.uid, occ.name, higher.name, involv.uid, occ_kind.uid,\
+            #                       occ.name, part_occ.name, \
+            #                       involv.name, kind_part_occ.name, role_of_involved])
+            self.occ_model.append([occ.uid, occ.name, '', '', occ_kind_uid, \
+                                   occ.name, '', '', occ_kind_name, ''])
+            #print('Occ-3:',[nr_of_occur, occ.name, occ_uid, occ_kind_name])
+
+            status = expr[status_col]
+            occ_role = ''
+            self.occ_in_focus = 'occurrence'
+            # Find possession of aspect relations for aspects of occurrence
+            nr_of_aspects = self.Find_aspects(occ, occ_role)
+            
+            # If no aspects found then line without aspects (otherwise line is included in Find_aspects
+            if nr_of_aspects == 0:
+                self.line_nr += + 1
+                prod_line_5 = [occ.uid, occ_kind.uid, '', self.line_nr, occ_name,'','',occ_kind_name,\
+                               '','','','','',status]
+                self.prod_model.append(prod_line_5)
+                
+            # Search for objects that are involved in the found occurrence
+            # decomp_level determines print layout in product model.
+            self.decomp_level = 3
+            for rel_occ in occ.relations:
+                expr_occ = rel_occ.expression
+                # Search <is involved in> or <is involving> or any of its subtypes relations in occ
+                # excluding the object in focus (obj)
+                if expr_occ[rh_uid_col] != obj.uid and \
+                   (expr_occ[lh_uid_col] == occ.uid and expr_occ[rel_type_uid_col] in self.subInvolvUIDs):
+                    involved_uid   = expr_occ[rh_uid_col]
+                    #involved_name  = expr_occ[rh_name_col]
+                    inv_role_name  = expr_occ[rh_role_name_col]
+                elif expr_occ[lh_uid_col] != obj.uid and \
+                     (expr_occ[rh_uid_col] == occ.uid and expr_occ[rel_type_uid_col] in self.subInvolvUIDs):
+                    involved_uid   = expr_occ[lh_uid_col]
+                    #involved_name  = expr_occ[lh_name_col]
+                    inv_role_name  = expr_occ[lh_role_name_col]
+                else:
+                    continue
+
+                # An object is found that is involved in the occurrence
+                involved = self.uid_dict[involved_uid]
+                #print('Involved:',obj.uid, involved.uid, involved.name,\
+                #      'roles:',expr_occ[lh_role_uid_col],expr_occ[rh_role_uid_col])
+                
+                self.query_table.append(expr_occ)
+                status = expr_occ[status_col]
+                
+                # Determine the kind of the involved individual object
+                if len(involved.classifiers) > 0:
+                    involved_kind = involved.classifiers[0]
+                    involved_kind_name = involved_kind.name
+                else:
+                    print('Involved object {} has no classifier'.format(involved.name))
+                    involved_kind_name = 'unknown'
+                
+                # Search for aspects of objects that are involved in occurrence
+                # Find possession of aspect relations of involved object
+                nr_of_aspects = self.Find_aspects(involved, inv_role_name)
+                
+                # if no aspects of part found, then record part only
+                if nr_of_aspects == 0:
+                    self.line_nr += + 1
+                    prod_line_6 = [involved.uid, involved_kind.uid, '', \
+                                   self.line_nr, '', inv_role_name, involved.name, involved_kind_name,\
+                                   '','','','','',status]
+                    self.prod_model.append(prod_line_6)
+
+            # Search for successors or predecessors of found occurrence
+            #   with inputs and outputs and parts (? see below)
+            self.OccurrenceSequences(occ)
+
+            # Search for parts of found occurrence and parts of parts, etc.
+            occ_level = 1
+            self.PartOfOccur(occ, occ_level)
+
+##        # Check whether nr of occurrences = 0
+##        if nr_of_occur == 0:
+##            #if self.GUI_lang_index == 1:
+##            #    MessagesQ.insert('end','\nGeen gebeurtenissen gevonden in antwoord op vraag over %s (%i)' % (name,UID))
+##            #else:
+##            #    MessagesQ.insert('end','\nNo involving occurrences found in query results for %s (%i)' % (name,UID))
+##            self.line_nr += + 1
+##            none = ['None','Geen']
+##            prod_head_5A = ['','','',self.line_nr, none[self.GUI_lang_index],'','','','','','','','']
+##            self.prod_model.append(prod_head_5A)
+
+    def OccurrenceSequences(self, occ):
+        """ Build activities and their components with sequence between the components in the seq_table
+            and inputs and outputs in involv_table.
+            seq_table:    previusUID, previusName, nextUID,     nextName.
+            involv_table: occurUID,   occurName,   involvedUID, involvedName, roleUID, roleName (of invObj), invKindName.
+            p_occ_table:  wholeUID,   wholeName,   partUID,     partName,  kindOfPartName
+        """    
+
+        #print('OccurrenceSequences',occ.uid, occ.name)
+        
+        part_uids = []
+        nr_of_sequences = 0
+        nr_of_ins_and_outs = 0
+        nr_of_parts = 0
+        # Build sequence table (seq_table) for sequence of occurrences
+        for rel_occ in occ.relations:
+            expr = rel_occ.expression
+            # Search for predecessor - successor relations
+            if expr[rh_uid_col] == occ.uid and expr[rh_role_uid_col] in self.subNextUIDs:
+                predecessor = self.uid_dict[expr[lh_uid_col]]
+                self.seq_table.append([predecessor, occ])
+                nr_of_sequences += 1
+            elif expr[lh_uid_col] == occ.uid and expr[lh_role_uid_col] in self.subNextUIDs: # inverse
+                predecessor = self.uid_dict[expr[rh_uid_col]]
+                self.seq_table.append([predecessor, occ])
+                nr_of_sequences += 1
+                
+            # Search for inputs and outputs (streams) in involv_table
+            elif expr[lh_uid_col] == occ.uid and expr[rel_type_uid_col] in self.subInvolvUIDs:
+                involved = self.uid_dict[expr[rh_uid_col]]
+                if len(involved.classifiers) > 0:
+                    inv_kind_name = involved.classifiers[0].name
+                if expr[rh_role_uid_col] != '':
+                    inv_role_kind = self.uid_dict[expr[rh_role_uid_col]]
+                else:
+                    inv_role_kind = self.uid_dict['160170']
+##                ioRow = []
+##                ioRow.append(expr[lh_uid_col])       # occurrence UID
+##                ioRow.append(expr[lh_name_col])      # occName
+##                ioRow.append(expr[rh_uid_col])       # involved object UID
+##                ioRow.append(expr[rh_name_col])      # involved object Name
+##                ioRow.append(expr[rh_role_uid_col])   # role UID of involved object
+##                ioRow.append(expr[rhKindRoleNameExC])  # role Name of involved object
+##                kindOfInvData = FindClassification(expr[rh_uid_col],expr[rh_name_col])
+##                ioRow.append(kindOfInvData[1])
+                self.involv_table.append([occ, involved, inv_role_kind, inv_kind_name])
+                nr_of_ins_and_outs += 1
+            elif expr[rh_uid_col] == occ.uid and expr[rel_type_uid_col] in self.subInvolvUIDs: # inverse
+                involved = self.uid_dict[expr[lh_uid_col]]
+                if len(involved.classifiers) > 0:
+                    inv_kind_name = involved.classifiers[0].name
+                inv_role_kind = self.uid_dict[expr[lh_role_uid_col]]
+##                ioRow = []
+##                ioRow.append(expr[rh_uid_col])       # occurrence UID
+##                ioRow.append(expr[rh_name_col])      # occName
+##                ioRow.append(expr[lh_uid_col])       # involved object UID
+##                ioRow.append(expr[lh_name_col])      # involved object Name
+##                ioRow.append(expr[lh_role_uid_col])   # role UID of involved object
+##                ioRow.append(expr[lhKindRoleNameExC])  # role Name of involved object
+##                kindOfInvData = FindClassification(expr[lh_uid_col],expr[lh_name_col])
+##                ioRow.append(kindOfInvData[1])
+                self.involv_table.append([occ, involved, inv_role_kind, inv_kind_name])
+                nr_of_ins_and_outs += 1
+                
+##            # Search for parts of occurrence, being part - whole relations
+##            elif expr[lh_uid_col] == occ.uid and expr[rh_role_uid_col] in self.subComponUIDs:
+##                part = self.uid_dict[expr[rh_uid_col] 
+##                part_uids.append(part.uid)
+##                self.parts_of_occ_table.append([occ, part])
+##                nr_of_parts += 1
+##            elif expr[rh_uid_col] == occ.uid and expr[lh_role_uid_col] in self.subComponUIDs: # inverse
+##                part = self.uid_dict[expr[lh_uid_col]]
+##                part_uids.append(part.uid)
+##                self.parts_of_occ_table.append([occ, part])
+##                nr_of_parts += 1
+        
+        if len(occ.parts) > 0:
+            # Determine sequences, IOs and parts of parts
+            for part_occ in occ.parts:
+                self.OccurrenceSequences(part_occ)
+
+    def PartOfOccur(self, occ, occ_level):
+        """ Determine whole-parts hierarchy for occurrences
+            Store results in prod_model
+        """
+
+        parts = False
+        part_head   = ['Part occurrence', 'Deelgebeurtenis']
+        kind_part_head = ['Kind of part', 'Soort deel']
+        for rel_occ in occ.relations:
+            expr = rel_occ.expression 
+            if expr[lh_uid_col] == occ.uid and expr[rel_type_uid_col] in self.subComposUIDs:
+                # Create header line, only after finding a part the first time
+                if parts == False:
+                    self.line_nr += + 1
+                    prod_line_7 = ['', '', '', self.line_nr, '', part_head[self.GUI_lang_index],'',\
+                                   kind_part_head[self.GUI_lang_index],'','','','','','']
+                    self.prod_model.append(prod_line_7)
+                    parts = True
+                part_occ = self.uid_dict[expr[rh_uid_col]]
+                status = expr[status_col]
+                
+                self.query_table.append(expr)
+                
+                if len(part_occ.classifiers) > 0:
+                    kind_part_occ = part_occ.classifiers[0]
+                    kind_part_occ_uid = kind_part_occ.uid
+                    kind_part_occ_name = kind_part_occ.name
+                else:
+                    print('Part of occurrnce {} has no classifier'.format(part_occ.name))
+                    kind_part_occ = 'unknown'
+                    kind_part_occ_uid = '0'
+                    kind_part_occ_name = 'unknown'
+                    
+                if occ_level < 2:
+                    self.line_nr += + 1
+                    prod_line_8 = [part_occ.uid, kind_part_occ_uid, '', self.line_nr, '', part_occ.name, '',\
+                                   kind_part_occ_name, '','','','','', status]
+                    self.prod_model.append(prod_line_8)
+                    self.nr_of_occurrencies += + 1
+                    involv_uid = ''
+                    role_of_involved = ''
+                    #self.occ_model.append([part_occ.uid, part_occ.name, whole_occ.name, involv.uid, kind_occ.uid,\
+                    #                       occ.name, part_occ.name, involv.name, \
+                    #                       kind_part_occ.name, role_of_involved])
+                    self.occ_model.append([part_occ.uid, part_occ.name, occ.name, involv_uid, kind_part_occ_uid,\
+                                           '', part_occ.name,  '', \
+                                           kind_part_occ_name, role_of_involved])
+
+                # Add whole, part and kind of part occurrence to part_whole_occs hierarchy
+                self.part_whole_occs.append([occ, part_occ, kind_part_occ])
+
+                # Search for part on next decomposition level (part_of_part of occurrence)
+                part_level = occ_level + 1
+                self.PartOfOccur(part_occ, part_level)
 
     def Determine_name_in_language_and_community(self, obj):
         ''' Given an object and preferred language sequence uids and community sequence uids,
@@ -1373,12 +1733,18 @@ class Semantic_Network():
 
         self.line_nr = 3
 
-        #prod_line_3 = [part_uid,aspect_uid,self.line_nr,part,'','',kindOfPart,aspect.name,kindOfAspect,value,UoM,status]
-        #prod_line_4 = [partOfPart.uid,aspect_uid,self.line_nr,'',partOfPart,'',kindOfPart,aspect.name,kindOfAspect,value,UoM,status]
-        #prod_line_5 = [occur_uid,aspect_uid,self.line_nr,occur,'','',kindOfOcc,aspect.name,kindOfAspect,value,UoM,status]
-        #prod_line_6 = [invObj.uid,aspect_uid,self.line_nr,'',invObject,role,kindOfInv,aspect.name,kindOfAspect,value,UoM,status]
-        #prod_line_7 = [part_uid,aspect_uid,self.line_nr,'','','','',aspect.name,kindOfAspect,value,UoM,status]
-        #prod_line_8 = [obj.uid,file_uid,self.line_nr,obj,document,'',kind_of_document,file,kind_of_file,'','',status]
+        #prod_line_3 = [part_uid   , part_kind_uid, aspect_uid, self.line_nr, part,  '','',kindOfPart,\
+        #               aspect.name, kindOfAspect, value,UoM,status]
+        #prod_line_4 = [part_of_part.uid,part_kind_uid,aspect_uid, self.line_nr,'',  partOfPart,'',kindOfPart,\
+        #               aspect.name, kindOfAspect, value,UoM,status]
+        #prod_line_5 = [occur_uid  , occ_kind_uid, aspect_uid , self.line_nr, occur, '','',kindOfOcc,\
+        #               aspect.name, kindOfAspect, value,UoM,status]
+        #prod_line_6 = [inv_obj.uid, inv_kind_uid, aspect_uid , self.line_nr, ''   , invObject,role,kindOfInv,\
+        #               aspect.name, kindOfAspect, value,UoM,status]
+        #prod_line_7 = [part_uid   , part_kind_uid,aspect_uid , self.line_nr, ''   , '','','',\
+        #               aspect.name, kindOfAspect, value,UoM,status]
+        #prod_line_8 = [obj.uid    , obj_kind_uid, file_uid   , self.line_nr, obj  , document,'',kind_of_document,\
+        #               file       , kind_of_file, '','',status]
 
         if obj.category in ['kind', 'kind of physical object', 'kind of occurrence']:
             self.kind_model.append(prod_line_0)
@@ -1412,7 +1778,7 @@ class Semantic_Network():
         and search for their qualitative subtypes and possible collection of allowed values.
         obj      = the kind in focus
         role     = the role played by an involved object that is involved in an occurrence
-        decomp_level = decomposition level: 0 = objectInFocus, 1 = part, 2 = part of part, etc.
+        decomp_level = indentation level: 0 = objectInFocus, 1 = part, 2 = part of part, etc.
         obj.category = category of the object in focus,
                       being individual or kind or phys object or occurrence or kind of occurrence'''
 
@@ -1745,11 +2111,11 @@ class Semantic_Network():
                         # If summary row is about object in focus, then make supertype of object in focus empty
                         # Because treeview parent (taxon_row[2] should be supertype or blank.
                         #print('Subtype_level:', self.subtype_level, obj.name, self.taxon_row)
-                        if self.taxon_row[0] == self.object_in_focus.uid:
+                        if self.taxon_row[0] == obj.uid:
                             self.taxon_row[2] = ''
 
                         # If the supertype is the object_in_focus, then make the object a sub of the inter_row
-                        if self.taxon_row[2] == self.object_in_focus.name:
+                        if self.taxon_row[2] == obj.name:
                             self.taxon_row[2] = self.has_as_subtypes[self.GUI_lang_index]
                         self.taxon_model.append(self.taxon_row[:])
                         
@@ -1767,7 +2133,7 @@ class Semantic_Network():
 ####                    self.possib_objects.append(obj)
 ##                # If possibilities row is about object in focus, then make whole of object in focus empty
 ##                # Because treeview parent should be whole or blank.
-##                if self.possibility_row[0] == self.object_in_focus.uid:
+##                if self.possibility_row[0] == obj.uid:
 ##                    self.possibility_row[2] = ''
 ##                if self.possibility_row not in self.possibilities_model:
 ##                    self.possibilities_model.append(self.possibility_row[:])
@@ -1867,7 +2233,7 @@ class Semantic_Network():
         if self.decomp_level > 3:
             self.decomp_level += - 1
             return
-        #if test: print('PaA-level of parts of:',self.decomp_level,name,obj.uid)
+        #if test: print('Indentation_level of parts of:',self.decomp_level,name,obj.uid)
         
         # Search for <has as part> relation or any of its subtypes
         part_uid = ''
@@ -1882,7 +2248,7 @@ class Semantic_Network():
                         part_uid = expr[lh_uid_col]
                         
                 # If inverse phrase <has as part> and left hand is the object in focus then rh is a part
-                elif expr[phrase_type_uid_col] == invUID:     # inverse
+                elif expr[phrase_type_uid_col] == inversePhraseUID:     # inverse
                     if obj.uid == expr[lh_uid_col]:
                         part_uid = expr[rh_uid_col]
                 else:
@@ -1944,11 +2310,14 @@ class Semantic_Network():
                     if nr_of_aspects == 0: 
                         self.line_nr += + 1
                         if self.decomp_level == 1:
-                            prod_line_4 = [part.uid,part_kind_uid,'',self.line_nr,part.name,'','',part_kind_name,'','','','','',status]
+                            prod_line_4 = [part.uid,part_kind_uid,'',self.line_nr,part.name,'','',\
+                                           part_kind_name,'','','','','',status]
                         elif self.decomp_level == 2:
-                            prod_line_4 = [part.uid,part_kind_uid,'',self.line_nr,'',part.name,'',part_kind_name,'','','','','',status]
+                            prod_line_4 = [part.uid,part_kind_uid,'',self.line_nr,'',part.name,'',\
+                                           part_kind_name,'','','','','',status]
                         elif self.decomp_level == 3:
-                            prod_line_4 = [part.uid,part_kind_uid,'',self.line_nr,'','',part.name,part_kind_name,'','','','','',status]
+                            prod_line_4 = [part.uid,part_kind_uid,'',self.line_nr,'','',part.name,\
+                                           part_kind_name,'','','','','',status]
                         if self.decomp_level < 4:
                             if len(self.prod_model) < self.max_nr_of_rows:
                                 self.prod_model.append(prod_line_4)
@@ -1958,7 +2327,7 @@ class Semantic_Network():
                 
         self.decomp_level += - 1        
         #if nrOfParts == 0:              # Check whether nr of parts = 0
-        #    print('\nNo parts found in query results for {} ({})'.format(name,UID))
+        #    print('\nNo parts found in query results for {} ({})'.format(obj.name, obj.uid))
 
     def Find_kinds_of_parts_and_their_aspects(self, obj):
         """ Search for explicit kinds of parts and combine them with implied kinds of parts"""
@@ -1970,7 +2339,7 @@ class Semantic_Network():
         
         role = ''
         self.part_head_req = True
-        # Search for kinds of parts of self.object_in_focus
+        # Search for kinds of parts of object_in_focus
         for rel_obj in obj.relations:
                 expr = rel_obj.expression
                 if expr[lh_uid_col] == obj.uid and expr[rel_type_uid_col] in self.subConcComposUIDs\
@@ -2119,7 +2488,7 @@ class Semantic_Network():
             and store results in lines in prod_model
             indiv     = the individual thing
             kind.name = the name of the kind of individual thing (for messages only)
-            decomp_level    = decomposition level: 0 = objectInFocus, 1 = part, 2 = part of part, etc.
+            decomp_level    = decomposition_level: 0 = objectInFocus, 1 = part, 2 = part of part, etc.
             categoryInFocus = category of the object in focus, being individual or phys object or occurrence
             The prod_model lineType is 3A: aspects of a product - conform the header line for aspects (line type 3)
         """
@@ -2144,7 +2513,7 @@ class Semantic_Network():
                 else:
                     print('Phrase type uid of idea {} incompatible with expression'.format(expr.uid))
             elif indiv.uid == expr[rh_uid_col] and expr[rel_type_uid_col] in self.subPossAspUIDs: # inverse
-                if expr[phrase_type_uid_col] == invUID:
+                if expr[phrase_type_uid_col] == inversePhraseUID:
                     aspect_uid   = expr[lh_uid_col]
                 else:
                     print('Phrase type uid of idea {} incompatible with expression'.format(expr.uid))
@@ -2155,7 +2524,7 @@ class Semantic_Network():
                         aspect_uid = expr[rh_uid_col]
                         qual_aspect = True
                 elif indiv.uid == expr[rh_uid_col] and expr[rel_type_uid_col] in ['5843', '5423']:
-                    if expr[phrase_type_uid_col] == invUID:
+                    if expr[phrase_type_uid_col] == inversePhraseUID:
                         aspect_uid = expr[lh_uid_col]
                         qual_aspect = True
                 else:
@@ -2172,7 +2541,7 @@ class Semantic_Network():
             #print('aspect:', expr[lh_name_col], expr[rel_type_name_col], expr[rh_name_col])
             status = expr[status_col]
             nr_of_aspects += 1
-            self.line_nr  += 1
+            #self.line_nr  += 1
 
             # Find the aspect object of the <has as aspect> relation or the qualitative aspect
             aspect = self.uid_dict[aspect_uid]
@@ -2331,23 +2700,32 @@ class Semantic_Network():
                         
             # Create prod_model text line for output view
             self.line_nr += 1
-            if self.decomp_level == 1 and nr_of_aspects == 1:
-                prod_line_3 = [indiv.uid, indiv.kind_uid, aspect_uid, self.line_nr,indiv.name,role,''  ,indiv.kind_name,\
-                             aspect_name, aspect.kind_name, equality, value_name, uom_name, status]
+            #print('Aspect of obj.:', self.decomp_level, nr_of_aspects, indiv.name, aspect_name)
+            if self.decomp_level == 0 and nr_of_aspects == 1:
+                prod_line_3 = [indiv.uid   , indiv.kind_uid, aspect_uid, \
+                               self.line_nr, indiv.name, role,''  ,indiv.kind_name,\
+                               aspect_name , aspect.kind_name, equality, value_name, uom_name, status]
+            elif self.decomp_level == 1 and nr_of_aspects == 1:
+                prod_line_3 = [indiv.uid   , indiv.kind_uid, aspect_uid, \
+                               self.line_nr, indiv.name, role,''  ,indiv.kind_name,\
+                               aspect_name , aspect.kind_name, equality, value_name, uom_name, status]
             elif self.decomp_level == 2 and nr_of_aspects == 1:
-                prod_line_3 = [indiv.uid, indiv.kind_uid, aspect_uid, self.line_nr,role,indiv.name,''  ,indiv.kind_name,\
-                             aspect_name, aspect.kind_name, equality, value_name, uom_name, status]
+                prod_line_3 = [indiv.uid   , indiv.kind_uid, aspect_uid, \
+                               self.line_nr, role, indiv.name,''  ,indiv.kind_name,\
+                               aspect_name , aspect.kind_name, equality, value_name, uom_name, status]
             elif self.decomp_level == 3 and nr_of_aspects == 1:
-                prod_line_3 = [indiv.uid, indiv.kind_uid, aspect_uid, self.line_nr,''  ,role,indiv.name,indiv.kind_name,\
-                             aspect_name, aspect.kind_name, equality, value_name, uom_name, status]
+                prod_line_3 = [indiv.uid   , indiv.kind_uid, aspect_uid, \
+                               self.line_nr,'' , role, indiv.name, indiv.kind_name,\
+                               aspect_name , aspect.kind_name, equality, value_name, uom_name, status]
             else:
-                prod_line_3 = [indiv.uid, indiv.kind_uid, aspect_uid, self.line_nr,'','','','',\
-                             aspect_name, aspect.kind_name, equality, value_name, uom_name, status]
+                prod_line_3 = [indiv.uid   , indiv.kind_uid, aspect_uid, \
+                               self.line_nr,'','','','',\
+                               aspect_name , aspect.kind_name, equality, value_name, uom_name, status]
             if len(self.prod_model) < self.max_nr_of_rows:
                 self.prod_model.append(prod_line_3)
 
         # If aspect is possessed by object_in_focus (thus not possessed by a part) then add row to summ_model
-        #print('Indiv', self.decomp_level, self.object_in_focus.uid, self.summary_row)
+        #print('Indiv', self.decomp_level, indiv.uid, self.summary_row)
         if self.decomp_level == 0:
             if len(self.summ_model) < self.max_nr_of_rows:
                 if indiv not in self.summ_objects:
@@ -2360,8 +2738,8 @@ class Semantic_Network():
 
             self.summary_row = ['','','','','','','','','','','','','','']
 
-        # For whole and for parts of whole create a row in indiv_model
-        if len(self.indiv_model) < self.max_nr_of_rows:
+        # For whole and for parts of whole create a row in indiv_model (not for occurences)
+        if self.occ_in_focus != 'occurrence' and len(self.indiv_model) < self.max_nr_of_rows:
             if indiv not in self.indiv_objects:
                 self.indiv_objects.append(indiv)
                 # If indiv row is about object in focus, then make whole of object in focus blank
@@ -2583,7 +2961,7 @@ class Semantic_Network():
 
         # Collect found option in 'options' list for display and selection
         if len(candidates) > 0:
-            print ("nr of candidates:",len(candidates), self.GUI_lang_pref_uids)
+            #print ("nr of candidates:",len(candidates), self.GUI_lang_pref_uids)
             optionNr = 0
             for candidate in candidates:
                 # Only add the candidate if uid of language corresponds with uid from GUI_lang_pref_uids
@@ -2669,8 +3047,8 @@ class Semantic_Network():
                     
                 if self.GUI_lang_index == 1:
                     #self.MessagesQ.insert('end','\n
-                    print('Term <%s> is niet gevonden in het woordenboek. UID = {}. '.\
-                          format(searchString,self.unknown_quid))
+                    print('Term <{}> is niet gevonden in het woordenboek. UID = {}. '.\
+                          format(searchString, self.unknown_quid))
                 else:
                     #self.MessagesQ.insert('end','\n
                     print('String <{}> not found in the dictionary. UID = {}. '.\
@@ -2708,7 +3086,8 @@ class Semantic_Network():
                                 self.lh_obj_relation_types.append(sub_rel_type)
                 
     def Add_classification_relation(self, modified_object, selected_object):
-        # Append classifier to modified_object, and then add classification relation
+        ''' Append classifier to modified_object, and then add classification relation
+        '''
         
         statement = ['statement', 'bewering']
         modified_object.classifiers.append(selected_object)

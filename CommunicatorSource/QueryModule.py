@@ -261,10 +261,10 @@ class Query:
                             if len(conceptual_rel_type.basePhrases_in_context) > 0:
                                 rel_type_name = conceptual_rel_type.basePhrases_in_context[0][2]
                                 for phrase_in_context in conceptual_rel_type.basePhrases_in_context:
-                                    if phrase_in_context[0] == self.user.GUI_lang_uid:
+                                    if phrase_in_context[0] == self.Gel_net.GUI_lang_uid:
                                         rel_type_name = phrase_in_context[2]
                                         continue
-                                #print('Rel_type_name', rel_type_name, self.user.GUI_lang_uid, conceptual_rel_type.basePhrases_in_context)
+                                #print('Rel_type_name', rel_type_name, self.Gel_net.GUI_lang_uid, conceptual_rel_type.basePhrases_in_context)
                                 # Formulate condition expression:
                                 #   kind_of)aspect 'shall have on scale a value ...' value, uom
                                 print('Condition: {} <{}> {} {}'.\
