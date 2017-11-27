@@ -8,7 +8,7 @@ from Expr_Table_Def import *
 #from SemanticNetwork import Semantic_Network
 from QueryModule import Query
 from Create_output_file import Create_gellish_expression, Convert_numeric_to_integer, Open_output_file
-from Occurrences_diagrams import Occurrences_diagram as occ_diagram
+from Occurrences_diagrams import Occurrences_diagram
 
 class Display_views():
     def __init__(self, Gel_net, main):
@@ -18,6 +18,7 @@ class Display_views():
         self.user = main.user
         self.query = main.query
         self.lang_index = self.Gel_net.GUI_lang_index
+        self.uid_dict = self.Gel_net.uid_dict
 
         self.kind_model   = Gel_net.kind_model
         self.prod_model   = Gel_net.prod_model
@@ -27,6 +28,8 @@ class Display_views():
         self.indiv_model  = Gel_net.indiv_model
         self.query_table  = Gel_net.query_table
         self.occ_model    = Gel_net.occ_model
+        self.involv_table    = Gel_net.involv_table
+        #self.part_whole_occs = Gel_net.part_whole_occs
 
         #self.summ_of_aspect_uids = Gel_net.summ_of_aspect_uids
         self.taxon_column_names  = Gel_net.taxon_column_names
@@ -40,9 +43,9 @@ class Display_views():
 
         self.subsHead    = ['Subtypes'      ,'Subtypen']
         self.compHead    = ['Part hierarchy','Compositie']
-        self.involHead   = ['Occurrences'   ,'Gebeurtenissen']
-        self.roleHead    = ['Role'          ,'Rol']
-        self.otherHead   = ['Involvements'  ,'Betrokkenen']
+        self.occHead     = ['Occurrences'   ,'Gebeurtenissen']
+        #self.roleHead    = ['Role'          ,'Rol']
+        #self.involHead   = ['Involved'      ,'Betrokkene']
         self.kindHead    = ['Kind'          ,'Soort']
         self.aspectHead  = ['Aspect'        ,'Aspect']
         self.partOccHead = ['Part occurrence','Deelgebeurtenis']
@@ -127,39 +130,14 @@ class Display_views():
         
             self.Define_activity_sheet()
 
-            # Display activities and occurrences in self.act_tree
-            #if self.test: print('==self.Gel_net.nr_of_occurrencies:',self.Gel_net.nr_of_occurrencies)
-            self.act_tree.tag_configure('headTag', option=None, background='#dfd')
-            if len(self.occ_model) > 0:
-                occText  = ['Occurrence'     ,'Gebeurtenis']
-                partText = ['Part occurrence','Deelgebeurtenis']
-                strText  = ['Involved'       ,'Betrokkene']
-                uidText  = ['UID'            ,'UID']
-                kindText = ['Kind'           ,'Soort']
-                roleText = ['Role'           ,'Rol']
-                uidRText = ['UID of role'    ,'UID van rol']
-                space = ''
-                # Header line display
-                self.act_tree.insert('',index='end',\
-                               values=(occText[self.lang_index],partText[self.lang_index],\
-                                       strText[self.lang_index],uidText[self.lang_index],kindText[self.lang_index],\
-                                       roleText[self.lang_index],uidRText[self.lang_index]),\
-                               tags='headTag')                                          
-                for occ_line in self.occ_model:
-                    print('==OccTree:',occ_line)
-                    #wholes = []
-                    level  = 0
-                    # Display self.act_tree      occName   ,occUID
-                    OccurrenceTree(self.act_tree,occ_line[1],occ_line[2],occ_line[3],level) #,wholes
-
-                # IDEF0: Display drawings of occurrences
-                occ_diagram.Create_occurrences_diagram()
+            # Display occ_model in Activity sheet view
+            self.Display_occ_model_view()
 
      # Define and display Documents_view sheet = = = = = = = = = =
         if len(self.Gel_net.info_model) > 0:
             self.Define_and_display_documents()
 
-    # Define Expressions_view sheet = = = = = = = = = = = = = = = = = = =
+     # Define Expressions_view sheet = = = = = = = = = = = = = = = = = = =
         # Destroy earlier expression_frame
         try:
             self.expr_frame.destroy()
@@ -448,15 +426,7 @@ class Display_views():
         self.Define_composition_sheet()
 
         # Display composition sheet
-        # Display header row with units of measure
-        self.indiv_tree.insert('', index='end', values=self.indiv_uom_names, tags='uomTag')
-        # Display self.indiv_model rows in self.indiv_tree
-        indiv_parents = []
-        for indiv_line in self.indiv_model:
-            if indiv_line[2] == '' or indiv_line[2] in indiv_parents:
-                self.indiv_tree.insert(indiv_line[2],index='end',values=indiv_line,tags='sumTag',iid=indiv_line[1],\
-                                      text=indiv_line[1], open=True)  # indiv_line[2] is the whole
-                indiv_parents.append(indiv_line[1])
+        self.Display_composition_view()
         
     def Define_composition_sheet(self):
         ''' Define a sheet for display of an individual thing (indiv_model, a list of indiv_rows)
@@ -483,12 +453,15 @@ class Display_views():
 ##                                  displaycolumns='#all', selectmode='browse', height=30)
         self.indiv_tree = Treeview(self.indiv_frame,columns=(headings[0:nr_of_cols]),\
                                   displaycolumns=display_cols, selectmode='browse', height=30)
-                        
+
+        head_kind = ['Kind', 'Soort']
+        head_comm = ['Language community', 'Taalgemeenschap']
+        self.indiv_tree.heading('#0'        ,text='Object'   , anchor=W)
         self.indiv_tree.heading('UID'       ,text='UID'      , anchor=W)
         self.indiv_tree.heading('Name'      ,text='Name'     , anchor=W)
         self.indiv_tree.heading('Parent'    ,text='Parent'   , anchor=W)
-        self.indiv_tree.heading('Kind'      ,text='Kind'     , anchor=W)
-        self.indiv_tree.heading('Community' ,text='Community', anchor=W)
+        self.indiv_tree.heading('Kind'      ,text=head_kind[self.lang_index], anchor=W)
+        self.indiv_tree.heading('Community' ,text=head_comm[self.lang_index], anchor=W)
         
         self.indiv_tree.column ('#0'        ,minwidth=100    , width=200)
         self.indiv_tree.column ('Kind'      ,minwidth=20     , width=50)
@@ -515,6 +488,21 @@ class Display_views():
         self.indiv_tree.config(yscrollcommand=indiv_Scroll.set)
 
         self.indiv_tree.bind(sequence='<Double-1>', func=self.Indiv_detail_view)
+
+    def Display_composition_view(self):
+        ''' Display rows in indiv_model (composition of individual object)
+            in composition sheet view
+        '''
+        # Display header row with units of measure
+        self.indiv_tree.insert('', index='end', values=self.indiv_uom_names, tags='uomTag')
+        # Display self.indiv_model rows in self.indiv_tree
+        indiv_parents = []
+        for indiv_line in self.indiv_model:
+            if indiv_line[2] == '' or indiv_line[2] in indiv_parents:
+                self.indiv_tree.insert(indiv_line[2], index='end', \
+                                       values=indiv_line,tags='sumTag',iid=indiv_line[1],\
+                                       text=indiv_line[1], open=True)  # indiv_line[2] is the whole
+                indiv_parents.append(indiv_line[1])
 
     def Define_expressions_sheet(self):
         ''' Define expressions view sheet for display of expr_table in Notebook tab
@@ -631,18 +619,21 @@ class Display_views():
         self.expr_tree.column ('remarks'   ,minwidth=15,width=100)
         self.expr_tree.column ('status'    ,minwidth=15,width=120)
 
-        exprScroll = Scrollbar(self.expr_frame,orient=VERTICAL,command=self.expr_tree.yview)
+        exprScrollV = Scrollbar(self.expr_frame, orient=VERTICAL  , command=self.expr_tree.yview)
+        exprScrollV.grid       (column=0, row=1, sticky=NS+E, rowspan=3)
+        exprScrollH = Scrollbar(self.expr_frame, orient=HORIZONTAL, command=self.expr_tree.xview)
+        exprScrollH.grid       (column=0, row=3, sticky=S+EW)
         expr_lbl.grid         (column=0, row=0, sticky=NSEW)
         self.expr_tree.grid   (column=0, row=1, sticky=NSEW, rowspan=3)
-        exprScroll.grid       (column=0, row=1, sticky=NS+E, rowspan=3)
         details_button.grid   (column=1, row=0, sticky=N)
         save_CSV_button.grid  (column=1, row=1, sticky=N)
         save_JSON_button.grid (column=1, row=2, sticky=N)
         
-        self.expr_tree.config(yscrollcommand=exprScroll.set)
+        self.expr_tree.config(yscrollcommand=exprScrollV.set)
+        self.expr_tree.config(xscrollcommand=exprScrollH.set)
         self.expr_tree.tag_configure('valTag'  ,background='#cfc')
         
-##        self.expr_tree.columnconfigure(0,weight=1)
+        self.expr_tree.columnconfigure(0,weight=1)
 ##        self.expr_tree.columnconfigure(1,weight=1)
 ##        self.expr_tree.columnconfigure(2,weight=1)
 ##        self.expr_tree.columnconfigure(3,weight=1)
@@ -848,7 +839,7 @@ File is saved under name <QueryResults.csv')
                 # Set value_tags at 'valTag' or 'headTag' for each field
                 value_tags = 11*['valTag']
                 # If the line is a header line, then set value_tag to 'headTag'
-                if kindLine[4] in self.compHead    or kindLine[4] in self.involHead or \
+                if kindLine[4] in self.compHead    or kindLine[4] in self.occHead or \
                    kindLine[4] in self.info_head   or kindLine[8] in self.aspectHead or \
                    kindLine[5] in self.partOccHead or kindLine[4] in self.subsHead:
                     head = True
@@ -877,7 +868,7 @@ File is saved under name <QueryResults.csv')
                 # If the line is a header line, then continue to next line
                 if head == True:
                     continue
-                # If the line is a value line and the there is a name of a part
+                # If the line is a value line and there is a name of a part
                 #    then remember the part as a previous part
                 elif kindLine[4] != '':
                     level1Part = id
@@ -905,13 +896,14 @@ File is saved under name <QueryResults.csv')
         prod_label = Label(self.prod_frame, text=structure[self.lang_index],justify='left')
         heads = ['uid_1','uid_2','uid-3','inFocus','Level1','Level2','Level3','kind',\
                 'aspect','kAspect','>=<','value', 'UoM','status']
-        display_heads = heads[3:]
+        display_heads = heads[5:]
         self.prod_tree = Treeview(self.prod_frame,columns=(heads), displaycolumns=display_heads, \
                                   selectmode='browse', height=30, padding=2)
-        self.prod_treeHead = [('LineNr' ,'Object','','' ,'Kind' ,'Aspect','Kind of aspect',\
+        self.prod_treeHead = [('','' ,'Kind' ,'Aspect','Kind of aspect',\
                                '>=<','Value' ,'UoM'    ,'Status'),\
-                              ('RegelNr','Object','','','Soort','Aspect','Soort aspect'  ,\
+                              ('','','Soort','Aspect','Soort aspect'  ,\
                                '>=<','Waarde','Eenheid','Status')]
+        self.prod_tree.heading('#0' ,text='Object', anchor=W)
         col = -1
         for head_field in display_heads:
             col += + 1
@@ -929,8 +921,8 @@ File is saved under name <QueryResults.csv')
 ##        self.prod_tree.heading('UoM'     ,text=self.prod_treeHead[self.lang_index][9],anchor=W)
 ##        self.prod_tree.heading('status'  ,text=self.prod_treeHead[self.lang_index][10],anchor=W)
         
-        self.prod_tree.column ('#0'      ,minwidth=40,width=50)
-        self.prod_tree.column ('inFocus' ,minwidth=10,width=10)
+        self.prod_tree.column ('#0'      ,minwidth=40,width=100)
+        #self.prod_tree.column ('inFocus' ,minwidth=10,width=10)
         self.prod_tree.column ('Level1'  ,minwidth=20,width=100)
         self.prod_tree.column ('Level2'  ,minwidth=20,width=50)
         self.prod_tree.column ('Level3'  ,minwidth=20,width=50)
@@ -986,40 +978,70 @@ File is saved under name <QueryResults.csv')
         '''
         unknownVal   = ['unknown value','onbekende waarde']
         unknownKind  = ['unknown kind' ,'onbekende soort']
-        for prod_line in self.prod_model:
+        further_part = ['Further part' ,'Verder deel']
+        kind_of_part = ['Kind of part', 'Soort deel']
+        possible_roles = False # No roles expected
+        
+        for prod_line_0 in self.prod_model:
+            prod_line = prod_line_0[:]
             head = False
             headLine = []
-            #if self.test: print('prod_line:',prod_line)
-            # If line_type (prod_line[3]) == 1 then prepare header line from prod_line for level 0 object
-            # Note: line_type == 2 is skipped in this view
-            if prod_line[3] == 1:
-                headLine = prod_line[0:4]
-                headLine.append(prod_line[5])
-                headLine.append('')
-                headLine.append('')
-                headLine.append(prod_line[9])
-                nameInFocus = headLine[4]
-                level0Part = self.prod_tree.insert('',index='end',values=headLine,tags='focusTag',open=True)
+            print('Prod_line:',prod_line)
+##            # If line_type (prod_line[3]) == 1 then prepare header line from prod_line for level 0 object
+##            # Note: line_type == 2 and 3 are skipped in this view
+##            if prod_line[3] == 1:
+##                headLine = prod_line[0:4]
+##                headLine.append(prod_line[5])
+##                headLine.append('')
+##                headLine.append('')
+##                headLine.append(prod_line[9])
+##                nameInFocus = headLine[4]
+##                level0Part = self.prod_tree.insert('',index='end',values=headLine,tags='focusTag',open=True)
+##                previusPart = level0Part
+            # If line_type (prod_line[3]) == 4 then prepare header line from prod_line for level 0 object
+            # Note: line_type == 1, 2 and 3 are skipped in this view
+            if prod_line[3] == 4:
+                #nameInFocus = prod_line[5]
+                prod_name = prod_line[4]
+                level0Part = self.prod_tree.insert('', index='end', values=prod_line,\
+                                                   text=prod_name, tags='focusTag',open=True)
                 previusPart = level0Part
                 
             # In prod_tree view line_type 2 to 3 (indicated in prod_line[3]) are not displayed.
-            elif prod_line[3] > 3:
+            elif prod_line[3] > 4:
                 # Set value_tags at 'valTag' or 'headTag' for each field
                 value_tags = 11*['valTag']
+                    
                 # If the line is a header line, then set value_tag to 'headTag'
-                if prod_line[4] in self.compHead    or prod_line[4] in self.involHead or \
+                if prod_line[4] in self.compHead    or prod_line[4] in self.occHead or \
                    prod_line[4] in self.info_head   or prod_line[8] in self.aspectHead or \
                    prod_line[5] in self.partOccHead or prod_line[4] in self.subsHead:
                     head = True
                     value_tags = 11*['headTag']
+                    prod_name = prod_line[4]
+                    # Determine whether roles may appear in prod_line[4] in lines following the header line
+                    # to avoid that they are included in the indented hierarchy
+                    if prod_line[4] in self.occHead:
+                        possible_roles = True
+                    elif prod_line[5] in self.partOccHead:
+                        possible_roles = False
+                    # Remove header texts 'Further part' and 'Kind of part'
+                    if prod_line[6] in further_part:
+                        prod_line[6] = ''
+                    if prod_line[7] in kind_of_part:
+                        continue #prod_line[7] = ''
+                    
                 # If the line is a value line (thus not a header line) and there is a name of a part
                 # then remember the part as a previous part 
                 elif prod_line[4] != '':
                     previusPart = level0Part
+                    prod_name = prod_line[4]
                 elif prod_line[5] != '':
                     previusPart = level1Part
+                    prod_name = prod_line[5]
                 elif prod_line[6] != '':
                     previusPart = level2Part
+                    prod_name = prod_line[6]
 
                 # Set tag background color depending on value
                 # If value is missing then bachgroumd color is yellow
@@ -1029,15 +1051,22 @@ File is saved under name <QueryResults.csv')
                     value_tags[9] = 'available'
                 if prod_line[7] in unknownVal:
                     value_tags[7] = 'missing'
+
+                if possible_roles == True and prod_line[4] == '':
+                    prod_name = ''
+##                elif possible_roles == False and prod_line[5] != '':
+##                    prod_line[5] = ''
+                    
                 # Insert line
                 #print('Values:', prod_line[1], type(prod_line[1]))
-                id = self.prod_tree.insert(level0Part,index='end',values=prod_line,tags=value_tags,open=True)
+                id = self.prod_tree.insert(previusPart, index='end', values=prod_line,\
+                                           text=prod_name, tags=value_tags, open=True)
 
                 # If the line is a header line, then continue to next line
                 if head == True:
                     continue
                 # If the line is a value line and the there is a name of a part
-                # # then remember the part as a previous part
+                #   then remember the part as a previous part
                 elif prod_line[4] != '':
                     level1Part = id
                     previusPart = level0Part
@@ -1171,7 +1200,7 @@ File is saved under name <QueryResults.csv')
                 # Display the subsequent body values on line type > 3
                 if body == True:
                     # Set background color depending on either header, value present of 'unknown'
-                    if (column_nr == 1 and (field_value in self.compHead or field_value in self.involHead or\
+                    if (column_nr == 1 and (field_value in self.compHead or field_value in self.occHead or\
                                             field_value in self.info_head)) or \
                        (column_nr == 2 and (field_value in self.partOccHead)):
                         # Header line detected; set background color accordingly
@@ -1202,26 +1231,31 @@ File is saved under name <QueryResults.csv')
         self.views_noteb.insert("end",self.act_frame,sticky=NSEW)
         acts = ['Activity tree', 'Activiteitenboom']
         actLbl = Label(self.act_frame,text=acts[self.lang_index])
-        
-        self.act_tree = Treeview(self.act_frame,columns=('ActName','PartName','Involved','UID','Kind','Role','RoleUID'),\
-                               displaycolumns  =('ActName','PartName','Involved','UID','Kind','Role','RoleUID'),
+        headings = ['OccUID', 'OccName' , 'WholeOccName', 'InvolvUID', 'KindOccUID',
+                    'OccName','PartName', 'Involved'    , 'Kind'     , 'Role']
+        display_cols = headings[7:]
+        self.act_tree = Treeview(self.act_frame, columns=(headings),\
+                               displaycolumns=display_cols,
                                selectmode='browse',height=30)
 
-        #self.act_tree.heading('actName' ,text=q_rh_name     ,anchor=W)
-        #self.act_tree.heading('actUID'  ,text='UID'       ,anchor=W)
-        #self.act_tree.heading('actKind' ,text='Soort'     ,anchor=W)
-        #self.act_tree.heading('aspect1' ,text=occKinds[4] ,anchor=W)
-        #self.act_tree.heading('aspect2' ,text=occKinds[5] ,anchor=W)
-        #self.act_tree.heading('aspect3' ,text=occKinds[6] ,anchor=W)
+        occText  = ['Occurrence'     ,'Gebeurtenis']
+        partText = ['Part occurrence','Deelgebeurtenis']
+        strText  = ['Involved object','Betrokken object']
+        kindText = ['Kind'           ,'Soort']
+        roleText = ['Role'           ,'Rol']
+        self.act_tree.heading('#0'      ,text=occText[self.lang_index] ,anchor=W)
+        self.act_tree.heading('OccName' ,text=occText[self.lang_index] ,anchor=W)
+        self.act_tree.heading('PartName',text=partText[self.lang_index],anchor=W)
+        self.act_tree.heading('Involved',text=strText[self.lang_index] ,anchor=W)
+        self.act_tree.heading('Kind'    ,text=kindText[self.lang_index],anchor=W)
+        self.act_tree.heading('Role'    ,text=roleText[self.lang_index],anchor=W)
         
         self.act_tree.column('#0'       ,minwidth=20,width=20)
-        self.act_tree.column('ActName'  ,minwidth=20,width=120)
+        self.act_tree.column('OccName'  ,minwidth=20,width=120)
         self.act_tree.column('PartName' ,minwidth=20,width=80)
         self.act_tree.column('Involved' ,minwidth=20,width=80)
-        self.act_tree.column('UID'      ,minwidth=20,width=40)
         self.act_tree.column('Kind'     ,minwidth=20,width=60)
         self.act_tree.column('Role'     ,minwidth=20,width=60)
-        self.act_tree.column('RoleUID'  ,minwidth=20,width=40)
 
         #actLbl.grid (column=0,row=0,sticky=EW)
         self.act_tree.grid(column=0,row=0,sticky=NSEW)
@@ -1232,9 +1266,9 @@ File is saved under name <QueryResults.csv')
         self.act_tree.columnconfigure(3,weight=1)
         self.act_tree.columnconfigure(4,weight=1)
         self.act_tree.columnconfigure(5,weight=1)
-        self.act_tree.columnconfigure(6,weight=1)
-        self.act_tree.columnconfigure(7,weight=1)
-        self.act_tree.columnconfigure(8,weight=1)
+##        self.act_tree.columnconfigure(6,weight=1)
+##        self.act_tree.columnconfigure(7,weight=1)
+##        self.act_tree.columnconfigure(8,weight=1)
         self.act_tree.rowconfigure(0,weight=0)
         self.act_tree.rowconfigure(1,weight=1)
 
@@ -1244,6 +1278,63 @@ File is saved under name <QueryResults.csv')
         actScroll = Scrollbar(self.act_frame,orient=VERTICAL,command=self.act_tree.yview)
         actScroll.grid (column=0,row=0,sticky=NS+E)
         self.act_tree.config(yscrollcommand=actScroll.set)
+
+    
+    def Display_occ_model_view(self):
+        ''' Display activities and occurrences in self.act_tree
+        '''
+        
+        self.act_tree.tag_configure('headTag', option=None, background='#dfd')
+        if len(self.occ_model) > 0:
+            self.top_occurrences = []
+            for occ_line in self.occ_model:
+                #print('==OccTree:',occ_line)
+                # If higher part (occ_linen[2]) is blank then occ_line[0] contains top occ_UID
+                if occ_line[2] == '':
+                    top_occ = self.uid_dict[occ_line[0]]
+                    self.top_occurrences.append(top_occ)
+                level  = 0
+                # Display self.act_tree line
+                self.OccurrenceTree(occ_line, level) #,wholes
+
+            # IDEF0: Display drawings of occurrences
+            diagram = Occurrences_diagram(self.root, self.Gel_net)
+            diagram.Create_occurrences_diagram(self.top_occurrences)
+
+    def OccurrenceTree(self, occ_line, level):
+        """ Display occurrences compositions with inputs and outputs and roles.
+            occ_line = line in occ_model
+            occ_model.append([occ.uid, occ.name, higher.name, involv.uid, kind_occ.uid,\
+                              occ.name, part_occ.name, involv.name, \
+                              kind_part_occ.name, role_of_involved])
+            involv_table: occ, involved, inv_role_kind, inv_kind_name
+        """
+        #print('Occ_line:', occ_line)
+        
+        self.act_tree.tag_configure('occTag', option=None, background='#ddf')
+        self.act_tree.tag_configure('ioTag' , option=None, background='#eef')
+        space = ''
+
+        # Display the occurrence
+        id = self.act_tree.insert(occ_line[2], index='end', values=(occ_line),
+                                  iid=occ_line[1], text=occ_line[1], tags='occTag' , open=True)
+            
+        # Find and display its inputs and outputs
+        # involv_table = occ, involved, inv_role_kind, inv_kind_name
+        for io_objects in self.involv_table:
+            io_line = ['','','','','','','', io_objects[1].name, io_objects[3], io_objects[2].name]
+            #print('involv_table-line:', occ_line[1], io_objects[0].uid, io_objects[1].uid, io_line)
+            # If uid of occurrence == uid of object that has inputs or outputs then display io_line
+            if occ_line[0] == io_objects[0].uid:
+                self.act_tree.insert(id, index='end', values=(io_line), tags='ioTag' , open=True)
+        level = 1
+##        for whole_occ, part_occ, part_kind_occ in self.part_whole_occs:
+##            # For each part of occurrence call OccurrenceTree recursively
+##            # If uid of occurrence == uid whole then there is a part
+##            if occ_line[0] == whole_part[0].uid:
+##                print('part in part_whole_occs:', whole_occ.name, part_occ.name, part_kind_occ.name)
+##                #self.act_tree.insert(id,index='end',values=(wholePart[3],wholePart[2]),tags='actTag')
+##                self.OccurrenceTree(whole_part, level)
 
     def Define_and_display_documents(self):
         # Destroy earlier documents sheet
