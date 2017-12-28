@@ -92,11 +92,13 @@ class Query_view():
     # Query variables widgets definition   
         lhNameLbl   = ttk.Label(self.query_frame,text=lhTerm [self.lang_index])
         lhUIDLbl    = ttk.Label(self.query_frame,text='UID:')
-        relNameLbl  = ttk.Label(self.query_frame,text=relTerm[self.lang_index])
-        rhNameLbl   = ttk.Label(self.query_frame,text=rhTerm [self.lang_index])
-        uomNameLbl  = ttk.Label(self.query_frame,text=uomTerm[self.lang_index])
+        if self.main.extended_query:
+            relNameLbl  = ttk.Label(self.query_frame,text=relTerm[self.lang_index])
+            rhNameLbl   = ttk.Label(self.query_frame,text=rhTerm [self.lang_index])
+            uomNameLbl  = ttk.Label(self.query_frame,text=uomTerm[self.lang_index])
         self.q_lh_name_widget  = ttk.Combobox(self.query_frame,textvariable=self.q_lh_name_str ,\
                                               values=self.Gel_net.lh_terms ,width=30)
+        #if self.main.extended_query:
         self.q_rel_name_widget = ttk.Combobox(self.query_frame,textvariable=self.q_rel_name_str,\
                                               values=self.Gel_net.rel_terms,width=40)
         self.q_rh_name_widget  = ttk.Combobox(self.query_frame,textvariable=self.q_rh_name_str ,\
@@ -104,6 +106,7 @@ class Query_view():
         self.q_uom_name_widget = ttk.Combobox(self.query_frame,textvariable=self.q_uom_name_str,\
                                               values=self.Gel_net.uoms     ,width=10)
         self.q_lh_uid_widget   = ttk.Entry(self.query_frame,textvariable=self.q_lh_uid_str ,width=10)
+        #if self.main.extended_query:
         self.q_rel_uid_widget  = ttk.Entry(self.query_frame,textvariable=self.q_rel_uid_str,width=10)
         self.q_rh_uid_widget   = ttk.Entry(self.query_frame,textvariable=self.q_rh_uid_str ,width=10)
         self.q_uom_uid_widget  = ttk.Entry(self.query_frame,textvariable=self.q_uom_uid_str,width=10)
@@ -111,11 +114,12 @@ class Query_view():
     # Bindings
         self.q_lh_uid_widget.bind  ("<KeyRelease>",self.Lh_uid_command)
         self.q_lh_name_widget.bind ("<KeyRelease>",self.LhSearchCmd)
-        self.q_rel_name_widget.bind("<KeyRelease>",self.RelSearchCmd)
-        self.q_rh_name_widget.bind ("<KeyRelease>",self.RhSearchCmd)
-        self.q_lh_name_widget.bind ("<Double-Button-1>"  ,self.LhSearchCmd)
-        self.q_rel_name_widget.bind("<Double-Button-1>"  ,self.RelSearchCmd)
-        self.q_rh_name_widget.bind ("<Double-Button-1>"  ,self.RhSearchCmd)
+        if self.main.extended_query:
+            self.q_rel_name_widget.bind("<KeyRelease>",self.RelSearchCmd)
+            self.q_rh_name_widget.bind ("<KeyRelease>",self.RhSearchCmd)
+            self.q_lh_name_widget.bind ("<Double-Button-1>"  ,self.LhSearchCmd)
+            self.q_rel_name_widget.bind("<Double-Button-1>"  ,self.RelSearchCmd)
+            self.q_rh_name_widget.bind ("<Double-Button-1>"  ,self.RhSearchCmd)
 
         defText = ['Def. of left hand object:','Definitie van linker object:']
         fullDefQLbl = ttk.Label(self.query_frame,text=defText[self.lang_index])
@@ -155,25 +159,29 @@ class Query_view():
         #                               variable = IncludeDescrVar, onvalue = True)
         
     # Conditions widgets definition
-        condit  = ["Conditions:"         ,"Voorwaarden:"]
-        condLbl   = ttk.Label(self.query_frame,text=condit[self.lang_index])
-        for i in range(0,3):
-            self.query.lhCondVal.append (ttk.Combobox(self.query_frame,textvariable=lhCondQStr[i], \
-                                                      values=self.Gel_net.lh_terms ,width=30))
-            self.query.relCondVal.append(ttk.Combobox(self.query_frame,textvariable=relCondQStr[i],\
-                                                      values=self.Gel_net.rel_terms,width=40))
-            self.query.rhCondVal.append (ttk.Combobox(self.query_frame,textvariable=rhCondQStr[i], \
-                                                      values=self.Gel_net.rh_terms ,width=30))
-            self.query.uomCondVal.append(ttk.Combobox(self.query_frame,textvariable=uomCondQStr[i],\
-                                                      values=self.Gel_net.uoms     ,width=10))
+        if self.main.extended_query:
+            condit  = ["Conditions:"         ,"Voorwaarden:"]
+            condLbl   = ttk.Label(self.query_frame,text=condit[self.lang_index])
+            for i in range(0,3):
+                self.query.lhCondVal.append (ttk.Combobox(self.query_frame,textvariable=lhCondQStr[i], \
+                                                          values=self.Gel_net.lh_terms ,width=30))
+                self.query.relCondVal.append(ttk.Combobox(self.query_frame,textvariable=relCondQStr[i],\
+                                                          values=self.Gel_net.rel_terms,width=40))
+                self.query.rhCondVal.append (ttk.Combobox(self.query_frame,textvariable=rhCondQStr[i], \
+                                                          values=self.Gel_net.rh_terms ,width=30))
+                self.query.uomCondVal.append(ttk.Combobox(self.query_frame,textvariable=uomCondQStr[i],\
+                                                          values=self.Gel_net.uoms     ,width=10))
         
     # Options for selection Widgets definition
         selectTerm = ["Select one of each of the following options:","Kies één van de volgende opties:"]
         optLbl     = ttk.Label(self.query_frame,text=selectTerm[self.lang_index])
 
     # lh Options frame in query_frame for lh options Treeview
+        lh_rowspan = 20
+        if self.main.extended_query:
+            lh_rowspan = 5
         lhOptFrame  = ttk.Frame(self.query_frame,borderwidth=3,relief='ridge')
-        lhOptFrame.grid (column=0, row=15,columnspan=8,rowspan=5,sticky=NSEW)
+        lhOptFrame.grid (column=0, row=15,columnspan=8,rowspan=lh_rowspan,sticky=NSEW)
         lhOptFrame.columnconfigure(0,minsize=10,weight=1)
         lhOptFrame.rowconfigure   (0,minsize=10,weight=1)
 
@@ -217,85 +225,86 @@ class Query_view():
 
         self.lh_options_tree.bind(sequence='<Button-1>', func=self.Set_selected_q_lh_term)
     # = = = = = = = = =
-    # rel Options frame in query_frame for rel options Treeview
-        relOptFrame = ttk.Frame(self.query_frame,borderwidth=3,relief='ridge')
-        relOptFrame.grid (column=0, row=20,columnspan=8,rowspan=5,sticky=NSEW)
-        relOptFrame.columnconfigure(0,minsize=10,weight=1)
-        relOptFrame.rowconfigure   (0,minsize=10,weight=1)
-        
-        #relOptVal = ttk.Combobox(self.query_frame,textvariable=relSelect, values=relOptionList,width=40, postcommand=UpdateRelNames)
-        self.rel_options_tree = ttk.Treeview(relOptFrame,columns=('UID','Name','Kind','Comm','Lang'),\
-                                displaycolumns='#all', selectmode='browse', height=3)
-        self.rel_options_tree.heading('#0'     ,anchor=W)
-        self.rel_options_tree.heading('UID'    ,text=relaCol[self.lang_index] ,anchor=W)
-        self.rel_options_tree.heading('Name'   ,text=nameCol[self.lang_index] ,anchor=W)
-        self.rel_options_tree.heading('Kind'   ,text=kindCol[self.lang_index] ,anchor=W)
-        self.rel_options_tree.heading('Comm'   ,text=commCol[self.lang_index] ,anchor=W)
-        self.rel_options_tree.heading('Lang'   ,text=langCol[self.lang_index] ,anchor=W)
+        if self.main.extended_query:
+        # rel Options frame in query_frame for rel options Treeview
+            relOptFrame = ttk.Frame(self.query_frame,borderwidth=3,relief='ridge')
+            relOptFrame.grid (column=0, row=20,columnspan=8,rowspan=5,sticky=NSEW)
+            relOptFrame.columnconfigure(0,minsize=10,weight=1)
+            relOptFrame.rowconfigure   (0,minsize=10,weight=1)
+            
+            #relOptVal = ttk.Combobox(self.query_frame,textvariable=relSelect, values=relOptionList,width=40, postcommand=UpdateRelNames)
+            self.rel_options_tree = ttk.Treeview(relOptFrame,columns=('UID','Name','Kind','Comm','Lang'),\
+                                    displaycolumns='#all', selectmode='browse', height=3)
+            self.rel_options_tree.heading('#0'     ,anchor=W)
+            self.rel_options_tree.heading('UID'    ,text=relaCol[self.lang_index] ,anchor=W)
+            self.rel_options_tree.heading('Name'   ,text=nameCol[self.lang_index] ,anchor=W)
+            self.rel_options_tree.heading('Kind'   ,text=kindCol[self.lang_index] ,anchor=W)
+            self.rel_options_tree.heading('Comm'   ,text=commCol[self.lang_index] ,anchor=W)
+            self.rel_options_tree.heading('Lang'   ,text=langCol[self.lang_index] ,anchor=W)
 
-        self.rel_options_tree.column ('#0'     ,width=10)
-        self.rel_options_tree.column ('UID'    ,minwidth=40  ,width=80)
-        self.rel_options_tree.column ('Name'   ,minwidth=100 ,width=200)
-        self.rel_options_tree.column ('Kind'   ,minwidth=100 ,width=200)
-        self.rel_options_tree.column ('Comm'   ,minwidth=80  ,width=160)
-        self.rel_options_tree.column ('Lang'   ,minwidth=80  ,width=160)
+            self.rel_options_tree.column ('#0'     ,width=10)
+            self.rel_options_tree.column ('UID'    ,minwidth=40  ,width=80)
+            self.rel_options_tree.column ('Name'   ,minwidth=100 ,width=200)
+            self.rel_options_tree.column ('Kind'   ,minwidth=100 ,width=200)
+            self.rel_options_tree.column ('Comm'   ,minwidth=80  ,width=160)
+            self.rel_options_tree.column ('Lang'   ,minwidth=80  ,width=160)
 
-        #relOptLbl.grid (column=0, row=0,sticky=EW)
-        self.rel_options_tree.grid(column=0, row=0, columnspan=1, rowspan=1, sticky=NSEW)
+            #relOptLbl.grid (column=0, row=0,sticky=EW)
+            self.rel_options_tree.grid(column=0, row=0, columnspan=1, rowspan=1, sticky=NSEW)
 
-        self.rel_options_tree.columnconfigure(0,weight=0)
-        self.rel_options_tree.columnconfigure(1,weight=1)
-        self.rel_options_tree.columnconfigure(2,weight=1)
-        self.rel_options_tree.columnconfigure(3,weight=1)
-        self.rel_options_tree.columnconfigure(4,weight=1)
-        self.rel_options_tree.columnconfigure(5,weight=1)
-        self.rel_options_tree.rowconfigure(0,weight=1)
+            self.rel_options_tree.columnconfigure(0,weight=0)
+            self.rel_options_tree.columnconfigure(1,weight=1)
+            self.rel_options_tree.columnconfigure(2,weight=1)
+            self.rel_options_tree.columnconfigure(3,weight=1)
+            self.rel_options_tree.columnconfigure(4,weight=1)
+            self.rel_options_tree.columnconfigure(5,weight=1)
+            self.rel_options_tree.rowconfigure(0,weight=1)
 
-        relOptScroll = ttk.Scrollbar(relOptFrame,orient=VERTICAL,command=self.rel_options_tree.yview)
-        relOptScroll.grid (column=0,row=0,sticky=NS+E)
-        self.rel_options_tree.config(yscrollcommand=relOptScroll.set)
+            relOptScroll = ttk.Scrollbar(relOptFrame,orient=VERTICAL,command=self.rel_options_tree.yview)
+            relOptScroll.grid (column=0,row=0,sticky=NS+E)
+            self.rel_options_tree.config(yscrollcommand=relOptScroll.set)
 
-        self.rel_options_tree.bind(sequence='<Button-1>', func=self.Set_selected_q_rel_term)
-    # = = = = = = = = =
-    # rh Options frame in query_frame for rh options Treeview
-        rhOptFrame  = ttk.Frame(self.query_frame,borderwidth=3,relief='ridge')
-        rhOptFrame.grid (column=0, row=25,columnspan=8,rowspan=5,sticky=NSEW)
-        rhOptFrame.columnconfigure(0,minsize=10,weight=1)
-        rhOptFrame.rowconfigure   (0,minsize=10,weight=1)
-        
-        #rhOptVal  = ttk.Combobox(self.query_frame,textvariable=rhSelect,  values=rhOptionList, width=40, postcommand=UpdateRhNames)
-        self.rh_options_tree = ttk.Treeview(rhOptFrame,columns=('UID','Name','Kind','Comm','Lang'),\
-                                displaycolumns='#all', selectmode='browse', height=3)
-        self.rh_options_tree.heading('#0'     ,anchor=W)
-        self.rh_options_tree.heading('UID'    ,text=righCol[self.lang_index] ,anchor=W)
-        self.rh_options_tree.heading('Name'   ,text=nameCol[self.lang_index] ,anchor=W)
-        self.rh_options_tree.heading('Kind'   ,text=kindCol[self.lang_index] ,anchor=W)
-        self.rh_options_tree.heading('Comm'   ,text=commCol[self.lang_index] ,anchor=W)
-        self.rh_options_tree.heading('Lang'   ,text=langCol[self.lang_index] ,anchor=W)
+            self.rel_options_tree.bind(sequence='<Button-1>', func=self.Set_selected_q_rel_term)
+        # = = = = = = = = =
+        # rh Options frame in query_frame for rh options Treeview
+            rhOptFrame  = ttk.Frame(self.query_frame,borderwidth=3,relief='ridge')
+            rhOptFrame.grid (column=0, row=25,columnspan=8,rowspan=5,sticky=NSEW)
+            rhOptFrame.columnconfigure(0,minsize=10,weight=1)
+            rhOptFrame.rowconfigure   (0,minsize=10,weight=1)
+            
+            #rhOptVal  = ttk.Combobox(self.query_frame,textvariable=rhSelect,  values=rhOptionList, width=40, postcommand=UpdateRhNames)
+            self.rh_options_tree = ttk.Treeview(rhOptFrame,columns=('UID','Name','Kind','Comm','Lang'),\
+                                    displaycolumns='#all', selectmode='browse', height=3)
+            self.rh_options_tree.heading('#0'     ,anchor=W)
+            self.rh_options_tree.heading('UID'    ,text=righCol[self.lang_index] ,anchor=W)
+            self.rh_options_tree.heading('Name'   ,text=nameCol[self.lang_index] ,anchor=W)
+            self.rh_options_tree.heading('Kind'   ,text=kindCol[self.lang_index] ,anchor=W)
+            self.rh_options_tree.heading('Comm'   ,text=commCol[self.lang_index] ,anchor=W)
+            self.rh_options_tree.heading('Lang'   ,text=langCol[self.lang_index] ,anchor=W)
 
-        self.rh_options_tree.column ('#0'     ,width=10)
-        self.rh_options_tree.column ('UID'    ,minwidth=40  ,width=80)
-        self.rh_options_tree.column ('Name'   ,minwidth=100 ,width=200)
-        self.rh_options_tree.column ('Kind'   ,minwidth=100 ,width=200)
-        self.rh_options_tree.column ('Comm'   ,minwidth=80 ,width=160)
-        self.rh_options_tree.column ('Lang'   ,minwidth=80 ,width=160)
+            self.rh_options_tree.column ('#0'     ,width=10)
+            self.rh_options_tree.column ('UID'    ,minwidth=40  ,width=80)
+            self.rh_options_tree.column ('Name'   ,minwidth=100 ,width=200)
+            self.rh_options_tree.column ('Kind'   ,minwidth=100 ,width=200)
+            self.rh_options_tree.column ('Comm'   ,minwidth=80 ,width=160)
+            self.rh_options_tree.column ('Lang'   ,minwidth=80 ,width=160)
 
-        #rhOptLbl.grid (column=0, row=0,sticky=EW)
-        self.rh_options_tree.grid(column=0, row=0, columnspan=1, rowspan=1, sticky=NSEW)
+            #rhOptLbl.grid (column=0, row=0,sticky=EW)
+            self.rh_options_tree.grid(column=0, row=0, columnspan=1, rowspan=1, sticky=NSEW)
 
-        self.rh_options_tree.columnconfigure(0,weight=0)
-        self.rh_options_tree.columnconfigure(1,weight=1)
-        self.rh_options_tree.columnconfigure(2,weight=1)
-        self.rh_options_tree.columnconfigure(3,weight=1)
-        self.rh_options_tree.columnconfigure(4,weight=1)
-        self.rh_options_tree.columnconfigure(5,weight=1)
-        self.rh_options_tree.rowconfigure(0,weight=1)
+            self.rh_options_tree.columnconfigure(0,weight=0)
+            self.rh_options_tree.columnconfigure(1,weight=1)
+            self.rh_options_tree.columnconfigure(2,weight=1)
+            self.rh_options_tree.columnconfigure(3,weight=1)
+            self.rh_options_tree.columnconfigure(4,weight=1)
+            self.rh_options_tree.columnconfigure(5,weight=1)
+            self.rh_options_tree.rowconfigure(0,weight=1)
 
-        rhOptScroll = ttk.Scrollbar(rhOptFrame,orient=VERTICAL,command=self.rh_options_tree.yview)
-        rhOptScroll.grid (column=0,row=0,sticky=NS+E)
-        self.rh_options_tree.config(yscrollcommand=rhOptScroll.set)
+            rhOptScroll = ttk.Scrollbar(rhOptFrame,orient=VERTICAL,command=self.rh_options_tree.yview)
+            rhOptScroll.grid (column=0,row=0,sticky=NS+E)
+            self.rh_options_tree.config(yscrollcommand=rhOptScroll.set)
 
-        self.rh_options_tree.bind(sequence='<Button-1>', func=self.Set_selected_q_rh_term)
+            self.rh_options_tree.bind(sequence='<Button-1>', func=self.Set_selected_q_rh_term)
     # = = = = = = = = = = = = =
     # Buttons definition
         search = ['Search' ,'Zoek']
@@ -307,13 +316,6 @@ class Query_view():
         confirmBut = ttk.Button(self.query_frame,text=confirm[self.lang_index], command=self.Formulate_query_spec)
         verifyBut  = ttk.Button(self.query_frame,text=verify[self.lang_index],  command=self.query.Verify_model)
         
-##    # Messages area - text widget definition
-##        messText = ["Messages and warnings:","Berichten en foutmeldingen:"]
-##        MessagesQLbl = ttk.Label(self.query_frame,text=messText[self.lang_index])
-##        self.query.MessagesQ = Text(self.query_frame, width = 40, height = 10, background='#efc')
-##        MessQScroll  = ttk.Scrollbar(self.query_frame,orient=VERTICAL,command=self.query.MessagesQ.yview)
-##        self.query.MessagesQ.config(yscrollcommand=MessQScroll.set)
-        
     # Buttons location in grid
         #ImmediateSearch.grid(column=0, columnspan=2,row=1,sticky=W)
         CaseSensitive.grid  (column=0, columnspan=2,row=1,sticky=W)
@@ -324,13 +326,15 @@ class Query_view():
     # Widget locations in grid
         lhNameLbl.grid  (column=0,row=3,sticky=W)
         lhUIDLbl.grid   (column=0,row=3,sticky=E)
-        relNameLbl.grid (column=2,row=3,sticky=EW)
-        rhNameLbl.grid  (column=4,row=3,sticky=EW)
-        uomNameLbl.grid (column=6,row=3,sticky=EW)
+        if self.main.extended_query:
+            relNameLbl.grid (column=2,row=3,sticky=EW)
+            rhNameLbl.grid  (column=4,row=3,sticky=EW)
+            uomNameLbl.grid (column=6,row=3,sticky=EW)
         self.q_lh_name_widget.grid (column=0,row=4,columnspan=2, rowspan=1,sticky=EW)
-        self.q_rel_name_widget.grid(column=2,row=4,columnspan=2, rowspan=1,sticky=EW)
-        self.q_rh_name_widget.grid (column=4,row=4,columnspan=2, rowspan=1,sticky=EW)
-        self.q_uom_name_widget.grid(column=6,row=4,columnspan=2, rowspan=1,sticky=EW)
+        if self.main.extended_query:
+            self.q_rel_name_widget.grid(column=2,row=4,columnspan=2, rowspan=1,sticky=EW)
+            self.q_rh_name_widget.grid (column=4,row=4,columnspan=2, rowspan=1,sticky=EW)
+            self.q_uom_name_widget.grid(column=6,row=4,columnspan=2, rowspan=1,sticky=EW)
         self.q_lh_uid_widget.grid  (column=1,row=3,columnspan=1, rowspan=1,sticky=EW)
         #self.q_rel_uid_widget.grid (column=2,row=5,columnspan=1, rowspan=1,sticky=EW)
         #self.q_rh_uid_widget.grid  (column=4,row=5,columnspan=1, rowspan=1,sticky=EW)
@@ -340,13 +344,14 @@ class Query_view():
         defQScroll.grid (column=7,row=5,rowspan=1,sticky=NS+E)
 
     # Conditions widgets location
-        condLbl.grid  (column=0, row=7, columnspan=1, sticky=W)
-        for i in range(0,3):
-            rowNr = 11 + i
-            self.query.lhCondVal[i].grid (column=0, row=rowNr, columnspan=2, rowspan=1, sticky=EW)
-            self.query.relCondVal[i].grid(column=2, row=rowNr, columnspan=2, rowspan=1, sticky=EW)
-            self.query.rhCondVal[i].grid (column=4, row=rowNr, columnspan=2, rowspan=1, sticky=EW)
-            self.query.uomCondVal[i].grid(column=6, row=rowNr, columnspan=2, rowspan=1, sticky=EW)
+        if self.main.extended_query:
+            condLbl.grid  (column=0, row=7, columnspan=1, sticky=W)
+            for i in range(0,3):
+                rowNr = 11 + i
+                self.query.lhCondVal[i].grid (column=0, row=rowNr, columnspan=2, rowspan=1, sticky=EW)
+                self.query.relCondVal[i].grid(column=2, row=rowNr, columnspan=2, rowspan=1, sticky=EW)
+                self.query.rhCondVal[i].grid (column=4, row=rowNr, columnspan=2, rowspan=1, sticky=EW)
+                self.query.uomCondVal[i].grid(column=6, row=rowNr, columnspan=2, rowspan=1, sticky=EW)
 
     # Option Widgets location
         optLbl.grid    (column=0, row=14, columnspan=3, rowspan=1, sticky=EW)

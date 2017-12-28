@@ -97,6 +97,7 @@ class Semantic_Network():
         self.kind_model   = []
         self.prod_model   = []
         self.query_table  = []
+        self.network_model  = []
         self.summ_model   = []
         self.summ_objects = []
         self.taxon_model  = []
@@ -320,7 +321,7 @@ class Semantic_Network():
                 # If obj is not defined and it is not 'anything' and not a whole number then display a warning
                 if obj.defined == False and obj.uid != anythingUID:
                     int_obj_uid, integer = Convert_numeric_to_integer(obj.uid)
-                    if integer == True and (int_obj_uid < 1000000000 or int_obj_uid > 3000000000):
+                    if integer == True and int_obj_uid not in range(1000000000, 3000000000):
                         self.user.Message(
                             'Warning: RH object {} ({}) is not yet defined'           .format(obj.name, obj.uid),\
                             'Waarschuwing: RH object {} ({}) is nog niet gedefinieerd'.format(obj.name, obj.uid))
@@ -351,7 +352,7 @@ class Semantic_Network():
                             # If no rh_name is found and obj.uid does not denote an integer number then report warning
                             int_obj_uid, integer = Convert_numeric_to_integer(obj.uid)
                             if rh_name_found == False and obj.uid != anythingUID and \
-                               (integer == False or (int_obj_uid < 1000000000 or int_obj_uid > 3000000000)):
+                               (integer == False or int_obj_uid not in range(1000000000, 3000000000)):
                                 print("Warning: rh_name '{}' ({}) not known for uid '{}'. Correct or add a synonym.".\
                                       format(cand_name, obj.uid, obj.names_in_contexts[0][2]))
                                 # Create a name in context with description and add to object and dictionary
@@ -1121,6 +1122,7 @@ class Semantic_Network():
         self.indiv_model[:]   = []
         self.indiv_objects[:] = []
         self.query_table[:]   = []
+        self.network_model[:]   = []
         self.info_model[:]    = []
         self.occ_model[:]     = []
         self.involv_table[:]  = []
@@ -1156,7 +1158,7 @@ class Semantic_Network():
             self.Build_single_product_view(obj)
         
     def Build_single_product_view(self, obj):
-        ''' Create product model views in
+        ''' Create product model views in network_model,
             kind_model, prod_model, query_table (with Gellish expressions),
             taxon_model (taxonomy view) summ_model (tabular view),
             possibilities_model and indiv_model'''
@@ -1194,6 +1196,10 @@ class Semantic_Network():
                         if expr[rel_type_uid_col] in ['1146', '1726', '5396', '1823']:
                             if len(self.query_table) < self.max_nr_of_rows:
                                 self.query_table.append(expr)
+                                branch = [expr[lh_uid_col], expr[rel_type_uid_col], expr[rh_uid_col],\
+                                          expr[phrase_type_uid_col], \
+                                          expr[lh_name_col], expr[rel_type_name_col], expr[rh_name_col]]
+                                self.network_model.append(branch)
 
         # Individual thing: Object category is not a kind, thus indicates an indiv.
         # Verify whether the individual thing is classified (has one or more classifiers)
@@ -1342,6 +1348,7 @@ class Semantic_Network():
 ##                for rel in s.relations:
 ##                    if len(self.query_table) < self.max_nr_of_rows:
 ##                        self.query_table.append(rel.expression)
+##                        self.network_model.append(branch)
 ##            # Determine subtypes of subtypes recursively
 ##            for sub in subs:
 ##                if sub in self.ex_candids or sub.uid in self.coll_of_subtype_uids:
@@ -1405,6 +1412,10 @@ class Semantic_Network():
             
             if len(self.query_table) < self.max_nr_of_rows:
                 self.query_table.append(expr)
+                branch = [expr[lh_uid_col], expr[rel_type_uid_col], expr[rh_uid_col],\
+                          expr[phrase_type_uid_col], \
+                          expr[lh_name_col], expr[rel_type_name_col], expr[rh_name_col]]
+                self.network_model.append(branch)
 
             # Record the role playing occurrence in occ_model
             # Find classifying kind of occurrence
@@ -1463,6 +1474,10 @@ class Semantic_Network():
                 #      'roles:',expr_occ[lh_role_uid_col],expr_occ[rh_role_uid_col])
                 
                 self.query_table.append(expr_occ)
+                branch = [expr_occ[lh_uid_col], expr_occ[rel_type_uid_col], expr_occ[rh_uid_col],\
+                          expr_occ[phrase_type_uid_col], \
+                          expr_occ[lh_name_col], expr_occ[rel_type_name_col], expr_occ[rh_name_col]]
+                self.network_model.append(branch)
                 status = expr_occ[status_col]
                 
                 # Determine the kind of the involved individual object
@@ -1607,6 +1622,10 @@ class Semantic_Network():
                 status = expr[status_col]
                 
                 self.query_table.append(expr)
+                branch = [expr[lh_uid_col], expr[rel_type_uid_col], expr[rh_uid_col],\
+                          expr[phrase_type_uid_col], \
+                          expr[lh_name_col], expr[rel_type_name_col], expr[rh_name_col]]
+                self.network_model.append(branch)
                 
                 if len(part_occ.classifiers) > 0:
                     kind_part_occ = part_occ.classifiers[0]
@@ -1667,7 +1686,9 @@ class Semantic_Network():
                 comm_name = self.community_dict[obj.names_in_contexts[0][1]] # community uid
                 part_def  = obj.names_in_contexts[0][4]
         else:
-            print('No names in contexts for {}'.format(obj.name))
+            numeric_uid, integer = Convert_numeric_to_integer(obj.uid)
+            if integer == False or numeric_uid not in range(1000000000, 3000000000):
+                print('No names in contexts for {}'.format(obj.name))
             obj_name  = obj.name
             lang_name = 'unknown'
             comm_name = 'unknown'
@@ -1805,6 +1826,10 @@ class Semantic_Network():
                 expr = rel_obj.expression
                 if len(self.query_table) < self.max_nr_of_rows and expr not in self.query_table:
                         self.query_table.append(expr)
+                        branch = [expr[lh_uid_col], expr[rel_type_uid_col], expr[rh_uid_col],\
+                                  expr[phrase_type_uid_col], \
+                                  expr[lh_name_col], expr[rel_type_name_col], expr[rh_name_col]]
+                        self.network_model.append(branch)
         
         # Collect list of obj and its supertypes in the complete hierarchy for searching inherited aspects
         all_supers = self.Determine_supertypes(obj)
@@ -1831,11 +1856,8 @@ class Semantic_Network():
                     role_name    = expr[lh_role_name_col]
                 else:
                     continue
+                
                 # There is a kind of aspect found
-##                # Add a found <can have as aspect a> relation (or its subtype) to the query_table for output
-##                if len(self.query_table) < self.max_nr_of_rows:
-##                    self.query_table.append(expr)
-
                 nr_of_aspects += 1    
                 #self.line_nr  += 1
                 status = expr[status_col]     
@@ -1953,7 +1975,10 @@ class Semantic_Network():
                         self.possibilities_model.append(self.possibility_row[:])
                     
                     if len(self.possibilities_model) < self.max_nr_of_rows:
-                        community_name = self.community_dict[obj.names_in_contexts[0][1]] # community uid
+                        if len(obj.names_in_contexts) > 0:
+                            community_name = self.community_dict[obj.names_in_contexts[0][1]] # community uid
+                        else:
+                            community_name = 'unknown'
                         self.possibility_row[0] = obj.uid
                         self.possibility_row[1] = aspect_name + of_text[self.GUI_lang_index] + obj_name + ')'
                         self.possibility_row[2] = poss_asp_of_obj_text
@@ -1981,6 +2006,10 @@ class Semantic_Network():
                     #print('Value present:', obj_i.name, aspect_name, value_name)
                     if len(self.query_table) < self.max_nr_of_rows:
                         self.query_table.append(expr2)
+                        branch = [expr2[lh_uid_col], expr2[rel_type_uid_col], expr2[rh_uid_col],\
+                                  expr2[phrase_type_uid_col], \
+                                  expr2[lh_name_col], expr2[rel_type_name_col], expr2[rh_name_col]]
+                        self.network_model.append(branch)
                     if self.decomp_level == 0:
                         # Build summary_view header add a column for aspects if not yet included
                         if value_presence == True and aspect_name not in self.taxon_column_names and \
@@ -2110,19 +2139,26 @@ class Semantic_Network():
                     if len(self.taxon_model) < self.max_nr_of_rows:
                         # If summary row is about object in focus, then make supertype of object in focus empty
                         # Because treeview parent (taxon_row[2] should be supertype or blank.
-                        #print('Subtype_level:', self.subtype_level, obj.name, self.taxon_row)
-                        if self.taxon_row[0] == obj.uid:
+                        #print('Subtype_level-1:', self.subtype_level, self.object_in_focus.uid, \
+                        #      self.object_in_focus.name, obj.uid, obj.name, self.taxon_row[0:4])
+                        if self.taxon_row[0] == self.object_in_focus.uid:
                             self.taxon_row[2] = ''
-
-                        # If the supertype is the object_in_focus, then make the object a sub of the inter_row
-                        if self.taxon_row[2] == obj.name:
-                            self.taxon_row[2] = self.has_as_subtypes[self.GUI_lang_index]
-                        self.taxon_model.append(self.taxon_row[:])
+                            self.taxon_model.append(self.taxon_row[:])
                         
-                        # If the object is the object_in_focus, then insert an inter_row header line for the subtypes
+                        # If the object not a subtype of the object_in_focus,
+                        # then insert an inter_row header line for the subtypes
                         if self.subtype_level == 0:
                             inter_row = [obj.uid, self.has_as_subtypes[self.GUI_lang_index], obj.name, '']
                             self.taxon_model.append(inter_row)
+
+                        # If the supertype is the object_in_focus, then make the object a sub of the inter_row
+                        else:
+                            if self.taxon_row[2] == self.object_in_focus.name:
+                                self.taxon_row[2] = self.has_as_subtypes[self.GUI_lang_index]
+                                self.taxon_model.append(self.taxon_row[:])
+                            else:
+                                self.taxon_model.append(self.taxon_row[:])
+                        #print('Subtype_level-2:', self.subtype_level, obj.name, self.taxon_row[0:4])
 
             self.taxon_row = ['','','','','','','','','','','','','','']
 
@@ -2167,7 +2203,7 @@ class Semantic_Network():
 ##        if self.individuals > 0:
 ##            for individual in self.individuals:
 ##                indiv_uid = individual.uid
-        has_as_individuals = ['classifies as individual ', 'classificeert als individueel ']
+        has_as_individuals = ['classifies as individual ', 'classificeert als individuele ']
         first_time = True
         
         for rel_obj in obj.relations:
@@ -2185,6 +2221,10 @@ class Semantic_Network():
                 # Store the expression in the query_table for display and possible export
                 if len(self.query_table) < self.max_nr_of_rows:
                     self.query_table.append(expr)
+                    branch = [expr[lh_uid_col], expr[rel_type_uid_col], expr[rh_uid_col],\
+                              expr[phrase_type_uid_col], \
+                              expr[lh_name_col], expr[rel_type_name_col], expr[rh_name_col]]
+                    self.network_model.append(branch)
                     
                 # Individual thing uid is found via classification relation
                 indiv = self.uid_dict[indiv_uid]
@@ -2242,6 +2282,10 @@ class Semantic_Network():
             if expr[rel_type_uid_col] in self.subComposUIDs:
                 if expr not in self.query_table and expr not in self.query_table:
                     self.query_table.append(expr)
+                    branch = [expr[lh_uid_col], expr[rel_type_uid_col], expr[rh_uid_col],\
+                              expr[phrase_type_uid_col], \
+                              expr[lh_name_col], expr[rel_type_name_col], expr[rh_name_col]]
+                    self.network_model.append(branch)
                 # If base phrase <is a part of> and right hand is the object in focus then lh is a part
                 if expr[phrase_type_uid_col]   == basePhraseUID:     # base
                     if obj.uid == expr[rh_uid_col]:
@@ -2266,8 +2310,6 @@ class Semantic_Network():
                         self.part_head_req = False
                     part = self.uid_dict[part_uid]
 
-##                    if len(self.query_table) < self.max_nr_of_rows and expr not in self.query_table:
-##                        self.query_table.append(expr)
                     status = expr[status_col]
 
                     # Verify if the classification of the part is known
@@ -2371,6 +2413,10 @@ class Semantic_Network():
                 # Add the expression to the query_table output table
                 if len(self.query_table) < self.max_nr_of_rows:
                     self.query_table.append(expr)
+                    branch = [expr[lh_uid_col], expr[rel_type_uid_col], expr[rh_uid_col],\
+                              expr[phrase_type_uid_col], \
+                              expr[lh_name_col], expr[rel_type_name_col], expr[rh_name_col]]
+                    self.network_model.append(branch)
 
                 # Determine preferred name of object (= kind)
                 if len(obj.names_in_contexts) > 0:
@@ -2505,6 +2551,10 @@ class Semantic_Network():
             # Add each expression to the query_table with each idea about the object in focus
             if len(self.query_table) < self.max_nr_of_rows and expr not in self.query_table:
                 self.query_table.append(expr)
+                branch = [expr[lh_uid_col], expr[rel_type_uid_col], expr[rh_uid_col],\
+                          expr[phrase_type_uid_col], \
+                          expr[lh_name_col], expr[rel_type_name_col], expr[rh_name_col]]
+                self.network_model.append(branch)
                 
             # Find possession of aspect relations (or its subtypes)
             if indiv.uid == expr[lh_uid_col] and expr[rel_type_uid_col] in self.subPossAspUIDs:
@@ -2583,6 +2633,10 @@ class Semantic_Network():
                     expr = rel_obj.expression
                     if len(self.query_table) < self.max_nr_of_rows and expr not in self.query_table:
                         self.query_table.append(expr)
+                        branch = [expr[lh_uid_col], expr[rel_type_uid_col], expr[rh_uid_col],\
+                                  expr[phrase_type_uid_col], \
+                                  expr[lh_name_col], expr[rel_type_name_col], expr[rh_name_col]]
+                        self.network_model.append(branch)
                     if aspect_uid == expr[lh_uid_col]:
                         # Find the first expression that qualifies or quantifies the aspect
                         # by searching for the kinds of qualifying relations or their subtypes
@@ -2612,7 +2666,7 @@ class Semantic_Network():
                     #    determine the value name in the preferred language (and in the preferred language community)
                     #print('Value', aspect_uid, value_uid, value_name, expr[0:25])
                     numeric_uid, integer = Convert_numeric_to_integer(value_uid)
-                    if integer == False or (numeric_uid < 1000000000 or numeric_uid >= 3000000000):
+                    if integer == False or numeric_uid not in range(1000000000, 3000000000):
                         value = self.uid_dict[value_uid]
                         lang_name, comm_name, value_name, descr = \
                                self.Determine_name_in_language_and_community(value)
@@ -2620,6 +2674,10 @@ class Semantic_Network():
                     # Aspect value found: add expression to result table
                     if len(self.query_table) < self.max_nr_of_rows and expr not in self.query_table:
                         self.query_table.append(expr)
+                        branch = [expr[lh_uid_col], expr[rel_type_uid_col], expr[rh_uid_col],\
+                                  expr[phrase_type_uid_col], \
+                                  expr[lh_name_col], expr[rel_type_name_col], expr[rh_name_col]]
+                        self.network_model.append(branch)
             else:
                 # Qualitative aspect found (e.g. a substance such as PVC)
                 substance = self.uid_dict['431771']     # subtance or stuff
@@ -2813,6 +2871,10 @@ class Semantic_Network():
                         info.description = info_expr[full_def_col]
                         qualified = True
                         self.query_table.append(info_expr)
+                        branch = [info_expr[lh_uid_col], info_expr[rel_type_uid_col], info_expr[rh_uid_col],\
+                                  info_expr[phrase_type_uid_col], \
+                                  info_expr[lh_name_col], info_expr[rel_type_name_col], info_expr[rh_name_col]]
+                        self.network_model.append(branch)
                         
                     # Verify whether info <is presented on> (4996) physical object (typically an electronic data file)
                     #        or info <is presented on at least one of> (5627) collection of physical objects
@@ -2827,6 +2889,10 @@ class Semantic_Network():
                         # Info is presented on a carrier
                         presented = True
                         self.query_table.append(info_expr)
+                        branch = [info_expr[lh_uid_col], info_expr[rel_type_uid_col], info_expr[rh_uid_col],\
+                                  info_expr[phrase_type_uid_col], \
+                                  info_expr[lh_name_col], info_expr[rel_type_name_col], info_expr[rh_name_col]]
+                        self.network_model.append(branch)
                         carrier = self.uid_dict[carrier_uid]
                         if len(carrier.classifiers) > 0:
                             carrier_kind_name = carrier.classifiers[0].name
@@ -2848,6 +2914,10 @@ class Semantic_Network():
                                 # Directory for carrier is found
                                 directory = self.uid_dict[directory_uid]
                                 self.query_table.append(car_expr)
+                                branch = [car_expr[lh_uid_col], car_expr[rel_type_uid_col], car_expr[rh_uid_col],\
+                                          car_expr[phrase_type_uid_col], \
+                                          car_expr[lh_name_col], car_expr[rel_type_name_col], car_expr[rh_name_col]]
+                                self.network_model.append(branch)
                                 directory_name = directory.name
 
                         if directory_name == '':
@@ -2859,7 +2929,7 @@ class Semantic_Network():
                         # Store info about object in info_model
                         #print('Carrier {} is located on directory {}.'.format(carrier.name, directory_name))
                         info_row = [info.uid, obj.uid, carrier.uid, directory_name,\
-                                    info.name, super_info_name, obj.name, \
+                                    info.name, super_info_name, directory_name, obj.name, \
                                     carrier.name, carrier_kind_name]
                         self.info_model.append(info_row)
                         
@@ -2879,7 +2949,8 @@ class Semantic_Network():
                 if presented == False:
                     # Store info about object in info_model
                     info_row = [info.uid, obj.uid, info.description, '', \
-                                info.name, super_info_name, obj.name, '',descr_avail_text[self.GUI_lang_index], '', '']
+                                info.name, super_info_name, '', obj.name, '',\
+                                descr_avail_text[self.GUI_lang_index], '', '']
                     self.info_model.append(info_row)
                     
                     # Store info about object in prod_model or kind_model
