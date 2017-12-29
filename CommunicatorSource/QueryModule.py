@@ -857,13 +857,16 @@ right hand kind <{}> unknown; Try again.'.format(self.q_lh_name,self.q_rh_name))
         print('Otherviews')
         
     def Formulate_conditions_from_gui(self):
-        """ Determine conditions for GUI
+        """ Determine conditions in GUI if any
         """
         self.answer_expressions = []
         condition = []
         #self.condition_table[:] = []
         condText = ['Condition','Voorwaarde']
         cond_satified = True
+
+        if self.main.extended_query == False:
+            return
         
         # Get conditions and find condition UIDs
         for condNr in range(0,3):

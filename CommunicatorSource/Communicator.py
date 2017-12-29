@@ -25,6 +25,7 @@ class Main():
         self.db_name   = "GellishDB"
         self.file_name = "Gellish_net_db"
         self.query_spec = []
+        self.extended_query = False
 
         self.use_GUI = False
         graphic = 'y' #input('GUI (y/n):')
@@ -123,7 +124,7 @@ class Main():
         # by loading knowledge and/or product model files
         self.db_cursor.Import_Model_Files(model_files, model_dirs, self.Gel_net, self.user)
         
-    def Verify_table(self):
+    def Read_file(self):
 ##        self.Verify_presence_db_and_net()
         # Verify file(s) means read one or more files, verify their content
         # and load them in various tables in an in-:memory: database
@@ -148,7 +149,15 @@ class Main():
             self.Ensure_network_built()
             self.Gel_net_built = True
 
+    def Search_net(self):
+        self.extended_query = False
+        self.Extended_query_net()
+        
     def Query_net(self):
+        self.extended_query = True
+        self.Extended_query_net()
+        
+    def Extended_query_net(self):
         # Query the semantic network
         if self.Gel_net_built == True:
             # Create a query object
@@ -243,7 +252,7 @@ else:
             main.Create_net()
         if action == 'r': main.Read_db()
         if action == 'm': main.Modify_db()
-        if action == 'v': main.Verify_table()
+        if action == 'v': main.Read_file()
         if action == 'q': main.Query_net()
         if action == 'd': main.Dump_net()
         if action == 'l': main.Load_net()
