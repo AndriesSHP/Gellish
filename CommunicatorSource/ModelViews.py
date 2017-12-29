@@ -27,6 +27,7 @@ class Display_views():
         self.possibilities_model = Gel_net.possibilities_model
         self.indiv_model  = Gel_net.indiv_model
         self.query_table  = Gel_net.query_table
+        self.network_model  = Gel_net.network_model
         self.occ_model    = Gel_net.occ_model
         self.involv_table    = Gel_net.involv_table
         #self.part_whole_occs = Gel_net.part_whole_occs
@@ -41,15 +42,18 @@ class Display_views():
         self.indiv_column_names  = Gel_net.indiv_column_names
         self.indiv_uom_names     = Gel_net.indiv_uom_names
 
-        self.subsHead    = ['Subtypes'      ,'Subtypen']
-        self.compHead    = ['Part hierarchy','Compositie']
-        self.occHead     = ['Occurrences'   ,'Gebeurtenissen']
-        #self.roleHead    = ['Role'          ,'Rol']
-        #self.involHead   = ['Involved'      ,'Betrokkene']
-        self.kindHead    = ['Kind'          ,'Soort']
-        self.aspectHead  = ['Aspect'        ,'Aspect']
-        self.partOccHead = ['Part occurrence','Deelgebeurtenis']
-        self.info_head   = ['Document'      ,'Document']
+        self.subs_head     = ['Subtypes'      ,'Subtypen']
+        self.comp_head     = ['Part hierarchy','Compositie']
+        self.occ_head      = ['Occurrences'   ,'Gebeurtenissen']
+        #self.role_head    = ['Role'          ,'Rol']
+        #self.involv_head  = ['Involved'      ,'Betrokkene']
+        self.kind_head     = ['Kind'          ,'Soort']
+        self.aspect_head   = ['Aspect'        ,'Aspect']
+        self.part_occ_head = ['Part occurrence','Deelgebeurtenis']
+        self.info_head     = ['Document'      ,'Document']
+        self.name_head     = ['Name'          , 'Naam']
+        self.parent_head   = ['Whole'         , 'Geheel']
+        self.comm_head     = ['Community'     , 'Taalgemeenschap']
 
         self.modification = ''
         
@@ -63,6 +67,10 @@ class Display_views():
         self.views_noteb.columnconfigure(0,weight=1)
         self.views_noteb.rowconfigure(0,weight=1)
         #self.views_noteb.rowconfigure(1,weight=1)
+
+    # Define and display Network view sheet = = = = = = = = = = = = =
+        if len(self.query_table) > 0:
+            self.Define_and_display_network()
 
     # Define and display Taxonomic view sheet for kinds of products = = = =
         if len(self.taxon_model) > 0:
@@ -166,6 +174,94 @@ class Display_views():
 
         self.log_messages.grid (column=0, row=0, columnspan=1, rowspan=1, sticky=NSEW)
         log_mess_scroll.grid   (column=1, row=0, sticky=NS+E)
+
+    def Define_and_display_network(self):
+        # Destroy earlier network_frame
+        try:
+            self.network_frame.destroy()
+        except AttributeError:
+            pass
+        
+        self.Define_network_sheet()
+
+        self.Display_network_view()
+
+    def Define_network_sheet(self):
+        ''' Define a network sheet for display of network_model (a list of network rows)
+            for display in a tab of Notebook
+        '''
+        self.network_frame = Frame(self.views_noteb)
+        self.network_frame.grid (column=0, row=0, sticky=NSEW, rowspan=2) #pack(fill=BOTH, expand=1)  
+        self.network_frame.columnconfigure(0, weight=1)
+        self.network_frame.rowconfigure(0,weight=0)
+        self.network_frame.rowconfigure(1,weight=1)
+        
+        network_text = ['Network','Netwerk']
+        self.views_noteb.add(self.network_frame, text=network_text[self.lang_index], sticky=NSEW)
+        #self.views_noteb.insert("end", self.network_frame, sticky=NSEW)
+
+        network_head = ['Network of objects and aspects',\
+                        'Netwerk van objecten en aspecten']
+        network_lbl  = Label(self.network_frame,text=network_head[self.lang_index])
+        
+        headings = ['UID','Name', 'Kind','Community','Aspect1','Aspect2','Aspect3','Aspect4','Aspect5'  ,\
+                                 'Aspect6','Aspect7','Aspect8','Aspect9','Aspect10']
+        nr_of_cols = len(self.taxon_column_names)
+        display_cols = headings[3:nr_of_cols]
+
+        self.network_tree = Treeview(self.network_frame,columns=(headings[0:nr_of_cols]),\
+                                  displaycolumns=display_cols, selectmode='browse', height=30)
+                        
+        self.network_tree.heading('UID'       ,text='UID'      , anchor=W)
+        self.network_tree.heading('Name'      ,text=self.name_head[self.lang_index], anchor=W)
+        self.network_tree.heading('Kind'      ,text=self.kind_head[self.lang_index], anchor=W)
+        self.network_tree.heading('Community' ,text=self.comm_head[self.lang_index], anchor=W)
+        
+        self.network_tree.column ('#0'        ,minwidth=100    , width=200)
+        self.network_tree.column ('Community' ,minwidth=20     , width=50)
+        asp = 0
+        for column in self.taxon_column_names[4:]:
+            asp += 1
+            Asp_name = 'Aspect' + str(asp)
+            self.network_tree.heading(Asp_name   ,text=self.taxon_column_names[asp +3]  ,anchor=W)
+            self.network_tree.column (Asp_name   ,minwidth=20 ,width=50)
+
+##        self.network_tree.columnconfigure(0,weight=1)
+##        self.network_tree.rowconfigure   (0,weight=1)
+        
+        self.network_tree.tag_configure('colTag', option=None, background='#afa')
+        self.network_tree.tag_configure('uomTag', option=None, background='#ccf')
+        self.network_tree.tag_configure('sumTag', option=None, background='#cfc')
+
+        network_scroll = Scrollbar(self.network_frame, orient=VERTICAL, command=self.network_tree.yview)
+        network_lbl.grid       (column=0, row=0,sticky=EW)
+        self.network_tree.grid (column=0, row=1,sticky=NSEW)
+        network_scroll.grid    (column=0, row=1,sticky=NS+E)
+        self.network_tree.config(yscrollcommand=network_scroll.set)
+
+        self.network_tree.bind(sequence='<Double-1>', func=self.Expr_detail_view)
+        self.network_tree.bind(sequence='i'         , func=self.Expr_detail_view)
+
+    def Display_network_view(self):
+        # Display header row with units of measure
+        self.network_tree.insert('', index='end', values=self.taxon_uom_names, tags='uomTag')
+        # Display self.network_model rows in self.network_tree
+        parents = []
+        for network_line in self.network_model:
+            #print('network_line', network_line)
+            # Verify whether network_line[2], being the supertype, is blank or in the list of parents
+            if network_line[2] == '' or network_line[2] in parents:
+                # Skip duplicates
+                if self.network_tree.exists(network_line[1]):
+                    continue
+                else:
+                    color_tag = 'sumTag'
+                    term = network_line[1].partition(' ')
+                    if term[0] in ['has', 'heeft', 'classifies', 'classificeert']:
+                        color_tag = 'colTag'
+                    self.network_tree.insert(network_line[2],index='end',values=network_line,tags=color_tag,\
+                                           iid=network_line[1],text=network_line[1], open=True)
+                    parents.append(network_line[1])
 
     def Define_and_display_taxonomy_of_kinds(self):
         # Destroy earlier taxon_frame
@@ -283,11 +379,11 @@ class Display_views():
 ##                                  displaycolumns='#all', selectmode='browse', height=30)
         self.summ_tree = Treeview(self.summ_frame,columns=(headings[0:nr_of_cols]),\
                                   displaycolumns=display_cols, selectmode='browse', height=30)
-                        
+             
         self.summ_tree.heading('UID'       ,text='UID'      , anchor=W)
-        self.summ_tree.heading('Name'      ,text='Name'     , anchor=W)
-        self.summ_tree.heading('Kind'      ,text='Kind'     , anchor=W)
-        self.summ_tree.heading('Community' ,text='Community', anchor=W)
+        self.summ_tree.heading('Name'      ,text=self.name_head[self.lang_index], anchor=W)
+        self.summ_tree.heading('Kind'      ,text=self.kind_head[self.lang_index], anchor=W)
+        self.summ_tree.heading('Community' ,text=self.comm_head[self.lang_index], anchor=W)
         
         self.summ_tree.column ('#0'        ,minwidth=100    , width=200)
         self.summ_tree.column ('Community' ,minwidth=20     , width=50)
@@ -383,12 +479,12 @@ class Display_views():
 ##                                  displaycolumns='#all', selectmode='browse', height=30)
         self.possib_tree = Treeview(self.possib_frame, columns=(headings[0:nr_of_cols]),\
                                     displaycolumns=display_cols, selectmode='browse', height=30)
-                        
+
         self.possib_tree.heading('UID'       ,text='UID'      , anchor=W)
-        self.possib_tree.heading('Name'      ,text='Name'     , anchor=W)
-        self.possib_tree.heading('Parent'    ,text='Parent'   , anchor=W)
-        self.possib_tree.heading('Kind'      ,text='Kind'     , anchor=W)
-        self.possib_tree.heading('Community' ,text='Community', anchor=W)
+        self.possib_tree.heading('Name'      ,text=self.name_head[self.lang_index], anchor=W)
+        self.possib_tree.heading('Parent'    ,text=self.parent_head[self.lang_index], anchor=W)
+        self.possib_tree.heading('Kind'      ,text=self.kind_head[self.lang_index], anchor=W)
+        self.possib_tree.heading('Community' ,text=self.comm_head[self.lang_index], anchor=W)
         
         self.possib_tree.column ('#0'        ,minwidth=100    , width=200)
         self.possib_tree.column ('Kind'      ,minwidth=20     , width=50)
@@ -454,14 +550,12 @@ class Display_views():
         self.indiv_tree = Treeview(self.indiv_frame,columns=(headings[0:nr_of_cols]),\
                                   displaycolumns=display_cols, selectmode='browse', height=30)
 
-        head_kind = ['Kind', 'Soort']
-        head_comm = ['Language community', 'Taalgemeenschap']
         self.indiv_tree.heading('#0'        ,text='Object'   , anchor=W)
         self.indiv_tree.heading('UID'       ,text='UID'      , anchor=W)
-        self.indiv_tree.heading('Name'      ,text='Name'     , anchor=W)
-        self.indiv_tree.heading('Parent'    ,text='Parent'   , anchor=W)
-        self.indiv_tree.heading('Kind'      ,text=head_kind[self.lang_index], anchor=W)
-        self.indiv_tree.heading('Community' ,text=head_comm[self.lang_index], anchor=W)
+        self.indiv_tree.heading('Name'      ,text=self.name_head[self.lang_index], anchor=W)
+        self.indiv_tree.heading('Parent'    ,text=self.parent_head[self.lang_index], anchor=W)
+        self.indiv_tree.heading('Kind'      ,text=self.kind_head[self.lang_index], anchor=W)
+        self.indiv_tree.heading('Community' ,text=self.comm_head[self.lang_index], anchor=W)
         
         self.indiv_tree.column ('#0'        ,minwidth=100    , width=200)
         self.indiv_tree.column ('Kind'      ,minwidth=20     , width=50)
@@ -820,18 +914,18 @@ File is saved under name <QueryResults.csv')
         unknownKind  = ['unknown kind' ,'onbekende soort']
         for kindLine in self.kind_model:
             head = False
-            headLine = []
+            head_line = []
             #if self.test: print('kindLine:',kindLine)
             # If line_type == 1 then prepare header line for level 0 object
             # Note: line_type == 2 is skipped in this view
             if kindLine[3] == 1:
-                headLine = kindLine[0:4]
-                headLine.append(kindLine[5])
-                headLine.append('')
-                headLine.append('')
-                headLine.append(kindLine[9])
-                nameInFocus = headLine[4]
-                level0Part = self.kind_tree.insert('',index='end',values=headLine,tags='focusTag',open=True)
+                head_line = kindLine[0:4]
+                head_line.append(kindLine[5])
+                head_line.append('')
+                head_line.append('')
+                head_line.append(kindLine[9])
+                nameInFocus = head_line[4]
+                level0Part = self.kind_tree.insert('',index='end',values=head_line,tags='focusTag',open=True)
                 previusPart = level0Part
             # In kind_tree view line_type 2 to 3 (indicated in kindLine[3]) are not displayed.
             elif kindLine[3] > 3:
@@ -839,9 +933,9 @@ File is saved under name <QueryResults.csv')
                 # Set value_tags at 'valTag' or 'headTag' for each field
                 value_tags = 11*['valTag']
                 # If the line is a header line, then set value_tag to 'headTag'
-                if kindLine[4] in self.compHead    or kindLine[4] in self.occHead or \
-                   kindLine[4] in self.info_head   or kindLine[8] in self.aspectHead or \
-                   kindLine[5] in self.partOccHead or kindLine[4] in self.subsHead:
+                if kindLine[4] in self.comp_head    or kindLine[4] in self.occ_head or \
+                   kindLine[4] in self.info_head   or kindLine[8] in self.aspect_head or \
+                   kindLine[5] in self.part_occ_head or kindLine[4] in self.subs_head:
                     head = True
                     value_tags = 11*['headTag']
                 # If the line is a value line (thus not a header line) and there is a name of a part
@@ -985,19 +1079,21 @@ File is saved under name <QueryResults.csv')
         for prod_line_0 in self.prod_model:
             prod_line = prod_line_0[:]
             head = False
-            headLine = []
+            head_line = []
             print('Prod_line:',prod_line)
-##            # If line_type (prod_line[3]) == 1 then prepare header line from prod_line for level 0 object
-##            # Note: line_type == 2 and 3 are skipped in this view
-##            if prod_line[3] == 1:
-##                headLine = prod_line[0:4]
-##                headLine.append(prod_line[5])
-##                headLine.append('')
-##                headLine.append('')
-##                headLine.append(prod_line[9])
-##                nameInFocus = headLine[4]
-##                level0Part = self.prod_tree.insert('',index='end',values=headLine,tags='focusTag',open=True)
-##                previusPart = level0Part
+            # If line_type (prod_line[3]) == 1 then prepare header line from prod_line for level 0 object
+            # Note: line_type == 2 and 3 are skipped in this view
+            if prod_line[3] == 1:
+                head_line = prod_line[0:4]
+                head_line.append(prod_line[5])
+                head_line.append('')
+                head_line.append('')
+                head_line.append(prod_line[9])
+                nameInFocus = head_line[4]
+                print('Head_line:',head_line)
+                level0Part = self.prod_tree.insert('', index='end', values=head_line,
+                                                   text=nameInFocus, tags='focusTag', open=True)
+                previusPart = level0Part
             # If line_type (prod_line[3]) == 4 then prepare header line from prod_line for level 0 object
             # Note: line_type == 1, 2 and 3 are skipped in this view
             if prod_line[3] == 4:
@@ -1013,17 +1109,17 @@ File is saved under name <QueryResults.csv')
                 value_tags = 11*['valTag']
                     
                 # If the line is a header line, then set value_tag to 'headTag'
-                if prod_line[4] in self.compHead    or prod_line[4] in self.occHead or \
-                   prod_line[4] in self.info_head   or prod_line[8] in self.aspectHead or \
-                   prod_line[5] in self.partOccHead or prod_line[4] in self.subsHead:
+                if prod_line[4] in self.comp_head    or prod_line[4] in self.occ_head or \
+                   prod_line[4] in self.info_head   or prod_line[8] in self.aspect_head or \
+                   prod_line[5] in self.part_occ_head or prod_line[4] in self.subs_head:
                     head = True
                     value_tags = 11*['headTag']
                     prod_name = prod_line[4]
                     # Determine whether roles may appear in prod_line[4] in lines following the header line
                     # to avoid that they are included in the indented hierarchy
-                    if prod_line[4] in self.occHead:
+                    if prod_line[4] in self.occ_head:
                         possible_roles = True
-                    elif prod_line[5] in self.partOccHead:
+                    elif prod_line[5] in self.part_occ_head:
                         possible_roles = False
                     # Remove header texts 'Further part' and 'Kind of part'
                     if prod_line[6] in further_part:
@@ -1200,9 +1296,9 @@ File is saved under name <QueryResults.csv')
                 # Display the subsequent body values on line type > 3
                 if body == True:
                     # Set background color depending on either header, value present of 'unknown'
-                    if (column_nr == 1 and (field_value in self.compHead or field_value in self.occHead or\
+                    if (column_nr == 1 and (field_value in self.comp_head or field_value in self.occ_head or\
                                             field_value in self.info_head)) or \
-                       (column_nr == 2 and (field_value in self.partOccHead)):
+                       (column_nr == 2 and (field_value in self.part_occ_head)):
                         # Header line detected; set background color accordingly
                         head = True
                         back = '#dfb'
@@ -1357,7 +1453,7 @@ File is saved under name <QueryResults.csv')
         self.doc_frame.rowconfigure(0,weight=0)
         self.views_noteb.add(self.doc_frame, text=documents[self.lang_index], sticky=NSEW)
         self.views_noteb.insert("end",self.doc_frame,sticky=NSEW)
-        headings = ['info','obj','carrier','directory','infoName','infoKind',\
+        headings = ['info','obj','carrier','directory','infoName','infoKind', 'dirName',\
                     'objName','fileName','fileKind']
         display_cols = headings[4:]
         self.doc_tree = Treeview(self.doc_frame, columns=(headings),\
@@ -1368,6 +1464,7 @@ File is saved under name <QueryResults.csv')
         self.doc_tree.heading('directory',text='directory' ,anchor=W)
         self.doc_tree.heading('infoName' ,text='Document'  ,anchor=W)
         self.doc_tree.heading('infoKind' ,text='Doc type'  ,anchor=W)
+        self.doc_tree.heading('dirName'  ,text='Directory'  ,anchor=W)
         self.doc_tree.heading('objName'  ,text='about Object' ,anchor=W)
         self.doc_tree.heading('fileName' ,text='File name' ,anchor=W)
         self.doc_tree.heading('fileKind' ,text='File type' ,anchor=W)
@@ -1375,6 +1472,7 @@ File is saved under name <QueryResults.csv')
         self.doc_tree.column('#0'        ,minwidth=10,width=10)
         self.doc_tree.column('infoName'  ,minwidth=100,width=150)
         self.doc_tree.column('infoKind'  ,minwidth=100,width=150)
+        self.doc_tree.column('dirName'   ,minwidth=100,width=150)
         self.doc_tree.column('objName'   ,minwidth=100,width=150)
         self.doc_tree.column('fileName'  ,minwidth=100,width=150)
         self.doc_tree.column('fileKind'  ,minwidth=100,width=150)
@@ -1391,6 +1489,7 @@ File is saved under name <QueryResults.csv')
         self.doc_tree.config(yscrollcommand=docScroll.set)
 
         self.doc_tree.bind(sequence='<Double-1>', func=self.Doc_detail_view)
+        self.doc_tree.bind(sequence='<Button-3>', func=self.Doc_detail_view)
 
 #------------------------------------------------------------------------
     def Expr_detail_view(self, sel):
@@ -1765,28 +1864,42 @@ then click right button')
         cur_item = self.doc_tree.focus()
         item_dict = self.doc_tree.item(cur_item)
         info_row = list(item_dict['values'])
+        print('Doc_detail_view:', cur_item, info_row)
 
-        # If info_kind is a description then display the destription
-        description_text  = ['description', 'beschrijving']
-        description_title = ['Information about ', 'Informatie over ']
-        if info_row[5] in description_text:
-            #print('Information {} is not presented on a carrier but is as follows:\n   {}'.\
-            #      format(info_row[4], info_row[2]))
-            messagebox.showinfo(description_title[self.lang_index] + info_row[6], info_row[2])
-
-        # Verify whether file name (info_row[7]) is presented on a file
-        # And verify whether the file name has a file extension (indicated by a dot (.)) 
-        parts = info_row[7].rsplit('.', maxsplit=1)
-        if len(parts) == 1:
-            print('== Error: File name {} does not have a file extension'.format(info_row[7]))
+        # If right hand mouse button is pressed (sel.num == 3),
+        # then determine and display a product view of the object about which the document provides info
+        if sel.num == 3:
+            if len(info_row) > 1:
+                if info_row[1] != '':
+                    selected_object   = self.Gel_net.uid_dict[str(info_row[1])]
+                    print('Display product details of: {}'.format(selected_object.name))
+                    self.Define_and_display_kind_detail_view(selected_object)
+                    
+                    if len(self.Gel_net.info_model) > 0:
+                        self.Define_and_display_documents()
         else:
-            # Open the file in the file format that is defined by its file extension
-            print('Open file {} about {}'.format(info_row[7], info_row[6]))
-            directory_name = info_row[3]
-            if directory_name != '':
-                file_path = os.path.join(directory_name, info_row[7])
-                normalized_path = os.path.normpath(file_path)
-                os.startfile(normalized_path,'open')
+            # Left hand mouse button is pressed
+            # If info_kind is a description then display the destription
+            description_text  = ['description', 'beschrijving']
+            description_title = ['Information about ', 'Informatie over ']
+            if info_row[5] in description_text:
+                #print('Information {} is not presented on a carrier but is as follows:\n   {}'.\
+                #      format(info_row[4], info_row[2]))
+                messagebox.showinfo(description_title[self.lang_index] + info_row[6], info_row[2])
+
+            # Verify whether file name (info_row[7]) is presented on a file
+            # And verify whether the file name has a file extension (indicated by a dot (.)) 
+            parts = info_row[8].rsplit('.', maxsplit=1)
+            if len(parts) == 1:
+                print('== Error: File name {} does not have a file extension'.format(info_row[7]))
+            else:
+                # Open the file in the file format that is defined by its file extension
+                print('Open file {} about {}'.format(info_row[8], info_row[7]))
+                directory_name = info_row[3]
+                if directory_name != '':
+                    file_path = os.path.join(directory_name, info_row[8])
+                    normalized_path = os.path.normpath(file_path)
+                    os.startfile(normalized_path,'open')
 
     def Contextual_facts(self):
         print('Contextual_facts')
@@ -1795,8 +1908,8 @@ then click right button')
 class Main():
     def __init__(self):
         pass
-    def Verify_table(self):
-        print('Verify_table')
+    def Read_file(self):
+        print('Read_file')
         
     def Query_net(self):
         print('Query_net')
