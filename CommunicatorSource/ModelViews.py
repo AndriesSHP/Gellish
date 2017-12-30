@@ -1914,9 +1914,6 @@ class Main():
     def Query_net(self):
         print('Query_net')
         
-    def Modify_db(self):
-        print('Modify_db')
-        
     def Stop_Quit(self):
         print('Stop_Quit')
         
@@ -1926,11 +1923,11 @@ class Main():
     def Dump_net(self):
         print('Dump_net')
         
-    def Load_net(self):
-        print('Load_net')
-        
-    def Read_db(self):
-        print('Read_db')
+##    def Load_net(self):
+##        print('Load_net')
+##        
+##    def Read_db(self):
+##        print('Read_db')
 
 class User():
     def __init__(self):

@@ -45,7 +45,7 @@ class Main_view():
         verify  = ['Read file'  , 'Lees file']
         search  = ['Search'     , 'Zoek']
         query   = ['Query'      , 'Vraag']
-        edit    = ['Modify'     , 'Wijzig']
+##        edit    = ['Modify'     , 'Wijzig']
         stop    = ['Stop'       , 'Stop']
         admin   = ['DB Admin'   , 'DB Admin']
         new_net = ['New network', 'Nieuw netwerk']
@@ -56,7 +56,7 @@ class Main_view():
         self.menubar.add_command(label=verify[self.lang_index], command=self.main.Read_file)
         self.menubar.add_command(label=search[self.lang_index], command=self.main.Search_net)
         self.menubar.add_command(label=query [self.lang_index], command=self.main.Query_net)
-        #self.menubar.add_command(label=edit  [self.lang_index], command=self.main.Modify_db)
+##        self.menubar.add_command(label=edit  [self.lang_index], command=self.main.Modify_db)
         self.menubar.add_command(label=stop  [self.lang_index], command=self.main.Stop_Quit)
         
         self.DBMenu = Menu(self.menubar)

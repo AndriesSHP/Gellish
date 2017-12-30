@@ -12,7 +12,8 @@ from Anything import Anything, Object, Individual, Kind, Relation, RelationType
 from Bootstrapping import *
 from GellishDict import GellishDict
 from ModelViews import Display_views
-from Create_output_file import Create_gellish_expression, Convert_numeric_to_integer, Open_output_file
+from Create_output_file import Create_gellish_expression, Convert_numeric_to_integer, \
+     Open_output_file, Message
 
 class Semantic_Network():
     """ Create a Semantic_Network model (called net_name) from a Gellish database (db_name).
@@ -22,9 +23,9 @@ class Semantic_Network():
               base_phrases being bootstrapping base phrases
               and inverse_phrases being bootstrapping inverse phrases
     """
-    def __init__(self, net_name, user):
+    def __init__(self, net_name):
         self.name          = net_name
-        self.user          = user
+        #self.user          = user
         self.rels          = []
         self.idea_uids     = []
         self.rel_types     = [] # initialize and collect all binary relation types
@@ -322,7 +323,7 @@ class Semantic_Network():
                 if obj.defined == False and obj.uid != anythingUID:
                     int_obj_uid, integer = Convert_numeric_to_integer(obj.uid)
                     if integer == True and int_obj_uid not in range(1000000000, 3000000000):
-                        self.user.Message(
+                        Message(self.GUI_lang_index,\
                             'Warning: RH object {} ({}) is not yet defined'           .format(obj.name, obj.uid),\
                             'Waarschuwing: RH object {} ({}) is nog niet gedefinieerd'.format(obj.name, obj.uid))
                         # Add provisional data to semi-defined rh_object
@@ -805,7 +806,8 @@ class Semantic_Network():
                     all_subtypes.append(sub)      # Add subtype to total list of subtypes
                     all_subtype_uids.append(sub.uid)
                     
-                    # If sub belongs to taxonomy of relations then inherit by definition first and second kinds of roles
+                    # If sub belongs to taxonomy of relations then
+                    # inherit by definition the first and second kinds of roles
                     if rel_taxonomy == True:
                         self.Inherit_kinds_of_roles(sub, supertype)
                 #print ('Supertype:',supertype.uid,"Subtypes:",subs,subtypeRow)
@@ -829,10 +831,17 @@ class Semantic_Network():
         return all_subtypes, all_subtype_uids
 
     def Inherit_kinds_of_roles(self, sub, supertype):
+        ''' If sub (a kind of relation) has no defined (first or second) kind of role, then
+            allocate the kind of role of the supertype to the subtype kind of relation.
+            If the kind of relation has a defined kind of role, then
+            verify whether that kind of role has one or more supertypes and if yes, then 
+            verify whether one of those supertypes
+            is equal to the kind of role of the supertype of the kind of relation.
+        '''
         sub.category = 'kind of relation'
         try:
             if sub.first_role: # != None:
-                # Check whether supertype of kind of role == role of supertype
+                # Check whether supertype of the kind of role == role of supertype of kind of relation
                 equality = False
                 if len(sub.first_role.supertypes) > 0:
                     for supertype_role in sub.first_role.supertypes:
@@ -840,8 +849,10 @@ class Semantic_Network():
                             equality = True
                             break
                     if equality == False:
-                        print('Supertype of first kind of role {} not equal role of supertype {}'\
-                              .format(supertype_role.name, supertype.first_role.name))
+                        print('Kind of relation <{}> has a first kind of role <{}> with as supertype <{}> \
+which is not equal to the first role <{}> of its supertype <{}>'\
+                              .format(sub.name, sub.first_role.name, supertype_role.name, \
+                                      supertype.first_role.name, supertype.name))
                 else:
                     print('First kind of role {} has no supertypes'.format(sub.first_role.name))
                 #print('sub.first_role_def:', sub.first_role.name)
@@ -861,10 +872,12 @@ class Semantic_Network():
                             equality = True
                             break
                     if equality == False:
-                        print('Supertype of second kind of role {} not equal role of supertype {}'\
-                              .format(supertype_role.name, supertype.second_role.name))
+                        print('Kind of relation <{}> has a second kind of role <{}> with as superty <{}> \
+which is not equal to the second role <{}> of its supertype <{}>'\
+                              .format(sub.name, sub.second_role.name, supertype_role.name, \
+                                      supertype.second_role.name, supertype.name))
                 else:
-                    print('Second kind of role {} has no supertypes'.format(sub.second_role.name))
+                    print('Second kind of role <{}> has no supertypes'.format(sub.second_role.name))
         except AttributeError:
             sub.second_role = supertype.second_role
 #----------------------------------------------------------------
@@ -3207,7 +3220,7 @@ if __name__ == "__main__":
     
     # Choose GUI language and formal language
     formal_language = "English"
-    user = User('Andries')
+    #user = User('Andries')
     network.GUI_lang_name = "English"
 
     # Create a naming dictionary
