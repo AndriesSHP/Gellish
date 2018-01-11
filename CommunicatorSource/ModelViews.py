@@ -11,48 +11,48 @@ from Create_output_file import Create_gellish_expression, Convert_numeric_to_int
 from Occurrences_diagrams import Occurrences_diagram
 
 class Display_views():
-    def __init__(self, Gel_net, main):
-        self.Gel_net = Gel_net
+    def __init__(self, gel_net, main):
+        self.gel_net = gel_net
         self.main = main
         self.root = main.root
         self.user = main.user
         self.query = main.query
-        self.lang_index = self.Gel_net.GUI_lang_index
-        self.uid_dict = self.Gel_net.uid_dict
+        self.lang_index = self.gel_net.GUI_lang_index
+        self.uid_dict = self.gel_net.uid_dict
 
-        self.kind_model   = Gel_net.kind_model
-        self.prod_model   = Gel_net.prod_model
-        self.taxon_model  = Gel_net.taxon_model
-        self.summ_model   = Gel_net.summ_model
-        self.possibilities_model = Gel_net.possibilities_model
-        self.indiv_model  = Gel_net.indiv_model
-        self.query_table  = Gel_net.query_table
-        self.network_model  = Gel_net.network_model
-        self.occ_model    = Gel_net.occ_model
-        self.involv_table    = Gel_net.involv_table
-        #self.part_whole_occs = Gel_net.part_whole_occs
+        self.kind_model   = gel_net.kind_model
+        self.prod_model   = gel_net.prod_model
+        self.taxon_model  = gel_net.taxon_model
+        self.summ_model   = gel_net.summ_model
+        self.possibilities_model = gel_net.possibilities_model
+        self.indiv_model  = gel_net.indiv_model
+        self.query_table  = gel_net.query_table
+        self.network_model  = gel_net.network_model
+        self.occ_model    = gel_net.occ_model
+        self.involv_table    = gel_net.involv_table
+        #self.part_whole_occs = gel_net.part_whole_occs
 
-        #self.summ_of_aspect_uids = Gel_net.summ_of_aspect_uids
-        self.taxon_column_names  = Gel_net.taxon_column_names
-        self.taxon_uom_names     = Gel_net.taxon_uom_names
-        self.summ_column_names   = Gel_net.summ_column_names
-        self.summ_uom_names      = Gel_net.summ_uom_names
-        self.possib_column_names = Gel_net.possib_column_names
-        self.possib_uom_names    = Gel_net.possib_uom_names
-        self.indiv_column_names  = Gel_net.indiv_column_names
-        self.indiv_uom_names     = Gel_net.indiv_uom_names
+        #self.summ_of_aspect_uids = gel_net.summ_of_aspect_uids
+        self.taxon_column_names  = gel_net.taxon_column_names
+        self.taxon_uom_names     = gel_net.taxon_uom_names
+        self.summ_column_names   = gel_net.summ_column_names
+        self.summ_uom_names      = gel_net.summ_uom_names
+        self.possib_column_names = gel_net.possib_column_names
+        self.possib_uom_names    = gel_net.possib_uom_names
+        self.indiv_column_names  = gel_net.indiv_column_names
+        self.indiv_uom_names     = gel_net.indiv_uom_names
 
-        self.subs_head     = ['Subtypes'      ,'Subtypen']
-        self.comp_head     = ['Part hierarchy','Compositie']
-        self.occ_head      = ['Occurrences'   ,'Gebeurtenissen']
-        #self.role_head    = ['Role'          ,'Rol']
-        #self.involv_head  = ['Involved'      ,'Betrokkene']
-        self.kind_head     = ['Kind'          ,'Soort']
-        self.aspect_head   = ['Aspect'        ,'Aspect']
+        self.subs_head     = ['Subtypes'      , 'Subtypen']
+        self.comp_head     = ['Part hierarchy', 'Compositie']
+        self.occ_head      = ['Occurrences'   , 'Gebeurtenissen']
+        #self.role_head    = ['Role'          , 'Rol']
+        #self.involv_head  = ['Involved'      , 'Betrokkene']
+        self.kind_head     = ['Kind'          , 'Soort']
+        self.aspect_head   = ['Aspect'        , 'Aspect']
         self.part_occ_head = ['Part occurrence','Deelgebeurtenis']
-        self.info_head     = ['Document'      ,'Document']
+        self.info_head     = ['Document'      , 'Document']
         self.name_head     = ['Name'          , 'Naam']
-        self.parent_head   = ['Whole'         , 'Geheel']
+        self.parent_head   = ['Upper concept' , 'Hoger concept']
         self.comm_head     = ['Community'     , 'Taalgemeenschap']
 
         self.modification = ''
@@ -142,7 +142,7 @@ class Display_views():
             self.Display_occ_model_view()
 
      # Define and display Documents_view sheet = = = = = = = = = =
-        if len(self.Gel_net.info_model) > 0:
+        if len(self.gel_net.info_model) > 0:
             self.Define_and_display_documents()
 
      # Define Expressions_view sheet = = = = = = = = = = = = = = = = = = =
@@ -204,27 +204,29 @@ class Display_views():
                         'Netwerk van objecten en aspecten']
         network_lbl  = Label(self.network_frame,text=network_head[self.lang_index])
         
-        headings = ['UID','Name', 'Kind','Community','Aspect1','Aspect2','Aspect3','Aspect4','Aspect5'  ,\
+        headings = ['UID','Name', 'Parent','Kind','Aspect1','Aspect2','Aspect3','Aspect4','Aspect5'  ,\
                                  'Aspect6','Aspect7','Aspect8','Aspect9','Aspect10']
-        nr_of_cols = len(self.taxon_column_names)
+        nr_of_cols = 4 # len(self.taxon_column_names)
         display_cols = headings[3:nr_of_cols]
 
         self.network_tree = Treeview(self.network_frame,columns=(headings[0:nr_of_cols]),\
                                   displaycolumns=display_cols, selectmode='browse', height=30)
-                        
+
+        self.network_tree.heading('#0'        ,text='Object'   , anchor=W)
         self.network_tree.heading('UID'       ,text='UID'      , anchor=W)
         self.network_tree.heading('Name'      ,text=self.name_head[self.lang_index], anchor=W)
+        self.network_tree.heading('Parent'    ,text=self.parent_head[self.lang_index], anchor=W)
         self.network_tree.heading('Kind'      ,text=self.kind_head[self.lang_index], anchor=W)
-        self.network_tree.heading('Community' ,text=self.comm_head[self.lang_index], anchor=W)
         
         self.network_tree.column ('#0'        ,minwidth=100    , width=200)
-        self.network_tree.column ('Community' ,minwidth=20     , width=50)
-        asp = 0
-        for column in self.taxon_column_names[4:]:
-            asp += 1
-            Asp_name = 'Aspect' + str(asp)
-            self.network_tree.heading(Asp_name   ,text=self.taxon_column_names[asp +3]  ,anchor=W)
-            self.network_tree.column (Asp_name   ,minwidth=20 ,width=50)
+        self.network_tree.column ('Parent'    ,minwidth=20     , width=50)
+        self.network_tree.column ('Kind'      ,minwidth=20     , width=50)
+##        asp = 0
+##        for column in self.taxon_column_names[4:]:
+##            asp += 1
+##            Asp_name = 'Aspect' + str(asp)
+##            self.network_tree.heading(Asp_name   ,text=self.taxon_column_names[asp +3]  ,anchor=W)
+##            self.network_tree.column (Asp_name   ,minwidth=20 ,width=50)
 
 ##        self.network_tree.columnconfigure(0,weight=1)
 ##        self.network_tree.rowconfigure   (0,weight=1)
@@ -239,17 +241,18 @@ class Display_views():
         network_scroll.grid    (column=0, row=1,sticky=NS+E)
         self.network_tree.config(yscrollcommand=network_scroll.set)
 
-        self.network_tree.bind(sequence='<Double-1>', func=self.Expr_detail_view)
-        self.network_tree.bind(sequence='i'         , func=self.Expr_detail_view)
+        self.network_tree.bind(sequence='<Double-1>', func=self.Object_detail_view)
+        self.network_tree.bind(sequence='i'         , func=self.Object_detail_view)
+        self.network_tree.bind(sequence='<Double-3>', func=self.Object_detail_view)
 
     def Display_network_view(self):
         # Display header row with units of measure
-        self.network_tree.insert('', index='end', values=self.taxon_uom_names, tags='uomTag')
+        #self.network_tree.insert('', index='end', values=self.taxon_uom_names, tags='uomTag')
+        
         # Display self.network_model rows in self.network_tree
         parents = []
         for network_line in self.network_model:
-            #print('network_line', network_line)
-            # Verify whether network_line[2], being the supertype, is blank or in the list of parents
+            # Verify whether network_line[2], being the parent, is blank or in the list of parents
             if network_line[2] == '' or network_line[2] in parents:
                 # Skip duplicates
                 if self.network_tree.exists(network_line[1]):
@@ -257,7 +260,8 @@ class Display_views():
                 else:
                     color_tag = 'sumTag'
                     term = network_line[1].partition(' ')
-                    if term[0] in ['has', 'heeft', 'classifies', 'classificeert']:
+                    if term[0] in ['has', 'heeft', 'classifies', 'classificeert', \
+                                   'is', 'can', 'kan', 'shall', 'moet']:
                         color_tag = 'colTag'
                     self.network_tree.insert(network_line[2],index='end',values=network_line,tags=color_tag,\
                                            iid=network_line[1],text=network_line[1], open=True)
@@ -296,12 +300,11 @@ class Display_views():
                                  'Aspect6','Aspect7','Aspect8','Aspect9','Aspect10']
         nr_of_cols = len(self.taxon_column_names)
         display_cols = headings[3:nr_of_cols]
-##        self.taxon_tree = Treeview(self.taxon_frame,columns=('Community','Aspect1','Aspect2','Aspect3','Aspect4'  ,\
-##                                                     'Aspect5'  ,'Aspect6','Aspect7','Aspect8','Aspect9','Aspect10'),\
-##                                  displaycolumns='#all', selectmode='browse', height=30)
+
         self.taxon_tree = Treeview(self.taxon_frame,columns=(headings[0:nr_of_cols]),\
                                   displaycolumns=display_cols, selectmode='browse', height=30)
-                        
+
+        self.taxon_tree.heading('#0'        ,text='Object'   , anchor=W)
         self.taxon_tree.heading('UID'       ,text='UID'      , anchor=W)
         self.taxon_tree.heading('Name'      ,text='Name'     , anchor=W)
         self.taxon_tree.heading('Kind'      ,text='Kind'     , anchor=W)
@@ -379,7 +382,8 @@ class Display_views():
 ##                                  displaycolumns='#all', selectmode='browse', height=30)
         self.summ_tree = Treeview(self.summ_frame,columns=(headings[0:nr_of_cols]),\
                                   displaycolumns=display_cols, selectmode='browse', height=30)
-             
+
+        self.summ_tree.heading('#0'        ,text='Object'   , anchor=W)     
         self.summ_tree.heading('UID'       ,text='UID'      , anchor=W)
         self.summ_tree.heading('Name'      ,text=self.name_head[self.lang_index], anchor=W)
         self.summ_tree.heading('Kind'      ,text=self.kind_head[self.lang_index], anchor=W)
@@ -441,6 +445,7 @@ class Display_views():
         
         self.Define_possibilities_sheet()
 
+        # Display possibilities_sheet
         # Display header row with units of measure
         self.possib_tree.insert('', index='end', values=self.possib_uom_names, tags='uomTag')
         # Display self.possibilities_model rows in self.possib_tree
@@ -450,7 +455,7 @@ class Display_views():
                 #print('Possib_line', possib_line)
                 self.possib_tree.insert(possib_line[2], index='end', values=possib_line,\
                                         tags='sumTag' , iid=possib_line[1],\
-                                        text=possib_line[1], open=True)  # possib_line[2] is the whole
+                                        text=possib_line[1], open=True) # possib_line[2] is the whole
                 parents.append(possib_line[1])
 
     def Define_possibilities_sheet(self):
@@ -754,7 +759,7 @@ class Display_views():
         date = time.strftime("%x")
         # Create 3 header records of file
         header1 = ['Gellish', 'Nederlands', 'Version', '9.0', date, 'Query results',\
-                   'Query results about '+self.Gel_net.object_in_focus.name,'','','','','']
+                   'Query results about '+self.gel_net.object_in_focus.name,'','','','','']
         # header2 = expr_col_ids from initial settings
         # header3 is taken from Expr_Table_Def
         
@@ -785,7 +790,7 @@ File is saved under name <QueryResults.csv')
         fileWriter.writerow(header1)
         fileWriter.writerow(expr_col_ids)
         fileWriter.writerow(header3)
-        for expression in self.Gel_net.query_table:
+        for expression in self.gel_net.query_table:
             fileWriter.writerow(expression)
         
         queryFile.close()
@@ -802,7 +807,7 @@ File is saved under name <QueryResults.csv')
         subject_name = 'Query results'
         lang_name = 'Nederlands'
         serialization = 'json'
-        Open_output_file(self.Gel_net.query_table, subject_name, lang_name, serialization)
+        Open_output_file(self.gel_net.query_table, subject_name, lang_name, serialization)
 
     def Define_and_display_kind_view(self):
         # Destroy earlier summary_frame
@@ -1080,7 +1085,7 @@ File is saved under name <QueryResults.csv')
             prod_line = prod_line_0[:]
             head = False
             head_line = []
-            print('Prod_line:',prod_line)
+            #print('Prod_line:',prod_line)
             # If line_type (prod_line[3]) == 1 then prepare header line from prod_line for level 0 object
             # Note: line_type == 2 and 3 are skipped in this view
             if prod_line[3] == 1:
@@ -1090,7 +1095,7 @@ File is saved under name <QueryResults.csv')
                 head_line.append('')
                 head_line.append(prod_line[9])
                 nameInFocus = head_line[4]
-                print('Head_line:',head_line)
+                #print('Head_line:',head_line)
                 level0Part = self.prod_tree.insert('', index='end', values=head_line,
                                                    text=nameInFocus, tags='focusTag', open=True)
                 previusPart = level0Part
@@ -1394,7 +1399,7 @@ File is saved under name <QueryResults.csv')
                 self.OccurrenceTree(occ_line, level) #,wholes
 
             # IDEF0: Display drawings of occurrences
-            diagram = Occurrences_diagram(self.root, self.Gel_net)
+            diagram = Occurrences_diagram(self.root, self.gel_net)
             diagram.Create_occurrences_diagram(self.top_occurrences)
 
     def OccurrenceTree(self, occ_line, level):
@@ -1442,7 +1447,7 @@ File is saved under name <QueryResults.csv')
         self.Define_documents_sheet()
 
         # Documents: Display documents and files for selection for display
-        for info_line in self.Gel_net.info_model:
+        for info_line in self.gel_net.info_model:
             self.doc_tree.insert('',index='end',values=info_line,tags='docTag')
 
     def Define_documents_sheet(self):
@@ -1500,7 +1505,7 @@ File is saved under name <QueryResults.csv')
         item_dict = self.expr_tree.item(cur_item)
         values = list(item_dict['values'])
 
-        selected_object = self.Gel_net.uid_dict[str(values[lh_uid_col])]
+        selected_object = self.gel_net.uid_dict[str(values[lh_uid_col])]
         print('Display product details of:', selected_object.name)
         if selected_object.category in ['kind', 'kind of physical object', \
                                         'kind of occurrence', 'kind of aspect', \
@@ -1508,6 +1513,41 @@ File is saved under name <QueryResults.csv')
             self.Define_and_display_kind_detail_view(selected_object)
         else:
             self.Define_and_display_individual_detail_view(selected_object)
+
+#------------------------------------------------------------------------
+    def Object_detail_view(self, sel):
+        """ Find the selected left hand object from a user selection with left button
+            in the network_model that is displayed in the network_tree view."""
+        description_text = ['description', 'beschrijving']
+        obj_descr_title  = ['Information about ', 'Informatie over ']
+        
+        cur_item = self.network_tree.focus()
+        item_dict = self.network_tree.item(cur_item)
+        values = list(item_dict['values'])
+        #print('Network object_detail_view:', cur_item, values)
+        if len(values) > 0:
+            if sel.num == 1:
+                chosen_object_uid = values[0]
+            else:
+                chosen_object_uid = values[4]
+            if chosen_object_uid != '':
+                selected_object   = self.gel_net.uid_dict[str(chosen_object_uid)]
+
+                # If info_kind is a description then display the destription in messagebox
+                if values[8] in description_text:
+                    print('Information {} is not presented on a carrier but is as follows:\n   {}'.\
+                          format(values[5], selected_object.description))
+                    messagebox.showinfo(obj_descr_title[self.lang_index] + selected_object.name, \
+                                        selected_object.description)
+                else:
+                    print('Display object details of: {}'.format(selected_object.name))
+                    if selected_object.category in self.gel_net.categories_of_kinds:
+                        self.Define_and_display_kind_detail_view(selected_object)
+                    else:
+                        self.Define_and_display_individual_detail_view(selected_object)
+                
+                if len(self.gel_net.info_model) > 0:
+                    self.Define_and_display_documents()
 
 #------------------------------------------------------------------------
     def Kind_detail_view_left(self, sel):
@@ -1519,7 +1559,7 @@ File is saved under name <QueryResults.csv')
         item_dict = self.kind_tree.item(cur_item)
         values = list(item_dict['values'])
         #print('Kind_detail_left:', cur_item, values) #[0], values[1], values[2:]
-        selected_object   = self.Gel_net.uid_dict[str(values[0])]
+        selected_object   = self.gel_net.uid_dict[str(values[0])]
 
         # If info_kind is a description then display the destription in messagebox
         if values[7] in description_text:
@@ -1530,7 +1570,7 @@ File is saved under name <QueryResults.csv')
         else:                                       
             print('Display kind details of: {}'.format(selected_object.name))
             self.Define_and_display_kind_detail_view(selected_object)
-            if len(self.Gel_net.info_model) > 0:
+            if len(self.gel_net.info_model) > 0:
                 self.Define_and_display_documents()
 
 #------------------------------------------------------------------------
@@ -1547,7 +1587,7 @@ File is saved under name <QueryResults.csv')
         
         if len(values) > 0:
             if values[1] > 0:
-                selected_object   = self.Gel_net.uid_dict[str(values[1])]
+                selected_object   = self.gel_net.uid_dict[str(values[1])]
                 
                 # Save sel.type being either 'ButtonPress' or 'KeyPress' with sel.keysym = 'c'
                 self.sel_type = sel.type
@@ -1555,10 +1595,10 @@ File is saved under name <QueryResults.csv')
                 print('Display taxonomy of: {}'.format(selected_object.name))
                 obj_list = []
                 obj_list.append(selected_object)
-                self.Gel_net.Build_product_views(obj_list)
+                self.gel_net.Build_product_views(obj_list)
                 # Display taxonomy of selected kind
                 self.Define_and_display_taxonomy_of_kinds()
-                if len(self.Gel_net.info_model) > 0:
+                if len(self.gel_net.info_model) > 0:
                     self.Define_and_display_documents()
             else:
                 print('Kind of object is unknown.')
@@ -1600,7 +1640,7 @@ then click right button')
             print('There is no right hand object to be displayed')
 #------------------------------------------------------------------------
     def Prod_detail_view_left(self, sel):
-        """ Find the selected left hand object from a user selection with left button
+        """ Find the selected left hand individual object from a user selection with left button
             in the prod_table that is displayed in the prod_tree view."""
         description_text = ['description', 'beschrijving']
         obj_descr_title  = ['Information about ', 'Informatie over ']
@@ -1610,7 +1650,7 @@ then click right button')
         print('Prod_detail_left:', cur_item, values)
         if len(values) > 0:
             if values[0] != '':
-                selected_object   = self.Gel_net.uid_dict[str(values[0])]
+                selected_object   = self.gel_net.uid_dict[str(values[0])]
 
                 # If info_kind is a description then display the destription in messagebox
                 if values[7] in description_text:
@@ -1618,11 +1658,11 @@ then click right button')
                           format(values[4], selected_object.description))
                     messagebox.showinfo(obj_descr_title[self.lang_index] + selected_object.name, \
                                         selected_object.description)
-            else:                                       
-                print('Display product details of: {}'.format(selected_object.name))
-                self.Define_and_display_individual_detail_view(selected_object)
+                else:                                       
+                    print('Display product details of: {}'.format(selected_object.name))
+                    self.Define_and_display_individual_detail_view(selected_object)
                 
-                if len(self.Gel_net.info_model) > 0:
+                if len(self.gel_net.info_model) > 0:
                     self.Define_and_display_documents()
 
 #------------------------------------------------------------------------
@@ -1644,15 +1684,15 @@ then click right button')
         
         if len(values) > 0:
             if values[1] != '':
-                selected_object   = self.Gel_net.uid_dict[str(values[1])]
+                selected_object   = self.gel_net.uid_dict[str(values[1])]
                 #print('sel.type', sel.type, sel.keysym, sel.char)
                 # Verify sel.type being either 'ButtonPress' for display of taxonomy
                 # or 'KeyPress' with sel.keysym = 'c' (for display for classification by selection of subtype)
                 if sel.keysym == 'c':
                     self.modification = 'classification started'
-                    self.Gel_net.modified_object = self.Gel_net.uid_dict[str(values[0])]
+                    self.gel_net.modified_object = self.gel_net.uid_dict[str(values[0])]
                     print('Present taxonomy of kind: {} that classifies {} for selection of a subtype'.\
-                          format(selected_object.name, self.Gel_net.modified_object.name))
+                          format(selected_object.name, self.gel_net.modified_object.name))
                     
                     # Formulate query_spec including conditions from aspects of individual, if any
                     self.query.Formulate_query_spec_for_individual(selected_object)
@@ -1663,13 +1703,13 @@ then click right button')
                     print('Display taxonomy of kind: {}'.format(selected_object.name))
                 obj_list = []
                 obj_list.append(selected_object)
-                self.Gel_net.Build_product_views(obj_list)
+                self.gel_net.Build_product_views(obj_list)
                 # Display taxonomy in taxon view
                 self.Define_and_display_taxonomy_of_kinds()
                 # Display possibilities of kind in possibilities view
                 self.Define_and_display_possibilities_of_kind()
 
-                if len(self.Gel_net.info_model) > 0:
+                if len(self.gel_net.info_model) > 0:
                     self.Define_and_display_documents()
             else:
                 print('Kind of object is unknown.')
@@ -1701,7 +1741,7 @@ then click right button')
                 else:
                     print('Name of right hand object {} does not contain a file extension. It is interpreted as an aspect.'.\
                           format(values[8]))
-                    selected_object = self.Gel_net.uid_dict[str(values[2])]
+                    selected_object = self.gel_net.uid_dict[str(values[2])]
                     print('Display aspect details of: {}'.format(selected_object.name))
                     self.Define_and_display_individual_detail_view(selected_object)
             else:
@@ -1724,7 +1764,7 @@ then click right button')
         #print('Detail view item:', item_dict['values'])
         values = list(item_dict['values'])
         #print('Taxon values, sel.', values)
-        selected_object = self.Gel_net.uid_dict[str(values[0])]
+        selected_object = self.gel_net.uid_dict[str(values[0])]
 
         if sel.num == 1:
             # If mousebutton-1 is used, then Create a detail view
@@ -1739,13 +1779,13 @@ then click right button')
         elif self.modification == 'classification started':
             # if sel.type = 'KeyPress' with sel.keysym = 'c' then 
             # Append selected classifier to modified_object, and add classification relation
-            self.Gel_net.Add_classification_relation(self.Gel_net.modified_object, selected_object)
+            self.gel_net.Add_classification_relation(self.gel_net.modified_object, selected_object)
 
             # Display modified product view
             self.modification = 'classification completed'
-            self.Define_and_display_individual_detail_view(self.Gel_net.modified_object)
+            self.Define_and_display_individual_detail_view(self.gel_net.modified_object)
             print('Classification of {} by classifier {} is added to the network'.\
-                  format(self.Gel_net.modified_object.name, selected_object.name))
+                  format(self.gel_net.modified_object.name, selected_object.name))
 
 #-------------------------------------------------------------------------        
     def Summ_detail_view(self, sel):
@@ -1758,7 +1798,7 @@ then click right button')
         #print('Detail view item:', item_dict['values'])
         values = list(item_dict['values'])
         
-        selected_object = self.Gel_net.uid_dict[str(values[0])]
+        selected_object = self.gel_net.uid_dict[str(values[0])]
         print('Display product details of:',values[0], selected_object.name)
         # Create a detail view 
         self.Define_and_display_individual_detail_view(selected_object)
@@ -1773,7 +1813,7 @@ then click right button')
         #print('Detail view item:', item_dict['values'])
         values = list(item_dict['values'])
         
-        selected_object = self.Gel_net.uid_dict[str(values[0])]
+        selected_object = self.gel_net.uid_dict[str(values[0])]
         #print('Display product details of:',values[0], selected_object.name)
         # Create a detail view 
         self.Define_and_display_kind_detail_view(selected_object)
@@ -1788,7 +1828,7 @@ then click right button')
         #print('Detail view item:', item_dict['values'])
         values = list(item_dict['values'])
         
-        selected_object = self.Gel_net.uid_dict[str(values[0])]
+        selected_object = self.gel_net.uid_dict[str(values[0])]
         #print('Display product details of:',values[0], selected_object.name)
         # Create a detail view 
         self.Define_and_display_individual_detail_view(selected_object)
@@ -1796,9 +1836,9 @@ then click right button')
     def Define_and_display_kind_detail_view(self, selected_object):
         """ Create a detail view of a kind from a user selection
             and display the view in the kind_model view."""
-        self.Gel_net.kind_model[:]  = []
-        self.Gel_net.query_table[:] = []
-        self.Gel_net.Build_single_product_view(selected_object)
+        self.gel_net.kind_model[:]  = []
+        self.gel_net.query_table[:] = []
+        self.gel_net.Build_single_product_view(selected_object)
 
         try:
             self.kind_frame.destroy()
@@ -1823,9 +1863,9 @@ then click right button')
     def Define_and_display_individual_detail_view(self, selected_object):
         """ Create a detail view of a product from a user selection
             and display the view in the prod_model view."""
-        self.Gel_net.prod_model[:]  = []
-        self.Gel_net.query_table[:] = []
-        self.Gel_net.Build_single_product_view(selected_object)
+        self.gel_net.prod_model[:]  = []
+        self.gel_net.query_table[:] = []
+        self.gel_net.Build_single_product_view(selected_object)
 
         try:
             self.prod_frame.destroy()
@@ -1871,11 +1911,11 @@ then click right button')
         if sel.num == 3:
             if len(info_row) > 1:
                 if info_row[1] != '':
-                    selected_object   = self.Gel_net.uid_dict[str(info_row[1])]
+                    selected_object   = self.gel_net.uid_dict[str(info_row[1])]
                     print('Display product details of: {}'.format(selected_object.name))
                     self.Define_and_display_kind_detail_view(selected_object)
                     
-                    if len(self.Gel_net.info_model) > 0:
+                    if len(self.gel_net.info_model) > 0:
                         self.Define_and_display_documents()
         else:
             # Left hand mouse button is pressed
@@ -1938,11 +1978,11 @@ class User():
 if __name__ == "__main__":
     root = Tk()
     main = Main()
-    Gel_net = Semantic_network()
-    GUI = Display_views(Gel_net, main)
-    GUI.lang_index = 0
-    GUI.lang_name = 'English'
-    GUI.categoryInFocus = 'kind'
+    gel_net = Semantic_network()
+    views = Display_views(gel_net, main)
+    views.lang_index = 0
+    views.lang_name = 'English'
+    views.categoryInFocus = 'kind'
     
-    GUI.Notebook_views()
+    views.Notebook_views()
     root.mainloop()

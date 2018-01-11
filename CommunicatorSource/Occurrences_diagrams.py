@@ -5,14 +5,14 @@ from tkinter.ttk import *
     whereby the parts of an occurrence are presented on a next page
 '''
 class Occurrences_diagram():
-    def __init__(self, root, Gel_net):
+    def __init__(self, root, gel_net):
         self.root = root
-        self.Gel_net = Gel_net
-        self.GUI_lang_index = Gel_net.GUI_lang_index
-        self.seq_table = Gel_net.seq_table
-        self.involv_table  = Gel_net.involv_table
-        #self.parts_of_occ_table = Gel_net.parts_of_occ_table
-        self.part_whole_occs = Gel_net.part_whole_occs
+        self.gel_net = gel_net
+        self.GUI_lang_index = gel_net.GUI_lang_index
+        self.seq_table = gel_net.seq_table
+        self.involv_table  = gel_net.involv_table
+        #self.parts_of_occ_table = gel_net.parts_of_occ_table
+        self.part_whole_occs = gel_net.part_whole_occs
         
         self.drawings = []
         self.sheets    = []
@@ -148,10 +148,10 @@ class Occurrences_diagram():
                     parts.append(part)
                     #partNames.append(part.name)    # wholeName is a name of a top occurrence
     # Draw part occurrences on sheet(s)
-            if parts_present == True:
+            if parts_present is True:
                 self.MultipleSheets(childID, parts)
             
-        if parts_present == True:
+        if parts_present is True:
             self.DrawPartOccurrences(childID, parts)
         return
 #--------------------------------------------------------
@@ -279,9 +279,9 @@ class Occurrences_diagram():
         outputUID = '640019'      # output role
         inputUID  = '640016'      # input role
         actorUID  = '5036'        # actor role (supertype of mechanism)
-        subOutputs, subOutputUIDs = self.Gel_net.DetermineSubtypeList(outputUID)
-        subInputs,  subInputUIDs  = self.Gel_net.DetermineSubtypeList(inputUID)
-        subActors,  subActorUIDs  = self.Gel_net.DetermineSubtypeList(actorUID)
+        subOutputs, subOutputUIDs = self.gel_net.DetermineSubtypeList(outputUID)
+        subInputs,  subInputUIDs  = self.gel_net.DetermineSubtypeList(inputUID)
+        subActors,  subActorUIDs  = self.gel_net.DetermineSubtypeList(actorUID)
 
         thick = 2
         centerX  = []            # X-Center of canvas
@@ -355,7 +355,7 @@ class Occurrences_diagram():
                         out = True
                         break
                     
-                if out == False:
+                if out is False:
                     # Input comes from outside the sheet
                     streamUID  = involved.uid
                     streamName = involved.name
@@ -379,7 +379,7 @@ class Occurrences_diagram():
                     line1 = self.sheets[self.sheet_nr].create_line(line1Pts,fill='blue', width=thick, arrow=LAST)
                     line2 = self.sheets[self.sheet_nr].create_line(line2Pts,fill='blue', width=thick, arrow=LAST)
                     linesOnSheet.append(line1)
-                    if left == True:
+                    if left is True:
                         self.leftStrTree[self.sheet_nr].insert('',index='end',values=(strID,streamName,streamUID,streamKind),tags='occTag')
                         left = False
                     else:
@@ -508,7 +508,7 @@ class Occurrences_diagram():
                 line2 = self.sheets[self.sheet_nr].create_line(line2Pts,fill='blue', width=thick, arrow=LAST)
                 linesOnSheet.append(line1)
     # Record stream in leftStrTree[self.sheet_nr](s)
-                if left == True:
+                if left is True:
                     self.leftStrTree[self.sheet_nr].insert('',index='end',values=(strID,streamName,streamUID,streamKind),tags='occTag')
                     left = False
                 else:

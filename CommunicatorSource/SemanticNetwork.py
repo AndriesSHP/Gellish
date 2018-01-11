@@ -26,6 +26,7 @@ class Semantic_Network():
     def __init__(self, net_name):
         self.name          = net_name
         #self.user          = user
+        self.Gellish_files = []
         self.rels          = []
         self.idea_uids     = []
         self.rel_types     = [] # initialize and collect all binary relation types
@@ -52,9 +53,9 @@ class Semantic_Network():
         self.comm_dict_NL    = {'492014': "Gellish"}
         self.GUI_lang_pref_uids = []
         self.reply_lang_pref_uids  = []
-        self.comm_pref_uids  = ['492014'] # Default: 'Gellish'
-        self.base_phrases    = boot_base_phrasesEN    + boot_base_phrasesNL
-        self.inverse_phrases = boot_inverse_phrasesEN + boot_inverse_phrasesNL
+        self.comm_pref_uids  = ['492014', 'any'] # Default: 492014 = 'Gellish'
+        self.total_base_phrases    = boot_base_phrasesEN    + boot_base_phrasesNL
+        self.total_inverse_phrases = boot_inverse_phrasesEN + boot_inverse_phrasesNL
         self.specialRelUIDs  = ['1146']   # 1146 base UID for 'is a kind of'
         self.classifUIDs     = []       # 1225 base UID for 'is classified as a'
         self.subComposUIDs   = []
@@ -99,6 +100,7 @@ class Semantic_Network():
         self.prod_model   = []
         self.query_table  = []
         self.network_model  = []
+        self.rels_in_network_model = []
         self.summ_model   = []
         self.summ_objects = []
         self.taxon_model  = []
@@ -143,11 +145,11 @@ class Semantic_Network():
                                     'kind of aspect'  , 'kind of role', \
                                     'kind of relation', 'qualitative kind']
         self.non_object = Anything('', '')
-        self.idea_uid = 211000000
+        self.num_idea_uid = 211000000
         self.classification = ['is classified as a', 'is geclassificeerd als een']
         self.test = False
 
-    def Set_GUI_Language(self, GUI_lang):
+    def Set_GUI_language(self, GUI_lang):
         '''Set the GUI language of the user'''
         if GUI_lang in self.GUI_lang_name_dict:
             self.GUI_lang_name = GUI_lang
@@ -227,7 +229,7 @@ class Semantic_Network():
             if obj.category in ['kind', 'kind of physical object', 'kind of occurrence', 'kind of aspect', \
                                 'kind of role', 'kind of relation']:
                 if len(obj.supertypes) == 0:
-                    print('Kind ({}) {} has no supertype(s).'.format(obj.uid, obj.name))
+                    print('Kind ({}) {} in base ontology has no supertype(s).'.format(obj.uid, obj.name))
 
         # Determine lists of various kinds and their subtypes
         self.BuildHierarchies()
@@ -272,99 +274,62 @@ class Semantic_Network():
 ##            print('First role:', kind_of_relaton.name, kind_of_relaton.uid, kind_of_relaton.first_role.name)
 ##
 ##        #if not kind_of_relaton.second_role:
-        
-        self.base_ontology = True
-    
-    def Extent_Semantic_Network(self): #, db_cursor):
-        '''Build a Semantic Network from database db_cursor'''
+##        
+##        self.base_ontology = True
 
-        # Extent network by reading domain dictionaries table from DB content
-        table = 'domain_dictionaries'
-        self.Add_table_content_to_network(db_cursor, table)
-        print('  Extended network: {}; nr of objects = {}; nr of rels = {}; nr of rel_type_uids = {}'.\
-              format(self.name, len(self.objects), len(self.rels), len(self.rel_type_uids)))
-        
-        # Extent network by reading product and process table from DB content
-        table = 'productsANDprocesses'
-        self.Add_table_content_to_network(db_cursor, table)
-        print('  Including product network: {}; nr of objects = {}; nr of rels = {}; nr of rel_type_uids = {}'.\
-              format(self.name, len(self.objects), len(self.rels), len(self.rel_type_uids)))
 
-    def Add_table_content_to_network(self, db_cursor, table):
-        '''The content of a 'table' in Gel_db database is added to the Semantic Network
-           and the new names_in_context are added to the network.dictionary.
-        '''
-        #db_cursor.execute("select name from sqlite_master where type='table';")
-        #print("Tables:", db_cursor.fetchall())
-        
-        # read an expressions table
-        command = 'select * from ' + table
-        print("  Read table '{}' from database.".format(table))
-        db_cursor.execute(command)
-        rows = db_cursor.fetchall()
-        #print('rows:',len(rows))
-        
-        # Add each row to the semantic network
-        for row in rows:
-            self.Add_row_to_network(row)
-
-        self.Verify_rh_objects()
-
-    def Verify_rh_objects(self):
-
-        lang_uid = English_uid   # English
-        comm_uid = '492014'           # Gellish
-        description = ''
-        
-        # Verify whether all rh_objects are defined as (lh_)objects
-        if len(self.rh_objects) > 0:
-            for obj in self.rh_objects:
-                # If obj is not defined and it is not 'anything' and not a whole number then display a warning
-                if obj.defined == False and obj.uid != anythingUID:
-                    int_obj_uid, integer = Convert_numeric_to_integer(obj.uid)
-                    if integer == True and int_obj_uid not in range(1000000000, 3000000000):
-                        Message(self.GUI_lang_index,\
-                            'Warning: RH object {} ({}) is not yet defined'           .format(obj.name, obj.uid),\
-                            'Waarschuwing: RH object {} ({}) is nog niet gedefinieerd'.format(obj.name, obj.uid))
-                        # Add provisional data to semi-defined rh_object
-                        obj.defined = True
-                        anything = self.uid_dict[anythingUID]
-                        obj.kind = anything
-                        #self.object_uids.append(obj.uid)
-                        # Create a name in context with description and add to object and dictionary
-                        self.Add_name_in_context(lang_uid, comm_uid, obj.name, is_called_uid, description)
-                    else:
-                        # obj is a number
-                        obj.category = 'number'
-                else:
-                    # The object has been defined later than discovered as rh_object
-                    if len(obj.candidate_names) > 0:
-                        for cand_name in obj.candidate_names:
-                            # Verify whether rh_name is included in rh.names_in_contexts
-                            rh_name_found = False
-                            if len(obj.names_in_contexts) > 0:
-                                for name_in_context in obj.names_in_contexts:
-                                    if cand_name == name_in_context[2]:
-                                        rh_name_found = True
-                                        continue
-                            else:
-                                print("Error: no name in context given for {}".format(cand_name))
-
-                            # If no rh_name is found and obj.uid does not denote an integer number then report warning
-                            int_obj_uid, integer = Convert_numeric_to_integer(obj.uid)
-                            if rh_name_found == False and obj.uid != anythingUID and \
-                               (integer == False or int_obj_uid not in range(1000000000, 3000000000)):
-                                print("Warning: rh_name '{}' ({}) not known for uid '{}'. Correct or add a synonym.".\
-                                      format(cand_name, obj.uid, obj.names_in_contexts[0][2]))
-                                # Create a name in context with description and add to object and dictionary
-                                self.Add_name_in_context(lang_uid, comm_uid, cand_name, is_called_uid, description)
-                    
-                        obj.candidate_names[:] = []
-            
-                self.rh_objects.remove(obj)
+##    def Verify_rh_objects(self):
+##
+##        lang_uid = English_uid   # English
+##        comm_uid = '492014'      # Gellish
+##        description = ''
+##        
+##        # Verify whether all rh_objects are defined as (lh_)objects
 ##        if len(self.rh_objects) > 0:
 ##            for obj in self.rh_objects:
-##                print('To be defined: ', obj.name)
+##                # If obj is not defined and it is not 'anything' and not a whole number then display a warning
+##                if obj.defined is False and obj.uid != anythingUID:
+##                    int_obj_uid, integer = Convert_numeric_to_integer(obj.uid)
+##                    if integer is True and int_obj_uid not in range(1000000000, 3000000000):
+##                        Message(self.GUI_lang_index,\
+##                            'Warning: RH object {} ({}) is not yet defined'           .format(obj.name, obj.uid),\
+##                            'Waarschuwing: RH object {} ({}) is nog niet gedefinieerd'.format(obj.name, obj.uid))
+##                        # Add provisional data to semi-defined rh_object
+##                        obj.defined = True
+##                        anything = self.uid_dict[anythingUID]
+##                        obj.kind = anything
+##                        #self.object_uids.append(obj.uid)
+##                        # Create a name in context with description and add to object and dictionary
+##                        self.Add_name_in_context(lang_uid, comm_uid, obj.name, is_called_uid, description)
+##                    else:
+##                        # obj is a number
+##                        obj.category = 'number'
+##                else:
+##                    # The object has been defined later than discovered as rh_object
+##                    if len(obj.candidate_names) > 0:
+##                        for cand_name in obj.candidate_names:
+##                            # Verify whether rh_name is included in rh.names_in_contexts
+##                            rh_name_found = False
+##                            if len(obj.names_in_contexts) > 0:
+##                                for name_in_context in obj.names_in_contexts:
+##                                    if cand_name == name_in_context[2]:
+##                                        rh_name_found = True
+##                                        continue
+##                            else:
+##                                print("Error: no name in context given for {}".format(cand_name))
+##
+##                            # If no rh_name is found and obj.uid does not denote an integer number then report warning
+##                            int_obj_uid, integer = Convert_numeric_to_integer(obj.uid)
+##                            if rh_name_found is False and obj.uid != anythingUID and \
+##                               (integer is False or int_obj_uid not in range(1000000000, 3000000000)):
+##                                print("Warning: rh_name '{}' ({}) not known for uid '{}'. Correct or add a synonym.".\
+##                                      format(cand_name, obj.uid, obj.names_in_contexts[0][2]))
+##                                # Create a name in context with description and add to object and dictionary
+##                                self.Add_name_in_context(lang_uid, comm_uid, cand_name, is_called_uid, description)
+##                    
+##                        obj.candidate_names[:] = []
+##            
+##                self.rh_objects.remove(obj)
 
     def Add_name_in_context(self, lang_uid, comm_uid, name, naming_uid, description):
         ''' Create a name in context with description and add to object and dictionary'''
@@ -382,7 +347,7 @@ class Semantic_Network():
         idea_uid  = row[idea_uid_col]
         lang_uid  = row[lang_uid_col]
         comm_uid  = row[comm_uid_col]
-        intent_uid  = row[intent_uid_col]
+        intent_uid = row[intent_uid_col] 
 
         lh_uid, lh_name = row[lh_uid_col], row[lh_name_col]
         if lh_name == '':
@@ -434,15 +399,39 @@ class Semantic_Network():
                 if lang_uid == Dutch_uid:
                     ind = 1
                 lh_name = self.nameless[ind] + '-' + str(lh_uid)
+
+            if rel_type_uid in self.alias_uids:
+                naming_uid = rel_type_uid
+            else:
+                naming_uid = is_called_uid
+
+            # Verify uniuqness of name_in_context and if unique, then add to dictionary
+            lh_name_in_context = (lang_uid, comm_uid, lh_name)
+            if lh_name_in_context in self.dictionary:
+                # Check whether the same name in the same language and language community
+                # has indeed the same uid (otherwise it should be a homonym 
+                # with different language and/or language community)
+                verification_triple = self.dictionary[lh_name_in_context]
+                if verification_triple[0] != lh_uid:
+                    Message(self.GUI_lang_index, \
+                            'The same name <{}> in the same language and language community \
+shall have the same UIDs instead of {} and {}. Idea {} ignored.'.\
+                            format(lh_name_in_context[2], lh_uid, verification_triple[0], idea_uid),
+                            'Dezelfde naam <{}> in dezelfde taal en taalgemeenschap \
+moeten dezelfde UIDs hebben, in plaats van {} en {}. Idee {} is genegeerd'.\
+                            format(lh_name_in_context[2], lh_uid, verification_triple[0], idea_uid))
+                    return
+            else:
+                # Add name_in_context to dictionary of names in contexts
+                value_triple = (lh_uid, naming_uid, description)
+                #print('Dict entry: ', lh_name_in_context, value_triple)
+                self.dictionary[lh_name_in_context] = value_triple
+            
             # Create new (lh) object
             lh = Anything(lh_uid, lh_name)
             #self.object_uids.append(lh_uid)
             self.objects.append(lh)
             self.uid_dict[lh_uid] = lh
-            if rel_type_uid in self.alias_uids:
-                naming_uid = rel_type_uid
-            else:
-                naming_uid = is_called_uid
                 
             # Add name and description to object list of names_in_contexts
             lh_name_and_descr = (lang_uid, comm_uid, lh_name, naming_uid, description)
@@ -456,13 +445,6 @@ class Semantic_Network():
             if len(names_and_descriptions) > 0:
                 for name_and_description in names_and_descriptions:
                     lh.names_in_contexts.append(name_and_description)
-                
-            # Add name_in_context to dictionary
-            lh_name_in_context = (lang_uid, comm_uid, lh_name)
-            if lh_name_in_context not in self.dictionary:
-                value_triple = (lh_uid, naming_uid, description)
-                #print('Dict entry: ', lh_name_in_context, value_triple)
-                self.dictionary[lh_name_in_context] = value_triple
             
         else:
             # lh_uid is known, thus find the existing lh object from its uid in uid_dict. 
@@ -536,7 +518,7 @@ class Semantic_Network():
             for name_in_context in rh.names_in_contexts:
                 if rh_name == name_in_context[2]:
                     existing_name = True
-            if existing_name == False:
+            if existing_name is False:
                 if rh_name not in rh.candidate_names:
                     rh.candidate_names.append(rh_name)
                     self.rh_objects.append(rh)
@@ -568,7 +550,7 @@ class Semantic_Network():
             rel_type = self.uid_dict[rel_type_uid]
 
             # If base_ontology is created, then kinds of relations have kinds of roles
-            if self.base_ontology == True:
+            if self.base_ontology is True:
                 # If no lh or rh kinds of roles are given then allocate kind of role
                 # conform first and second role of kind of relation
                 if row[lh_role_uid_col] == '':
@@ -589,7 +571,7 @@ class Semantic_Network():
             # Default: category == None
             relation = Relation(lh, rel_type, rh, phrase_type_uid, uom, row)
 ##            # Verify whether phrase corresponds to uid
-##            if rel_type_name not in rel_type.basePhrases and rel_type_name not in rel_type.inversePhrases:
+##            if rel_type_name not in rel_type.base_phrases and rel_type_name not in rel_type.inverse_phrases:
 ##                print('Phrase <{}> does not correspond with UID {}'.format(rel_type_name, rel_type_uid))
             # Add the relation with reled objects (self.obj_1 and self.obj_2) and the self. rel_type object to both objects
             lh.add_relation(relation)
@@ -686,18 +668,31 @@ class Semantic_Network():
             # lh_uid == rh_uid
             # If rel_type_uid == uid of <is a base phrase for> (6066) name of a kind of relation
             # or rel_type_uid == uid of <is a inverse phrase for> (1986) name of a kind of relation,
-            # then add the name in context to the list of base phrases resp. inverse phrase in context for the object
-            # and add the name to the list of base_phrases or inverse_phrases
+            # then add the name in context to the list of base phrases resp. inverse phrase in context
+            # for the object and add the name to the list of base_phrases or inverse_phrases
+            # Including phrases for possible other languages
             if rel_type_uid == basePhraseUID:
                 phrase_in_context = [lang_uid, comm_uid, lh_name]
                 lh.add_base_phrase(phrase_in_context)
-                lh.basePhrases.append(lh_name)
-                self.base_phrases.append(lh_name)
+                lh.base_phrases.append(lh_name)
+                self.total_base_phrases.append(lh_name)
+                # If base phrases (and descriptions) in other languages are available add them as well
+                if len(names_and_descriptions) > 0:
+                    for name_and_description in names_and_descriptions:
+                        lh.add_base_phrase(name_and_description)
+                        lh.base_phrases.append(name_and_description[2])
+                        self.total_base_phrases.append(name_and_description[2])
             elif rel_type_uid == inversePhraseUID:
                 phrase_in_context = [lang_uid, comm_uid, lh_name]
                 lh.add_inverse_phrase(phrase_in_context)
-                lh.inversePhrases.append(lh_name)
-                self.inverse_phrases.append(lh_name)
+                lh.inverse_phrases.append(lh_name)
+                self.total_inverse_phrases.append(lh_name)
+                # If inverse phrases and descriptions in other languages are available add them as well
+                if len(names_and_descriptions) > 0:
+                    for name_and_description in names_and_descriptions:
+                        lh.add_inverse_phrase(name_and_description)
+                        lh.inverse_phrases.append(name_and_description[2])
+                        self.total_inverse_phrases.append(name_and_description[2])
 
     def BuildHierarchies(self):
         ''' Build lists of subtype concepts and subtype concept_uids of various kinds,
@@ -808,7 +803,7 @@ class Semantic_Network():
                     
                     # If sub belongs to taxonomy of relations then
                     # inherit by definition the first and second kinds of roles
-                    if rel_taxonomy == True:
+                    if rel_taxonomy is True:
                         self.Inherit_kinds_of_roles(sub, supertype)
                 #print ('Supertype:',supertype.uid,"Subtypes:",subs,subtypeRow)
 
@@ -825,61 +820,61 @@ class Semantic_Network():
 
                         # If sub belongs to taxonomy of relations
                         # then inherit by definition first and second kinds of roles
-                        if rel_taxonomy == True:
+                        if rel_taxonomy is True:
                             self.Inherit_kinds_of_roles(sub, subX)
                             
         return all_subtypes, all_subtype_uids
 
-    def Inherit_kinds_of_roles(self, sub, supertype):
-        ''' If sub (a kind of relation) has no defined (first or second) kind of role, then
+    def Inherit_kinds_of_roles(self, rel, supertype):
+        ''' If rel (a kind of relation) has no defined (first or second) kind of role, then
             allocate the kind of role of the supertype to the subtype kind of relation.
             If the kind of relation has a defined kind of role, then
             verify whether that kind of role has one or more supertypes and if yes, then 
             verify whether one of those supertypes
             is equal to the kind of role of the supertype of the kind of relation.
         '''
-        sub.category = 'kind of relation'
+        rel.category = 'kind of relation'
         try:
-            if sub.first_role: # != None:
+            if rel.first_role: # != None:
                 # Check whether supertype of the kind of role == role of supertype of kind of relation
                 equality = False
-                if len(sub.first_role.supertypes) > 0:
-                    for supertype_role in sub.first_role.supertypes:
+                if len(rel.first_role.supertypes) > 0:
+                    for supertype_role in rel.first_role.supertypes:
                         if supertype_role == supertype.first_role:
                             equality = True
                             break
-                    if equality == False:
-                        print('Kind of relation <{}> has a first kind of role <{}> with as supertype <{}> \
-which is not equal to the first role <{}> of its supertype <{}>'\
-                              .format(sub.name, sub.first_role.name, supertype_role.name, \
-                                      supertype.first_role.name, supertype.name))
+##                    if equality is False:
+##                        print('Kind of relation <{}> has a first kind of role <{}> with as supertype <{}> \
+##which is not equal to the first role <{}> of its supertype <{}>'\
+##                              .format(rel.name, rel.first_role.name, supertype_role.name, \
+##                                      supertype.first_role.name, supertype.name))
                 else:
-                    print('First kind of role {} has no supertypes'.format(sub.first_role.name))
-                #print('sub.first_role_def:', sub.first_role.name)
+                    print('First kind of role {} has no supertypes'.format(rel.first_role.name))
+                #print('rel.first_role_def:', rel.first_role.name)
             #else:
-                #print('sub.first_role_inh:', sub.first_role.name)
+                #print('rel.first_role_inh:', rel.first_role.name)
         except AttributeError:
-            sub.first_role = supertype.first_role
-            #print('sub.inherited first_role', sub.name, sub.uid, sub.first_role.name)
+            rel.first_role = supertype.first_role
+            #print('rel.inherited first_role', rel.name, rel.uid, rel.first_role.name)
             
         try:
-            if sub.second_role != None:
-                # Check whether supertype of kind of role == role of supertype
+            if rel.second_role != None:
+                # Check whether supertype of the kind of role == role of supertype of kind of relation
                 equality = False
-                if len(sub.second_role.supertypes) > 0:
-                    for supertype_role in sub.second_role.supertypes:
+                if len(rel.second_role.supertypes) > 0:
+                    for supertype_role in rel.second_role.supertypes:
                         if supertype_role == supertype.second_role:
                             equality = True
                             break
-                    if equality == False:
-                        print('Kind of relation <{}> has a second kind of role <{}> with as superty <{}> \
-which is not equal to the second role <{}> of its supertype <{}>'\
-                              .format(sub.name, sub.second_role.name, supertype_role.name, \
-                                      supertype.second_role.name, supertype.name))
+##                    if equality is False:
+##                        print('Kind of relation <{}> has a second kind of role <{}> with as supertype <{}> \
+##which is not equal to the second role <{}> of its supertype <{}>'\
+##                              .format(rel.name, rel.second_role.name, supertype_role.name, \
+##                                      supertype.second_role.name, supertype.name))
                 else:
-                    print('Second kind of role <{}> has no supertypes'.format(sub.second_role.name))
+                    print('Second kind of role <{}> has no supertypes'.format(rel.second_role.name))
         except AttributeError:
-            sub.second_role = supertype.second_role
+            rel.second_role = supertype.second_role
 #----------------------------------------------------------------
     def Determine_role_players_types(self, rel_uid):  #, phrase):
         # Individual or kind? Determine whether the query relation type denotes:
@@ -909,8 +904,8 @@ which is not equal to the second role <{}> of its supertype <{}>'\
             #    rolePlayersTypes = 'kinds'
             elif rel_uid == indOrMixRelUID:     # 6068 = binary relation between an individual thing and any (kind or individual)
                 rolePlayersTypes = 'individualsOrMixed'  # is related to (a)
-                #print('RolePlayers-IndividualsOrMixed:',rolePlayersTypes,relName,self.base_phrases)
-##                if relName in self.base_phrases:
+                #print('RolePlayers-IndividualsOrMixed:',rolePlayersTypes,relName,self.total_base_phrases)
+##                if relName in self.total_base_phrases:
 ##                    rolePlayersTypes = 'individualAndMixed'
 ##                    rolePlayerTypeLH = 'individual'
 ##                    rolePlayerTypeRH = 'mixed'
@@ -920,7 +915,7 @@ which is not equal to the second role <{}> of its supertype <{}>'\
 ##                    rolePlayerTypeRH = 'individual'
             elif rel_uid in self.mixedBinRelUIDs:        # binary relation between an individual thing and a kind
                 rolePlayersTypes = 'mixed'
-##                if relName in self.base_phrases:
+##                if relName in self.total_base_phrases:
 ##                    rolePlayersTypes = 'individualAndKind'
 ##                    rolePlayerTypeLH = 'individual'
 ##                    rolePlayerTypeRH = 'kind'
@@ -930,7 +925,7 @@ which is not equal to the second role <{}> of its supertype <{}>'\
 ##                    rolePlayerTypeRH = 'individual'
             elif rel_uid == kindAndMixRelUID:     # 7071 = binary relation between a kind and any (kind or individual)
                 rolePlayersTypes = 'kindsOrMixed'  # can be related to (a)
-##                if relName in self.base_phrases:
+##                if relName in self.total_base_phrases:
 ##                    rolePlayersTypes = 'kindsAndMixed'  # can be related to (a)
 ##                    rolePlayerTypeLH = 'kind'
 ##                    rolePlayerTypeRH = 'mixed'
@@ -977,7 +972,7 @@ which is not equal to the second role <{}> of its supertype <{}>'\
         candids = []
         first_chunk = False
         for chunk in chunks:
-            if first_chunk == False:
+            if first_chunk is False:
                 # Find list of candidates based on first chunk. Use that list as a reference list
                 cand_list = list(self.dictionary.filter_on_key(chunk, string_commonality))
                 ref_list = cand_list[:]
@@ -1062,13 +1057,13 @@ which is not equal to the second role <{}> of its supertype <{}>'\
             
         # Select one of the candidates.
         selected = False
-        while selected == False:
+        while selected is False:
             # If two candidates with identical UIDs then select the first one
             if len(candidates) == 2 and self.uid_name_desc_list[0][0] == self.uid_name_desc_list [1][0]:
                 selection = self.uid_name_desc_list[0]
                 selected = True
             elif len(candidates) > 1:
-                if selected == False:
+                if selected is False:
                     # If candidate selected earlier, then make the same selection             
                     for uid_name_desc in self.uid_name_desc_list:
                         #print('Compare {} with {}'.format(uid_name_desc[0], self.select_dict))
@@ -1116,7 +1111,7 @@ which is not equal to the second role <{}> of its supertype <{}>'\
                 uid = 2000000000 + number
         return uid
 #---------------------------------------
-    def Pickle_Dump(self, fname):
+    def save_pickle_db(self, fname):
         f = open(fname, "bw")
         pickle.dump(self, f)
         f.close()
@@ -1135,7 +1130,8 @@ which is not equal to the second role <{}> of its supertype <{}>'\
         self.indiv_model[:]   = []
         self.indiv_objects[:] = []
         self.query_table[:]   = []
-        self.network_model[:]   = []
+        self.network_model[:] = []
+        self.rels_in_network_model[:] = []
         self.info_model[:]    = []
         self.occ_model[:]     = []
         self.involv_table[:]  = []
@@ -1202,17 +1198,14 @@ which is not equal to the second role <{}> of its supertype <{}>'\
                 print('No supertype of {} found'.format(obj.name))
             else:
                 # There is one or more supertype of the kind in focus:
-                # collect all supertype relations in query_table
+                # collect all generalization relations in the query_table and the network
                 for supertype in obj.supertypes:
                     for rel_obj in obj.relations:
                         expr = rel_obj.expression
                         if expr[rel_type_uid_col] in ['1146', '1726', '5396', '1823']:
                             if len(self.query_table) < self.max_nr_of_rows:
                                 self.query_table.append(expr)
-                                branch = [expr[lh_uid_col], expr[rel_type_uid_col], expr[rh_uid_col],\
-                                          expr[phrase_type_uid_col], \
-                                          expr[lh_name_col], expr[rel_type_name_col], expr[rh_name_col]]
-                                self.network_model.append(branch)
+                                self.Add_line_to_network_model(rel_obj, expr)
 
         # Individual thing: Object category is not a kind, thus indicates an indiv.
         # Verify whether the individual thing is classified (has one or more classifiers)
@@ -1319,7 +1312,96 @@ which is not equal to the second role <{}> of its supertype <{}>'\
         if obj.category != 'occurrence':
             # Search for occurrences about the object_in_focus and other involved objects in those occurrences.
             self.decomp_level = 0
-            self.OccursAndInvolvs(obj)    
+            self.OccursAndInvolvs(obj)
+
+    def Add_line_to_network_model(self, rel_obj, expr):
+        ''' Add a row to the network_model for display in a network view
+        '''
+        if rel_obj.lh_obj == self.object_in_focus:
+            # Determine the preferred name of the related object
+            kind_name, kind_uid = self.Determine_preferred_kind_name(rel_obj.rh_obj)
+            # Determine the preferred phrase for the kind of relation
+            #print('Base phrases:', expr[rel_type_name_col], rel_obj.rel_type.base_phrases)
+            if expr[rel_type_name_col] in rel_obj.rel_type.base_phrases:
+                lang_name, comm_name, rel_type_phrase, full_def = \
+                       self.Determine_name_in_language_and_community(rel_obj.rel_type, 'base')
+            else:
+                # Rel_type_name is an inverse phrase
+                lang_name, comm_name, rel_type_phrase, full_def = \
+                       self.Determine_name_in_language_and_community(rel_obj.rel_type, 'inverse')
+            branch = [rel_obj.rh_obj.uid, rel_obj.rh_obj.name, rel_obj.lh_obj.name,\
+                      kind_name, kind_uid, rel_obj.lh_obj.uid , \
+                      expr[lh_name_col], rel_type_phrase, expr[rh_name_col]]
+        else:
+            # rh_obj is the object_in_focus
+            kind_name, kind_uid = self.Determine_preferred_kind_name(rel_obj.lh_obj)
+            if expr[rel_type_name_col] in rel_obj.rel_type.base_phrases:
+                lang_name, comm_name, rel_type_phrase, full_def = \
+                       self.Determine_name_in_language_and_community(rel_obj.rel_type, 'inverse')
+            else:
+                lang_name, comm_name, rel_type_phrase, full_def = \
+                       self.Determine_name_in_language_and_community(rel_obj.rel_type, 'base')
+            branch = [rel_obj.lh_obj.uid, rel_obj.lh_obj.name, rel_obj.rh_obj.name,\
+                      kind_name, kind_uid, rel_obj.rh_obj.uid , \
+                      expr[rh_name_col], rel_type_phrase, expr[lh_name_col]]
+            
+        #print('Branch-1:', rel_obj.phrase_type_uid, branch)    
+        if branch not in self.network_model:
+            is_related_to = branch[7] # rel_type_phrase
+            # If the branch is about the object in focus, then make parent empty (= root)
+            # and insert an intermediate line with the expressed kind of relation
+            if branch[5] == self.object_in_focus.uid and \
+               is_related_to not in self.rels_in_network_model:
+                if len(self.rels_in_network_model) == 0:
+                    kind_name, kind_uid = self.Determine_preferred_kind_name(self.object_in_focus)
+                    root = [self.object_in_focus.uid, self.object_in_focus.name, '', \
+                            kind_name, kind_uid]
+                    self.network_model.append(root)
+                
+                intermediate = [rel_obj.rel_type.uid, is_related_to, branch[2]]
+                self.network_model.append(intermediate)
+                self.rels_in_network_model.append(is_related_to)
+                #print('Branch-2:', rel_obj.phrase_type_uid, intermediate)
+                
+            # If the branch is a direct child of the object in focus,
+            # then link the child to the intermediate 
+            if branch[5] == self.object_in_focus.uid:
+                branch[2] = is_related_to
+                self.network_model.append(branch)
+            else:
+                self.network_model.append(branch)
+            #print('Branch-3:', rel_obj.phrase_type_uid, branch)
+##        else:
+##            print('Duplicate branch: {}, {}, {}'.format(branch[1], branch[5], branch[2]))
+
+    def Determine_preferred_kind_name(self, obj):
+        ''' Determine the preferred name of the first kind that classified obj
+            or the name of the first supertype of obj.
+        '''
+        kind = None
+        if len(obj.classifiers) > 0:
+            kind = obj.classifiers[0]
+        elif len(obj.supertypes) > 0:
+            kind = obj.supertypes[0]
+        if kind is not None:
+            lang_name, comm_name, kind_name, full_def = \
+                       self.Determine_name_in_language_and_community(kind)
+            kind_uid = kind.uid
+        else:
+            kind_uid = 'unknown'
+            kind_name = 'unknown'
+        return kind_name, kind_uid
+
+##    def Determine_preferred_phrase(self, rel_type, base_or_inverse):
+##        is_related_to = ['is related to', 'is gerelateerd aan']
+##        if base_or_inverse == 'base':
+##            if len(rel_type.base_phrases_in_contexts) > 0:
+##                phrase
+##            else:
+##                phrase = is_related_to[self.GUI_lang_index]
+##        else:
+##            phrase = rel_type.inverse_phrases[0]
+##        return phrase
     
 ##    def Create_prod_model_subtypes(self, obj):
 ##        ''' Create header in prod_model for subtypes of obj and
@@ -1361,7 +1443,7 @@ which is not equal to the second role <{}> of its supertype <{}>'\
 ##                for rel in s.relations:
 ##                    if len(self.query_table) < self.max_nr_of_rows:
 ##                        self.query_table.append(rel.expression)
-##                        self.network_model.append(branch)
+##                        self.Add_line_to_network_model(rel_obj, expr)
 ##            # Determine subtypes of subtypes recursively
 ##            for sub in subs:
 ##                if sub in self.ex_candids or sub.uid in self.coll_of_subtype_uids:
@@ -1425,10 +1507,7 @@ which is not equal to the second role <{}> of its supertype <{}>'\
             
             if len(self.query_table) < self.max_nr_of_rows:
                 self.query_table.append(expr)
-                branch = [expr[lh_uid_col], expr[rel_type_uid_col], expr[rh_uid_col],\
-                          expr[phrase_type_uid_col], \
-                          expr[lh_name_col], expr[rel_type_name_col], expr[rh_name_col]]
-                self.network_model.append(branch)
+                self.Add_line_to_network_model(rel_obj, expr)
 
             # Record the role playing occurrence in occ_model
             # Find classifying kind of occurrence
@@ -1487,10 +1566,7 @@ which is not equal to the second role <{}> of its supertype <{}>'\
                 #      'roles:',expr_occ[lh_role_uid_col],expr_occ[rh_role_uid_col])
                 
                 self.query_table.append(expr_occ)
-                branch = [expr_occ[lh_uid_col], expr_occ[rel_type_uid_col], expr_occ[rh_uid_col],\
-                          expr_occ[phrase_type_uid_col], \
-                          expr_occ[lh_name_col], expr_occ[rel_type_name_col], expr_occ[rh_name_col]]
-                self.network_model.append(branch)
+                self.Add_line_to_network_model(rel_occ, expr_occ)
                 status = expr_occ[status_col]
                 
                 # Determine the kind of the involved individual object
@@ -1625,7 +1701,7 @@ which is not equal to the second role <{}> of its supertype <{}>'\
             expr = rel_occ.expression 
             if expr[lh_uid_col] == occ.uid and expr[rel_type_uid_col] in self.subComposUIDs:
                 # Create header line, only after finding a part the first time
-                if parts == False:
+                if parts is False:
                     self.line_nr += + 1
                     prod_line_7 = ['', '', '', self.line_nr, '', part_head[self.GUI_lang_index],'',\
                                    kind_part_head[self.GUI_lang_index],'','','','','','']
@@ -1635,10 +1711,7 @@ which is not equal to the second role <{}> of its supertype <{}>'\
                 status = expr[status_col]
                 
                 self.query_table.append(expr)
-                branch = [expr[lh_uid_col], expr[rel_type_uid_col], expr[rh_uid_col],\
-                          expr[phrase_type_uid_col], \
-                          expr[lh_name_col], expr[rel_type_name_col], expr[rh_name_col]]
-                self.network_model.append(branch)
+                self.Add_line_to_network_model(rel_occ, expr)
                 
                 if len(part_occ.classifiers) > 0:
                     kind_part_occ = part_occ.classifiers[0]
@@ -1672,42 +1745,60 @@ which is not equal to the second role <{}> of its supertype <{}>'\
                 part_level = occ_level + 1
                 self.PartOfOccur(part_occ, part_level)
 
-    def Determine_name_in_language_and_community(self, obj):
+    def Determine_name_in_language_and_community(self, obj, base_or_inverse = 'normal'):
         ''' Given an object and preferred language sequence uids and community sequence uids,
-            determine lang_name, comm_name, obj_name for user interface
+            determine lang_name, comm_name, obj_name for user interface.
+            base_or_inverse denotes whther the preferred name should be found in the attribute list
+            names_in_contexts, base_phrases_in_contexts or inverse_phrases_in_contexts
         '''
+        if base_or_inverse == 'base':
+            names_in_contexts = obj.base_phrases_in_contexts
+        elif base_or_inverse == 'inverse':
+            names_in_contexts = obj.inverse_phrases_in_contexts
+        else:
+            names_in_contexts = obj.names_in_contexts
+        
         name_known = False
-        if len(obj.names_in_contexts) > 0:
-            # For language_prefs search for name  === for comm_pref_uids to be done ===
+        if len(names_in_contexts) > 0:
+            # For language_prefs and community preferences search for name
             for lang_uid in self.reply_lang_pref_uids:
-                for name_in_context in obj.names_in_contexts:
-                    # Verify if language uid corresponds with required reply language uid
-                    if name_in_context[0] == lang_uid:
-                        obj_name  = name_in_context[2]
-                        lang_name = self.lang_uid_dict[name_in_context[0]]
-                        comm_name = self.community_dict[name_in_context[1]] # community uid
-                        part_def  = name_in_context[4]
-                        name_known = True
+                for comm_pref_uid in self.comm_pref_uids:
+                    for name_in_context in names_in_contexts:
+                        # Verify if language uid corresponds with required reply language uid
+                        if name_in_context[0] == lang_uid and \
+                           (name_in_context[1] == comm_pref_uid or comm_pref_uid == 'any'):
+                            obj_name  = name_in_context[2]
+                            lang_name = self.lang_uid_dict[name_in_context[0]]
+                            comm_name = self.community_dict[name_in_context[1]] # community uid
+                            # base and inverse phrases have no description (name_in_context[4])
+                            if len(name_in_context) < 5:
+                                part_def = ''
+                            else:
+                                part_def  = name_in_context[4]
+                            name_known = True
+                            break
+                            #return lang_name, comm_name, obj_name, part_def
+                    if name_known is True:
                         break
-                        #return lang_name, comm_name, obj_name, part_def
-                if name_known == True:
+                if name_known is True:
                     break
-            if name_known == False:
+            if name_known is False:
                 # If no name is available in the preferred language, then use the first available name
-                obj_name  = obj.names_in_contexts[0][2]
-                lang_name = self.lang_uid_dict[obj.names_in_contexts[0][0]]
-                comm_name = self.community_dict[obj.names_in_contexts[0][1]] # community uid
-                part_def  = obj.names_in_contexts[0][4]
+                obj_name  = names_in_contexts[0][2]
+                lang_name = self.lang_uid_dict[names_in_contexts[0][0]]
+                comm_name = self.community_dict[names_in_contexts[0][1]] # community uid
+                part_def  = names_in_contexts[0][4]
         else:
             numeric_uid, integer = Convert_numeric_to_integer(obj.uid)
-            if integer == False or numeric_uid not in range(1000000000, 3000000000):
+            if integer is False or numeric_uid not in range(1000000000, 3000000000):
                 print('No names in contexts for {}'.format(obj.name))
             obj_name  = obj.name
             lang_name = 'unknown'
             comm_name = 'unknown'
             part_def  = ''
 
-        # Determine supertype name in the preferred language and concatenate with part_def
+        # Determine full_def by determining supertype name in the preferred language
+        # and concatenate with part_def
         super_name_known = False
         if len(obj.supertypes) > 0 and len(obj.supertypes[0].names_in_contexts) > 0:
             for lang_uid in self.reply_lang_pref_uids:
@@ -1717,9 +1808,9 @@ which is not equal to the second role <{}> of its supertype <{}>'\
                         super_name  = name_in_context[2]
                         super_name_known = True
                         break
-                if super_name_known == True:
+                if super_name_known is True:
                     break
-        if super_name_known == True:
+        if super_name_known is True:
             full_def = super_name + ' ' + part_def
         else:
             full_def = part_def
@@ -1838,12 +1929,9 @@ which is not equal to the second role <{}> of its supertype <{}>'\
         for rel_obj in obj.relations:
                 expr = rel_obj.expression
                 if len(self.query_table) < self.max_nr_of_rows and expr not in self.query_table:
-                        self.query_table.append(expr)
-                        branch = [expr[lh_uid_col], expr[rel_type_uid_col], expr[rh_uid_col],\
-                                  expr[phrase_type_uid_col], \
-                                  expr[lh_name_col], expr[rel_type_name_col], expr[rh_name_col]]
-                        self.network_model.append(branch)
-        
+                    self.query_table.append(expr)
+                    self.Add_line_to_network_model(rel_obj, expr)
+    
         # Collect list of obj and its supertypes in the complete hierarchy for searching inherited aspects
         all_supers = self.Determine_supertypes(obj)
         
@@ -1892,8 +1980,8 @@ which is not equal to the second role <{}> of its supertype <{}>'\
 ##                    implied_role_aspect    = [role_uid, role.name, 5817, aspect_uid, aspect_name]
                     
                     # Find collection of allowed values or other criterion, constraints or value for intrinsic aspect, if any.
-                    for rel_obj in role.relations:
-                        expr2 = rel_obj.expression
+                    for rel_obj2 in role.relations:
+                        expr2 = rel_obj2.expression
                         # Find collection of qualitative aspects for intrinsic aspect (=role), if any.
                         if role_uid == expr2[lh_uid_col] and expr2[rel_type_uid_col] in self.qualOptionsUIDs:
                             value_uid  = expr2[rh_uid_col]   # collection of allowed values
@@ -1995,7 +2083,7 @@ which is not equal to the second role <{}> of its supertype <{}>'\
                         self.possibility_row[0] = obj.uid
                         self.possibility_row[1] = aspect_name + of_text[self.GUI_lang_index] + obj_name + ')'
                         self.possibility_row[2] = poss_asp_of_obj_text
-                        print('Aspect', object_name, asp.uid, aspect_name, value_name, len(asp.supertypes)) # .kind
+                        #print('Aspect:', object_name, asp.uid, aspect_name, value_name, len(asp.supertypes)) # .kind
                         self.possibility_row[3] = asp_supertype_name
                         self.possibility_row[4] = community_name # of obj
                         self.possibility_row[5] = value_name
@@ -2006,7 +2094,7 @@ which is not equal to the second role <{}> of its supertype <{}>'\
                             print('Duplicate possibility row',len(self.possibilities_model), self.possibility_row)
                         self.possibility_row  = ['','','','','','','','','','','','','','','']
                 
-##                if value_presence == False:
+##                if value_presence is False:
 ##                    value_name = '' # noValuesText[self.GUI_lang_index]
 ##                    warnText  = ['  Warning: Kind of aspect','Waarschuwing: Soort aspect']
 ##                    valueMess = ['has no specification of (allowed) values.',\
@@ -2015,17 +2103,15 @@ which is not equal to the second role <{}> of its supertype <{}>'\
 ##                          (warnText[self.GUI_lang_index],aspect_name,aspect_uid,valueMess[self.GUI_lang_index]))
                 #print('obj_i', value_presence, obj_i.name, nr_of_aspects, aspect_name, value_name, len(self.taxon_aspect_uids))
 
-                if value_presence == True:
+                if value_presence is True:
                     #print('Value present:', obj_i.name, aspect_name, value_name)
                     if len(self.query_table) < self.max_nr_of_rows:
                         self.query_table.append(expr2)
-                        branch = [expr2[lh_uid_col], expr2[rel_type_uid_col], expr2[rh_uid_col],\
-                                  expr2[phrase_type_uid_col], \
-                                  expr2[lh_name_col], expr2[rel_type_name_col], expr2[rh_name_col]]
-                        self.network_model.append(branch)
+                        self.Add_line_to_network_model(rel_obj2, expr2)
+                        
                     if self.decomp_level == 0:
                         # Build summary_view header add a column for aspects if not yet included
-                        if value_presence == True and aspect_name not in self.taxon_column_names and \
+                        if value_presence is True and aspect_name not in self.taxon_column_names and \
                            len(self.taxon_column_names) <= 14:
                             #print('Summm_header', aspect_name, len(self.taxon_aspect_uids))
                             self.taxon_aspect_uids.append(aspect_uid)
@@ -2048,7 +2134,7 @@ which is not equal to the second role <{}> of its supertype <{}>'\
 
 ##                    if self.subtype_level == 0:
 ##                        # Build composition_view header add a column for aspects if not yet included
-##                        if value_presence == True and aspect_name not in self.possib_column_names and \
+##                        if value_presence is True and aspect_name not in self.possib_column_names and \
 ##                           len(self.possib_column_names) <= 15:
 ##                            #print('Compon_header', aspect_name, len(self.possib_aspect_uids))
 ##                            self.possib_aspect_uids.append(aspect_uid)
@@ -2234,17 +2320,14 @@ which is not equal to the second role <{}> of its supertype <{}>'\
                 # Store the expression in the query_table for display and possible export
                 if len(self.query_table) < self.max_nr_of_rows:
                     self.query_table.append(expr)
-                    branch = [expr[lh_uid_col], expr[rel_type_uid_col], expr[rh_uid_col],\
-                              expr[phrase_type_uid_col], \
-                              expr[lh_name_col], expr[rel_type_name_col], expr[rh_name_col]]
-                    self.network_model.append(branch)
+                    self.Add_line_to_network_model(rel_obj, expr)
                     
                 # Individual thing uid is found via classification relation
                 indiv = self.uid_dict[indiv_uid]
 
                 # Insert an inter_row header for classified individual things in the taxonomy
                 # the first time only
-                if first_time == True:
+                if first_time is True:
                     header_text = has_as_individuals[self.GUI_lang_index]+obj.name
                     inter_row = [obj.uid, header_text, obj.name, '']
                     self.taxon_model.append(inter_row)
@@ -2295,10 +2378,10 @@ which is not equal to the second role <{}> of its supertype <{}>'\
             if expr[rel_type_uid_col] in self.subComposUIDs:
                 if expr not in self.query_table and expr not in self.query_table:
                     self.query_table.append(expr)
-                    branch = [expr[lh_uid_col], expr[rel_type_uid_col], expr[rh_uid_col],\
-                              expr[phrase_type_uid_col], \
-                              expr[lh_name_col], expr[rel_type_name_col], expr[rh_name_col]]
-                    self.network_model.append(branch)
+                    #print('Rel_obj-parts', rel_obj.lh_obj.uid, rel_obj.lh_obj.name, \
+                    #      rel_obj.rel_type.base_phrases[0], rel_obj.rh_obj.name)
+                    self.Add_line_to_network_model(rel_obj, expr)
+                    
                 # If base phrase <is a part of> and right hand is the object in focus then lh is a part
                 if expr[phrase_type_uid_col]   == basePhraseUID:     # base
                     if obj.uid == expr[rh_uid_col]:
@@ -2314,7 +2397,7 @@ which is not equal to the second role <{}> of its supertype <{}>'\
 
                 if part_uid != '':
                     # There is an explicit part found; create part_header, prod_head_4, the first time only
-                    if self.part_head_req == True:
+                    if self.part_head_req is True:
                         self.line_nr += 1
                         prod_head_4 = ['','','',self.line_nr, compHead[self.GUI_lang_index], partHead[self.GUI_lang_index],\
                                      par3Head[self.GUI_lang_index], kindHead[self.GUI_lang_index],'','','','','']
@@ -2414,7 +2497,7 @@ which is not equal to the second role <{}> of its supertype <{}>'\
                 
                 # There is an explicit kind of part found; create part_header in kind_model, the first time only
                 #print('Kind of part', part_name)
-                if self.part_head_req == True:
+                if self.part_head_req is True:
                     self.line_nr += 1
                     prod_head_4 = ['','','',self.line_nr, compHead[self.GUI_lang_index], partHead[self.GUI_lang_index],\
                                  par3Head[self.GUI_lang_index], kindHead[self.GUI_lang_index],'','','','','']
@@ -2426,10 +2509,7 @@ which is not equal to the second role <{}> of its supertype <{}>'\
                 # Add the expression to the query_table output table
                 if len(self.query_table) < self.max_nr_of_rows:
                     self.query_table.append(expr)
-                    branch = [expr[lh_uid_col], expr[rel_type_uid_col], expr[rh_uid_col],\
-                              expr[phrase_type_uid_col], \
-                              expr[lh_name_col], expr[rel_type_name_col], expr[rh_name_col]]
-                    self.network_model.append(branch)
+                    self.Add_line_to_network_model(rel_obj, expr)
 
                 # Determine preferred name of object (= kind)
                 if len(obj.names_in_contexts) > 0:
@@ -2490,7 +2570,7 @@ which is not equal to the second role <{}> of its supertype <{}>'\
             #print('Nr of implied parts', len(self.implied_parts_dict))
 
             # There is an implied part left; thus create a part_header, the first time only
-            if self.part_head_req == True:
+            if self.part_head_req is True:
                 self.line_nr += 1
                 prod_head_4 = ['','','',self.line_nr, compHead[self.GUI_lang_index], partHead[self.GUI_lang_index],\
                              par3Head[self.GUI_lang_index], kindHead[self.GUI_lang_index],'','','','','']
@@ -2564,10 +2644,9 @@ which is not equal to the second role <{}> of its supertype <{}>'\
             # Add each expression to the query_table with each idea about the object in focus
             if len(self.query_table) < self.max_nr_of_rows and expr not in self.query_table:
                 self.query_table.append(expr)
-                branch = [expr[lh_uid_col], expr[rel_type_uid_col], expr[rh_uid_col],\
-                          expr[phrase_type_uid_col], \
-                          expr[lh_name_col], expr[rel_type_name_col], expr[rh_name_col]]
-                self.network_model.append(branch)
+                #print('Rel_obj', rel_obj.lh_obj.uid, rel_obj.lh_obj.name, \
+                #      rel_obj.rel_type.base_phrases[0], rel_obj.rh_obj.name)
+                self.Add_line_to_network_model(rel_obj, expr)
                 
             # Find possession of aspect relations (or its subtypes)
             if indiv.uid == expr[lh_uid_col] and expr[rel_type_uid_col] in self.subPossAspUIDs:
@@ -2621,7 +2700,7 @@ which is not equal to the second role <{}> of its supertype <{}>'\
                 indiv.kind_name = pref_cl_name
 
             # Verify if the aspect of the individual object is classified (when not being a qualitative aspect)
-            if qual_aspect == False:
+            if qual_aspect is False:
                 # Normal individual aspect found (not a qualitative aspect, such as a substance
                 aspect_name = aspect.name
                 if len(aspect.classifiers) == 0:
@@ -2646,10 +2725,7 @@ which is not equal to the second role <{}> of its supertype <{}>'\
                     expr = rel_obj.expression
                     if len(self.query_table) < self.max_nr_of_rows and expr not in self.query_table:
                         self.query_table.append(expr)
-                        branch = [expr[lh_uid_col], expr[rel_type_uid_col], expr[rh_uid_col],\
-                                  expr[phrase_type_uid_col], \
-                                  expr[lh_name_col], expr[rel_type_name_col], expr[rh_name_col]]
-                        self.network_model.append(branch)
+                        self.Add_line_to_network_model(rel_obj, expr)
                     if aspect_uid == expr[lh_uid_col]:
                         # Find the first expression that qualifies or quantifies the aspect
                         # by searching for the kinds of qualifying relations or their subtypes
@@ -2679,7 +2755,7 @@ which is not equal to the second role <{}> of its supertype <{}>'\
                     #    determine the value name in the preferred language (and in the preferred language community)
                     #print('Value', aspect_uid, value_uid, value_name, expr[0:25])
                     numeric_uid, integer = Convert_numeric_to_integer(value_uid)
-                    if integer == False or numeric_uid not in range(1000000000, 3000000000):
+                    if integer is False or numeric_uid not in range(1000000000, 3000000000):
                         value = self.uid_dict[value_uid]
                         lang_name, comm_name, value_name, descr = \
                                self.Determine_name_in_language_and_community(value)
@@ -2687,10 +2763,7 @@ which is not equal to the second role <{}> of its supertype <{}>'\
                     # Aspect value found: add expression to result table
                     if len(self.query_table) < self.max_nr_of_rows and expr not in self.query_table:
                         self.query_table.append(expr)
-                        branch = [expr[lh_uid_col], expr[rel_type_uid_col], expr[rh_uid_col],\
-                                  expr[phrase_type_uid_col], \
-                                  expr[lh_name_col], expr[rel_type_name_col], expr[rh_name_col]]
-                        self.network_model.append(branch)
+                        self.Add_line_to_network_model(rel_obj, expr)
             else:
                 # Qualitative aspect found (e.g. a substance such as PVC)
                 substance = self.uid_dict['431771']     # subtance or stuff
@@ -2884,10 +2957,7 @@ which is not equal to the second role <{}> of its supertype <{}>'\
                         info.description = info_expr[full_def_col]
                         qualified = True
                         self.query_table.append(info_expr)
-                        branch = [info_expr[lh_uid_col], info_expr[rel_type_uid_col], info_expr[rh_uid_col],\
-                                  info_expr[phrase_type_uid_col], \
-                                  info_expr[lh_name_col], info_expr[rel_type_name_col], info_expr[rh_name_col]]
-                        self.network_model.append(branch)
+                        self.Add_line_to_network_model(rel_info, info_expr)
                         
                     # Verify whether info <is presented on> (4996) physical object (typically an electronic data file)
                     #        or info <is presented on at least one of> (5627) collection of physical objects
@@ -2902,10 +2972,8 @@ which is not equal to the second role <{}> of its supertype <{}>'\
                         # Info is presented on a carrier
                         presented = True
                         self.query_table.append(info_expr)
-                        branch = [info_expr[lh_uid_col], info_expr[rel_type_uid_col], info_expr[rh_uid_col],\
-                                  info_expr[phrase_type_uid_col], \
-                                  info_expr[lh_name_col], info_expr[rel_type_name_col], info_expr[rh_name_col]]
-                        self.network_model.append(branch)
+                        self.Add_line_to_network_model(rel_info, info_expr)
+                        
                         carrier = self.uid_dict[carrier_uid]
                         if len(carrier.classifiers) > 0:
                             carrier_kind_name = carrier.classifiers[0].name
@@ -2927,10 +2995,7 @@ which is not equal to the second role <{}> of its supertype <{}>'\
                                 # Directory for carrier is found
                                 directory = self.uid_dict[directory_uid]
                                 self.query_table.append(car_expr)
-                                branch = [car_expr[lh_uid_col], car_expr[rel_type_uid_col], car_expr[rh_uid_col],\
-                                          car_expr[phrase_type_uid_col], \
-                                          car_expr[lh_name_col], car_expr[rel_type_name_col], car_expr[rh_name_col]]
-                                self.network_model.append(branch)
+                                self.Add_line_to_network_model(rel_carrier, car_expr)
                                 directory_name = directory.name
 
                         if directory_name == '':
@@ -2956,10 +3021,10 @@ which is not equal to the second role <{}> of its supertype <{}>'\
                         else:
                             self.prod_model.append(prod_line_8)
 
-                if qualified == False:
+                if qualified is False:
                     print('Warning: Information {} is not qualified'.format(info.name))
                     
-                if presented == False:
+                if presented is False:
                     # Store info about object in info_model
                     info_row = [info.uid, obj.uid, info.description, '', \
                                 info.name, super_info_name, '', obj.name, '',\
@@ -3071,7 +3136,7 @@ which is not equal to the second role <{}> of its supertype <{}>'\
                 # and add the object to the list of options
                 
                 result_uid, integer = Convert_numeric_to_integer(option[5])
-                if integer == False or result_uid >= 100:
+                if integer is False or result_uid >= 100:
                     # UID is of a known object (alpha or in range above unknowns (1-100)) then identify the object.
                     obj = self.uid_dict[str(result_uid)]
                     
@@ -3145,7 +3210,7 @@ which is not equal to the second role <{}> of its supertype <{}>'\
                         foundUID = obj.uid
                         break
             if foundUID == '':
-                print('Something wrong')
+                print('Something wrong. Found UID is blank')
                  
         return foundUID, options
 
@@ -3178,11 +3243,16 @@ which is not equal to the second role <{}> of its supertype <{}>'\
         
         # Add a classification expression to the list of expressions of the classified object
         # First determine the first available free uid in the range
-        for idea in range(self.idea_uid, 212000000):
-            if idea not in self.idea_uids:
-                self.idea_uid = idea
-                self.idea_uids.append(idea)
+        for num_uid in range(self.num_idea_uid, 212000000):
+            idea_uid = str(num_uid)
+            if idea_uid in self.idea_uids:
+                continue
+            else:
+                self.num_idea_uid = num_uid
+                self.idea_uids.append(idea_uid)
                 break
+            print('No idea uid available in range {} to {}'.format(self.num_idea_uid, 212000000))
+            
         lang_uid  = modified_object.names_in_contexts[0][0]
         lang_name = self.lang_uid_dict[lang_uid]
         comm_uid  = modified_object.names_in_contexts[0][1]
@@ -3196,7 +3266,7 @@ which is not equal to the second role <{}> of its supertype <{}>'\
         description         = ''
         intent_uid_name     = ['491285', statement[self.GUI_lang_index]]
         rel_type = self.uid_dict['1225']
-        gellish_expr = Create_gellish_expression(lang_comm, self.idea_uid, intent_uid_name,\
+        gellish_expr = Create_gellish_expression(lang_comm, idea_uid, intent_uid_name,\
                                                  lh_uid_name, rel_uid_phrase_type,\
                                        rh_role_uid_name, rh_uid_name, uom_uid_name, description)
         relation = Relation(modified_object, rel_type, selected_object, basePhraseUID, '', gellish_expr)
@@ -3205,22 +3275,14 @@ which is not equal to the second role <{}> of its supertype <{}>'\
 
 #-------------------------------------------------------------
 if __name__ == "__main__":
-    from DatabaseAPI import Database
     from SystemUsers import User
     
-##    # Connect to an existing database
-##    #db_name  = 'FormalEnglishDB'
-##    db_name  = ':memory:'
-##    Gel_db = Database(db_name)
-##    print("Database  : %s connected." % (Gel_db.name))
-    
     # Create and initialize a semantic network
-    net_name = 'Language definition network'
+    net_name = 'Semantic network'
     network = Semantic_Network(net_name)
     
     # Choose GUI language and formal language
     formal_language = "English"
-    #user = User('Andries')
     network.GUI_lang_name = "English"
 
     # Create a naming dictionary
@@ -3228,20 +3290,8 @@ if __name__ == "__main__":
     Gel_dict  = GellishDict(dict_name)
     print('Created dictionary:', Gel_dict.name)
 
-##    # Add the content of the 'base_ontology' database table to the Semantic Network and to the dictionary
-##    table = 'base_ontology'
-##    network.Add_table_content_to_network(Gel_db.db_cursor, table)
-##
-####    # Build hierarchies in base_ontology
-####    network.BuildHierarchies()
-##    print('network   : %s; nr of objects = %i; nr of rels = %i; nr of rel_types = %i' % \
-##          (network.name, len(network.objects), len(network.rels), len(network.rel_type_uids)))
-##
-##    # Add the content of the 'domain_ontologies' database table to the Semantic Network and to the dictionary
-##    table = 'domain_dictionaries'
-##    network.Add_table_content_to_network(Gel_db.db_cursor, table)
-##    print('network   : %s; nr of objects = %i; nr of rels = %i; nr of rel_types = %i' % \
-##          (network.name, len(network.objects), len(network.rels), len(network.rel_type_uids)))
+    # Build semantic network
+    # ===to be done===
 
     # Query things in network
     qtext = input("\nEnter query string: ")

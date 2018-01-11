@@ -17,11 +17,11 @@ class Anything:
         # If category not specified than allocate 'anything' as category.
         self.category = category if category is not None else 'anything'
         self.names_in_contexts = [] #[lang_uid, comm_uid, name, naming_rel_uid, description]
-        self.relations      = [] # expressions (including used names)
-        self.basePhrases    = []
-        self.basePhrases_in_context = []
-        self.inversePhrases = []
-        self.inversePhrases_in_context = []
+        self.relations       = [] # expressions (including used names)
+        self.base_phrases    = []
+        self.base_phrases_in_contexts = []
+        self.inverse_phrases = []
+        self.inverse_phrases_in_contexts = []
         self.supertypes  = [] # direct supertype objects that duplicate the uid refs in specialization relations (subset), invalid for individuals
         self.subtypes    = [] # direct subtype objects that duplicate the uid refs in specialization relations (subset), invalid for individuals
         self.classifiers = [] # kinds, duplicate of uid refs in classification relations (subset)
@@ -123,12 +123,14 @@ class Anything:
         return(' ({}) {}'.format(self.uid, self.names_in_contexts))
 
     def add_base_phrase(self, phrase_in_context):
-        self.basePhrases_in_context.append(phrase_in_context)
-        self.basePhrases.append(phrase_in_context[2])
+        self.base_phrases_in_contexts.append(phrase_in_context)
+        if phrase_in_context[2] not in self.base_phrases:
+            self.base_phrases.append(phrase_in_context[2])
 
     def add_inverse_phrase(self, phrase_in_context):
-        self.inversePhrases_in_context.append(phrase_in_context)
-        self.inversePhrases.append(phrase_in_context[2])
+        self.inverse_phrases_in_contexts.append(phrase_in_context)
+        if phrase_in_context[2] not in self.inverse_phrases:
+            self.inverse_phrases.append(phrase_in_context[2])
 
     def add_first_kind_of_role(self, first_role_type):
         self.first_role_type = first_role_type
@@ -150,8 +152,8 @@ class Kind(Object):
 class RelationType(Kind):
 ##    def __init__(self, uid, category = "kind of relation"):
 ##        Kind.__init__(self, uid, category = None):
-##            self.basePhrases    = []
-##            self.inversePhrases = []
+##            self.base_phrases    = []
+##            self.inverse_phrases = []
     pass
 
 class Intention_type(Kind):
@@ -192,9 +194,8 @@ class Relation(Anything):
 if __name__ == "__main__":   
     import TestData.TestDBcontent as Exprs
     
-    GUI = GUI_Language("English")
     net_name = 'Semantic network'
-    Gel_net = Semantic_Network(net_name)
+    gel_net = Semantic_Network(net_name)
     for ex in Exprs.expr:
         langUID   = ex[1];   langName   = ex[2] ; commUID = ex[3]    ; commName = ex[4] ;
         intentUID = ex[6];   intentName = ex[7] ; lhobUID = ex[9]    ; lhobName = ex[10];
@@ -212,22 +213,22 @@ if __name__ == "__main__":
         R2 = [6023, "has as originator",0,"Andries van Renssen"]
         rel.add_contextual_fact(R1)
         rel.add_contextual_fact(R2)
-        rel.show(Gel_net)
+        rel.show(gel_net)
 
         naming_rel_uid = 5117
         description = 'text'
         O1 = Object(lhobUID, fullDef)
-        if O1 not in Gel_net.obj_uids:
-            Gel_net.obj_uids.append(O1)
+        if O1 not in gel_net.obj_uids:
+            gel_net.obj_uids.append(O1)
             lhob_name_in_context = [langUID, commUID, lhobName, naming_rel_uid, description]
             O1.add_name_in_context(lhob_name_in_context)
-        Q1.show(Gel_net)
+        Q1.show(gel_net)
 
         O2 = Object(rhobUID,'')
-        if O2 not in Gel_net.obj_uids and O2 not in Gel_net.rh_obj_uids:
-            Gel_net.rh_obj_uids.append(O2)
+        if O2 not in gel_net.obj_uids and O2 not in gel_net.rh_obj_uids:
+            gel_net.rh_obj_uids.append(O2)
             O2.add_name_in_context(rhobName)
-        Q2.show(Gel_net)
+        Q2.show(gel_net)
 
         RT = RelationType(1260,'bla, bla')
         rt_name_in_context = [langUID, commUID, "composition relation between an individual thing \
@@ -235,7 +236,7 @@ and a composed individual thing", naming_rel_uid, description]
         RT.add_name_in_context(rt_name_in_context)
         RT.add_base_phrase("is a part of")
         RT.add_inverse_phrase("has as part")
-        RT.show(Gel_net)
+        RT.show(gel_net)
     GUI_index = 0
     categoryInFocus = 'kind'
     root = Tk()
@@ -251,7 +252,6 @@ and a composed individual thing", naming_rel_uid, description]
     summ_model = []
     query_table = []
     user = User("A")
-    Notebook_views()
 
 class User:
     def __init__(self, name):

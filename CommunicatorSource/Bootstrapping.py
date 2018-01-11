@@ -30,18 +30,23 @@ dict_file_names = [
                    ]
 
 # Knowledge, Requirements and Product type file paths
-#model_dirs  = ["EN models", "Knowledge and requirements models",]
-model_dirs  = ["NL modellen", "Kennis en vereistenmodellen",]
-#model_files = ["Knowledge base ROADS - v5.1.csv"]
-model_file_names = ["Kennisboek WEGEN - v5-UTF-8.csv"]
+model_dirs  = ["../GellishData"]
+#model_dirs  = ["NL modellen", "Kennis en vereistenmodellen",]
+model_file_names = [
+    "Taxonomic Dictionary+Knowledge about Roads-UTF-8.csv",\
+    ]
+#model_file_names = ["Kennisboek WEGEN - v5-UTF-8.csv"]
 
 # Product & Processes Models file paths
-#prod_dirs  = ["EN models", "Product and process models",]
-prod_dirs  = ["NL modellen", "Product en procesmodellen",]
-prod_file_names = [] #["Semantisch model van een WEG - v5.2.csv"]
+prod_dirs  = ["../GellishData"]
+#prod_dirs  = ["NL modellen", "Product en procesmodellen",]
+prod_file_names = [
+    "Semantic model of a road network - UTF-8.csv",\
+    ]
+#prod_file_names = ["Semantisch model van een WEG - v5.2-UTF-8.csv"]
 
 # Default output path name
-ini_out_path = r"C:\Users\Andries\CloudStation\Gellish Software\Gellish Model Server\NL modellen"
+ini_out_path = r"../Data"
 
 # Bootstrapping phrases and UIDs
 boot_base_phrasesEN    = ["is a kind of", "is a specialization of",\

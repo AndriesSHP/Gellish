@@ -14,8 +14,8 @@ from GellishDict import GellishDict
 from Create_output_file import Create_gellish_expression, Convert_numeric_to_integer, Open_output_file
 
 class Query:
-    def __init__(self, Gel_net, main):
-        self.Gel_net = Gel_net
+    def __init__(self, gel_net, main):
+        self.gel_net = gel_net
         self.main    = main
         self.user    = main.user
         self.query_expr = []
@@ -118,7 +118,7 @@ class Query:
         for string in strings:
             known_string = True
             print('Search for {}'.format(string))
-            candidates = self.Gel_net.Query_network_dict(string, com)
+            candidates = self.gel_net.Query_network_dict(string, com)
             
             if len(candidates) > 0:
                 # If candidates found, then show candidates for selection
@@ -137,8 +137,8 @@ class Query:
                     # If selected uid < 100 then the object is an unknown
                     elif integer == True and int_val < 100:
                     #elif int(sel_uid) < 100:
-                        self.Gel_net.unknown_quid += + 1
-                        obj_uid = self.Gel_net.unknown_quid
+                        self.gel_net.unknown_quid += + 1
+                        obj_uid = self.gel_net.unknown_quid
                         obj_name = string
                         known_string = False
                     # If there is only one candidate, then select the last candidate
@@ -147,20 +147,20 @@ class Query:
                         
                     # Search for selected uid in network
                     try:
-                        obj = self.Gel_net.uid_dict[sel_uid]    #= find_object(obj_uid)
-                        s = obj.show(self.Gel_net, self.user)
+                        obj = self.gel_net.uid_dict[sel_uid]    #= find_object(obj_uid)
+                        s = obj.show(self.gel_net, self.user)
                         obj_uid  = obj.uid
                         obj_name = obj.name
                         sel_uid = 'q'
                     except KeyError:
                         print("Selected UID '{}' is not known in the network.".format(sel_uid))
-                        if integer == False or int_val >= 100:
+                        if integer is False or int_val >= 100:
                         #if int(sel_uid) >= 100:
                             sel_uid = input("\nEnter a UID of a selected candidate, 'Enter' or quit (q): ")  
             else:
                 # No candidates found: the serach_string denotes an (next) unknown
-                self.Gel_net.unknown_quid += 1
-                obj_uid = self.Gel_net.unknown_quid
+                self.gel_net.unknown_quid += 1
+                obj_uid = self.gel_net.unknown_quid
                 obj_name = string
                 known_string = False
                 print("  No candidates found for ({}) {} \n".format(obj_uid, string))
@@ -178,8 +178,8 @@ class Query:
         return known_strings, interpreted  # list of Booleans, list
 
     def Formulate_query_spec_for_individual(self, selected_object):
-        ''' Determine from a selected individual (self.Gel_net.modified_object) a query_spec that searches for
-            subtypes of its kind (self.Gel_net.selected_object) that satisfy the aspects of the individual object.
+        ''' Determine from a selected individual (self.gel_net.modified_object) a query_spec that searches for
+            subtypes of its kind (self.gel_net.selected_object) that satisfy the aspects of the individual object.
             Thus using the aspects of the individual as criteria for selection of options.
         '''
         shall_have_as_aspect_phrase = ['shall have as aspect a', 'moet als aspect hebben een']
@@ -192,12 +192,12 @@ class Query:
         print('\nFormulate query spec for ',selected_object.name)
 
         # Determine an aspect of the individual modified object and the classifier of the aspect
-        for obj_rel in self.Gel_net.modified_object.relations:
+        for obj_rel in self.gel_net.modified_object.relations:
 ##            expr = obj_rel.expression
 ##            # Search for relation type <has as aspect> (1727) to find individual aspect_uid
-##            if expr[rel_type_uid_col] in self.Gel_net.subPossAspUIDs:
+##            if expr[rel_type_uid_col] in self.gel_net.subPossAspUIDs:
             # Search for relation type <has as aspect> (1727) to find an individual aspect
-            if obj_rel.rel_type.uid in self.Gel_net.subPossAspUIDs:
+            if obj_rel.rel_type.uid in self.gel_net.subPossAspUIDs:
                 if obj_rel.phrase_type_uid == basePhraseUID:     # Base phrase
                     aspect = obj_rel.rh_obj
                     if len(aspect.classifiers) > 0:
@@ -207,7 +207,7 @@ class Query:
                         continue
                     # Formulate expression: selected_object 'has by definition as aspect a' aspect_kind, uom
                     query_expr = [selected_object.uid, selected_object.name, \
-                                  '4956', shall_have_as_aspect_phrase[self.Gel_net.GUI_lang_index], \
+                                  '4956', shall_have_as_aspect_phrase[self.gel_net.GUI_lang_index], \
                                   classifier.uid, classifier.name, '' , '', basePhraseUID]
                     self.main.query_spec.append(query_expr)
                     
@@ -222,7 +222,7 @@ class Query:
                     # Formulate_condition(s) for kind from_individual aspect value
                     for asp_rel in aspect.relations:
                         # Search for qualification or quantification of the aspect
-                        if asp_rel.rel_type.uid in self.Gel_net.subQuantUIDs:
+                        if asp_rel.rel_type.uid in self.gel_net.subQuantUIDs:
                             
                             # Quantification relation found:
                             # Expression becomes: classifier <shall have on scale a value ...> value (on scale:) uom
@@ -230,41 +230,42 @@ class Query:
                             if asp_rel.rel_type.uid == '5025':
                                 # If rel-type is <has on scale a value equal to> (5025)
                                 #    then rel_type becomes <shall have on scale a value equal to> (5492)
-                                conceptual_rel_type = self.Gel_net.uid_dict['5492']
+                                conceptual_rel_type = self.gel_net.uid_dict['5492']
 
                             elif asp_rel.rel_type.uid == '5026':
                                 # If rel-type is <has on scale a value greater than> (5026)
                                 #    then rel_type becomes <shall have on scale a value greater than> (5493)
-                                conceptual_rel_type = self.Gel_net.uid_dict['5493']
+                                conceptual_rel_type = self.gel_net.uid_dict['5493']
                                 
                             elif asp_rel.rel_type.uid == '5027':
                                 # If rel-type is <has on scale a value less than> (5027)
                                 #    then rel_type becomes <shall have on scale a value less than> (5494)
-                                conceptual_rel_type = self.Gel_net.uid_dict['5494']
+                                conceptual_rel_type = self.gel_net.uid_dict['5494']
 
                             elif asp_rel.rel_type.uid == '5489':
                                 # If rel-type is <has on scale a value greater than or equal to> (5489)
                                 #    then rel_type becomes <shall have on scale a value greater than or equal to> (5632)
-                                conceptual_rel_type = self.Gel_net.uid_dict['5632']
+                                conceptual_rel_type = self.gel_net.uid_dict['5632']
 
                             elif asp_rel.rel_type.uid == '5490':
                                 # If rel-type is <has on scale a value less than or equal to> (5490)
                                 #    then rel_type becomes <shall have on scale a value less than or equal to> (5633)
-                                conceptual_rel_type = self.Gel_net.uid_dict['5633']
+                                conceptual_rel_type = self.gel_net.uid_dict['5633']
 
                             else:
                                 continue
                             # Conversion from qualification to conceptual qualification found:
                             # thus formulate condition in query_spec
                             # Determine base phrase of relation type in GUI language
-                            #print('Condition rel_type', conceptual_rel_type.name, len(conceptual_rel_type.basePhrases_in_context))
-                            if len(conceptual_rel_type.basePhrases_in_context) > 0:
-                                rel_type_name = conceptual_rel_type.basePhrases_in_context[0][2]
-                                for phrase_in_context in conceptual_rel_type.basePhrases_in_context:
-                                    if phrase_in_context[0] == self.Gel_net.GUI_lang_uid:
+                            #print('Condition rel_type', conceptual_rel_type.name, len(conceptual_rel_type.base_phrases_in_contexts))
+                            if len(conceptual_rel_type.base_phrases_in_contexts) > 0:
+                                rel_type_name = conceptual_rel_type.base_phrases_in_contexts[0][2]
+                                for phrase_in_context in conceptual_rel_type.base_phrases_in_contexts:
+                                    if phrase_in_context[0] == self.gel_net.GUI_lang_uid:
                                         rel_type_name = phrase_in_context[2]
                                         continue
-                                #print('Rel_type_name', rel_type_name, self.Gel_net.GUI_lang_uid, conceptual_rel_type.basePhrases_in_context)
+                                #print('Rel_type_name', rel_type_name, self.gel_net.GUI_lang_uid, \
+                                #       conceptual_rel_type.base_phrases_in_contexts)
                                 # Formulate condition expression:
                                 #   kind_of)aspect 'shall have on scale a value ...' value, uom
                                 print('Condition: {} <{}> {} {}'.\
@@ -286,7 +287,7 @@ class Query:
                     qual_aspect = obj_rel.rh_obj
                     # Formulate expression: selected_object 'is by definition qualified as' qualitative aspect, uom
                     query_expr = [selected_object.uid, selected_object.name, \
-                                  '5791', shall_be_phrase[self.Gel_net.GUI_lang_index], \
+                                  '5791', shall_be_phrase[self.gel_net.GUI_lang_index], \
                                   qual_aspect.uid, qual_aspect.name, '' , '', basePhraseUID]
 ##                    print('Query line-1b: {} ({}) <{}> ({}) {} ({})'.\
 ##                          format(query_expr[1], query_expr[0], query_expr[3], \
@@ -303,7 +304,7 @@ class Query:
                     qual_aspect = obj_rel.rh_obj
                     # Formulate expression: selected_object 'is by definition qualified as' qualitative aspect, uom
                     query_expr = [selected_object.uid, selected_object.name, \
-                                  '4995', shall_be_made_of_phrase[self.Gel_net.GUI_lang_index], \
+                                  '4995', shall_be_made_of_phrase[self.gel_net.GUI_lang_index], \
                                   qual_aspect.uid, qual_aspect.name, '' , '', basePhraseUID]
                     print('Query line-1c: {} ({}) <{}> ({}) {} ({})'.\
                           format(query_expr[1], query_expr[0], query_expr[3], \
@@ -326,10 +327,10 @@ class Query:
         # thus the first spec line has <= 2 fields and the uid >= 100,
         # then find the object by uid and show/display its data and its subtypes when applicable.
         int_uid, integer = Convert_numeric_to_integer(self.main.query_spec[0][0])
-        if len(self.main.query_spec[0]) <= 2 and (integer == False or int_uid >= 100):
+        if len(self.main.query_spec[0]) <= 2 and (integer is False or int_uid >= 100):
             # Single known object (uid) found. Find obj with uid in dictionary
             uid = self.main.query_spec[0][0]
-            obj = self.Gel_net.uid_dict[uid]
+            obj = self.gel_net.uid_dict[uid]
             
             # If obj is a kind of role, then build model of kind of role player (if known) instead of kind of role
             if obj.category == 'kind of role':
@@ -339,11 +340,11 @@ class Query:
                     # Determine whether the relation defines a kind of role player (5343 = is by def a role of a)
                     if expr[lh_uid_col] == obj.uid and expr[rel_type_uid_col] == by_def_role_of_ind:
                         role_player_uid = expr[rh_uid_col]
-                        role_player = self.Gel_net.uid_dict[role_player_uid]
+                        role_player = self.gel_net.uid_dict[role_player_uid]
                         player_found = True
                         print('Role {} replaced by role player {}'.format(obj.name, role_player.name))
                         continue
-                if player_found == False:
+                if player_found is False:
                      role_player = obj
                 # Append role_player to list of objects to be displayed
                 self.obj_list.append(role_player)    
@@ -352,7 +353,7 @@ class Query:
                 self.obj_list.append(obj)
                 
             # Build single product model (list with one element)
-            self.Gel_net.Build_product_views(self.obj_list)
+            self.gel_net.Build_product_views(self.obj_list)
 
         else:
             # Query is an expression
@@ -401,7 +402,7 @@ class Query:
             with expressions in self.candid_expressions with the same table definition.
 
             - Options list definition:
-              OptionNr, whetherKnown, lang_uid, comm_uid, resultString, self.Gel_net.unknown_quid
+              OptionNr, whetherKnown, lang_uid, comm_uid, resultString, self.gel_net.unknown_quid
         """
         self.query_expr = self.main.query_spec[0]
         self.q_lh_uid      = self.query_expr[0]
@@ -423,8 +424,8 @@ class Query:
         #self.q_phrase_type_index = 8 # Not used
         #indOrMixRelUID= 6068      # 6068 binary relation between an individual thing and something (indiv or kind)
         
-        self.Gel_net.sub_level = 0
-        self.Gel_net.all_subtypes[:] = []
+        self.gel_net.sub_level = 0
+        self.gel_net.all_subtypes[:] = []
 
         list_of_categories = ['kind', 'kind of aspect', 'kind of occurrence']
         
@@ -434,8 +435,8 @@ class Query:
         int_q_lh_uid, lh_integer = Convert_numeric_to_integer(self.q_lh_uid)
         int_q_rh_uid, rh_integer = Convert_numeric_to_integer(self.q_rh_uid)
         if self.rolePlayersQTypes == 'individuals' and \
-           (((lh_integer == False or int_q_lh_uid >= 100) and self.q_lh_category in list_of_categories) or \
-            ((rh_integer == False or int_q_rh_uid >= 100) and self.q_rh_category in list_of_categories)):
+           (((lh_integer is False or int_q_lh_uid >= 100) and self.q_lh_category in list_of_categories) or \
+            ((rh_integer is False or int_q_rh_uid >= 100) and self.q_rh_category in list_of_categories)):
             print('Warning: Relation type <{}> relates individual things, \
 but one or both related things are kinds of things. Try again.'.\
                                   format(self.q_rel_name, self.q_lh_uid, self.q_lh_category,\
@@ -445,8 +446,8 @@ but one or both related things are kinds of things. Try again.'.\
         # If relation type specifies a relation between kinds and the lh_object is known
         # then lh_object shall be a kind or kind of occurrence; idem for rh_object   
         elif (self.rolePlayersQTypes == 'hierOfKinds' or self.rolePlayersQTypes == 'thingsOfKinds') and \
-             (((lh_integer == False or int_q_lh_uid >= 100) and self.q_lh_category not in list_of_categories) or \
-              ((rh_integer == False or int_q_rh_uid >= 100) and self.q_rh_category not in list_of_categories)):
+             (((lh_integer is False or int_q_lh_uid >= 100) and self.q_lh_category not in list_of_categories) or \
+              ((rh_integer is False or int_q_rh_uid >= 100) and self.q_rh_category not in list_of_categories)):
             print('Warning: Relation type <{}> relates kinds of things, \
 but left {} ({}) or right {} ({}) related things are not kinds. Try again.'.\
                                   format(self.q_rel_name, self.q_lh_uid, self.q_lh_category,\
@@ -454,17 +455,17 @@ but left {} ({}) or right {} ({}) related things are not kinds. Try again.'.\
             #return
             
         elif self.rolePlayersQTypes == 'individualAndKind':
-            if ((lh_integer == False or int_q_lh_uid >= 100) and self.q_lh_category in list_of_categories):
+            if ((lh_integer is False or int_q_lh_uid >= 100) and self.q_lh_category in list_of_categories):
                 print('Warning: Relation type <{}> relates an individual thing to a kind, \
 but the left hand object {} ({}) is a kind. Try again.'.format(self.q_rel_name, self.q_lh_uid, self.q_lh_category))
                 
         elif self.rolePlayersQTypes == 'kindAndIndividual':
-            if ((rh_integer == False or int_q_rh_uid >= 100) and self.q_rh_category in list_of_categories):
+            if ((rh_integer is False or int_q_rh_uid >= 100) and self.q_rh_category in list_of_categories):
                 print('Warning: Relation type <{}> relates a kind to an individual thing, \
 but the right hand object {} ({}) is a kind. Try again.'.format(self.q_rel_name, self.q_rh_uid, self.q_rh_category))
                 
         elif self.rolePlayersQTypes == 'individualAndMixed':
-            if ((lh_integer == False or int_q_lh_uid >= 100) and self.q_lh_category in list_of_categories):
+            if ((lh_integer is False or int_q_lh_uid >= 100) and self.q_lh_category in list_of_categories):
                 print('Warning: Relation type <{}> relates an individual thing to an individual or kind, \
 but the left hand object {} ({}) is a kind. Try again.'.format(self.q_rel_name, self.q_lh_uid, self.q_lh_category))
 
@@ -475,33 +476,33 @@ but the left hand object {} ({}) is a kind. Try again.'.format(self.q_rel_name, 
         
         # If relUID of query (self.query_expr) known then determine rel_type object and its list of subtypes
         int_q_rel_uid, rel_integer = Convert_numeric_to_integer(self.query_expr[q_rel_uid_index])
-        if rel_integer == False or int_q_rel_uid >= 100:
-            rel_type = self.Gel_net.uid_dict[self.query_expr[q_rel_uid_index]]
+        if rel_integer is False or int_q_rel_uid >= 100:
+            rel_type = self.gel_net.uid_dict[self.query_expr[q_rel_uid_index]]
             # Find subtypes of specified relation type
-            self.q_rel_subtypes, self.q_rel_subtype_uids = self.Gel_net.Determine_subtypes(rel_type)  
+            self.q_rel_subtypes, self.q_rel_subtype_uids = self.gel_net.Determine_subtypes(rel_type)  
             #print('Subtypes of relation',self.query_expr[q_rel_uid_index],':',subRels)
             self.q_rel_subtype_uids.append(self.query_expr[q_rel_uid_index])
         #print('Relation type and subtypes:',self.q_rel_subtype_uids)
                 
         # Candidate answers ========
         cand_text = ['Candidate answers:','Kandidaat antwoorden:']
-        print('\n{}'.format(cand_text[self.Gel_net.GUI_lang_index]))
+        print('\n{}'.format(cand_text[self.gel_net.GUI_lang_index]))
 
         # Initialize whether types are known
         self.q_lh_category = 'unknown'
         self.q_rh_category = 'unknown'
         # If lh object is a known, then ...
         
-        if lh_integer == False or int_q_lh_uid >= 100:
+        if lh_integer is False or int_q_lh_uid >= 100:
             # If lh is possibly a kind then determine its subtypes
             if self.rolePlayersQTypes in ['kindAndIndividual', 'mixedAndIndividual', 'hierOfKinds',\
                                            'thingsOfKinds']:
                 self.q_lh_category = 'kind'
-                self.q_lh_subtypes, self.q_lh_subtype_uids = self.Gel_net.DetermineSubtypeList(self.q_lh_uid)
+                self.q_lh_subtypes, self.q_lh_subtype_uids = self.gel_net.DetermineSubtypeList(self.q_lh_uid)
                 
                 # If relation type is a transitive relation type then
                 # determine hierarchical network (chain) of rh_uids that relate to the q_lh_uid of the query
-                if self.q_rel_uid in self.Gel_net.transitiveRelUIDs:
+                if self.q_rel_uid in self.gel_net.transitiveRelUIDs:
                     self.Transitive_hier_network(self.q_lh_subtypes, self.q_rel_subtype_uids, self.q_phrase_type_uid)
                     self.rh_hierarchical_net_uids = self.net_uids
             else:
@@ -509,15 +510,15 @@ but the left hand object {} ({}) is a kind. Try again.'.format(self.q_rel_name, 
                 self.q_lh_subtypes[0] = self.q_lh_obj
 
         # If rh object is a known and is possibly a kind then determine its subtypes
-        if rh_integer == False or int_q_rh_uid >= 100:
+        if rh_integer is False or int_q_rh_uid >= 100:
             if self.rolePlayersQTypes in ['individualAndKind', 'individualAndMixed', 'hierOfKinds',\
                                           'thingsOfKinds']:
                 self.q_rh_category = 'kind'
-                self.q_rh_subtypes, self.q_rh_subtype_uids = self.Gel_net.DetermineSubtypeList(self.q_rh_uid)
+                self.q_rh_subtypes, self.q_rh_subtype_uids = self.gel_net.DetermineSubtypeList(self.q_rh_uid)
                 
                 # If relation type is a transitive relation type then
                 # determine hierarchical network (chain) of lh_uids that relate to the q_rh_uid of the query
-                if self.q_rel_uid in self.Gel_net.transitiveRelUIDs:
+                if self.q_rel_uid in self.gel_net.transitiveRelUIDs:
                     self.Transitive_hier_network(self.q_rh_subtypes, self.q_rel_subtype_uids, self.q_phrase_type_uid)
                     self.lh_hierarchical_net_uids = net_uids
             else:
@@ -531,9 +532,9 @@ but the left hand object {} ({}) is a kind. Try again.'.format(self.q_rel_name, 
         indeed = ['Indeed','Inderdaad']
         
         # If q_lh_object of query is unknown, (q_lh_uid < 100) ('what-1')
-        if lh_integer == False or int_q_lh_uid < 100:
+        if lh_integer is False or int_q_lh_uid < 100:
             # rh_object of query is known (q_rh_uid > 99) while q_lh object is unknown
-            if rh_integer == False or int_q_rh_uid >= 100: 
+            if rh_integer is False or int_q_rh_uid >= 100: 
                 # If relation_type object of query is known (q_rel_uid > 99) is known, then
                 if int_q_rel_uid >= 100:                  
                     # If self.q_rh_category == 'individual' then search for matches for the individual
@@ -557,7 +558,7 @@ but the left hand object {} ({}) is a kind. Try again.'.format(self.q_rel_name, 
             else:
                 # rh_object of query in also unknown (self.query_expr[q_rh_uid_index] < 100)
                 # Both q_lh and q_rh object are unknown
-                if self.Gel_net.GUI_lang_index == 1:
+                if self.gel_net.GUI_lang_index == 1:
                     print('\n  Fout: Ofwel de linker term of de rechter term moet bekend zijn. Probeer opnieuw')
                 else:
                     print('\n  Error: Either left hand term or right hand term should be known. Try again')
@@ -579,18 +580,18 @@ but the left hand object {} ({}) is a kind. Try again.'.format(self.q_rel_name, 
                             # === This does not hold for the inverse. Transitive!!! roles should comply (=== to be added ===)
                             if expr[rh_uid_col] in self.q_rh_subtype_uids:
                                 print('  {}: {} <{}> {} {}'.\
-                                      format(indeed[self.Gel_net.GUI_lang_index],expr[intent_name_col],\
+                                      format(indeed[self.gel_net.GUI_lang_index],expr[intent_name_col],\
                                              expr[lh_name_col],expr[rel_type_name_col],expr[rh_name_col]))
                                 # Create candidate object and add object to list of candidates and expressions, if not yet present
                                 self.Record_and_verify_candidate_object(expr)
                     
                             # If rh not in subtype list, but self.q_rel_uid is a transitive relation type
                             # then verify whether the transitive relation is satisfied.
-                            elif self.q_rel_uid in self.Gel_net.transitiveRelUIDs:
+                            elif self.q_rel_uid in self.gel_net.transitiveRelUIDs:
                                 if expr[rh_uid_col] in self.rh_hierarchical_net_uids:
                                     # Indeed, rh_object is by transitive chain related to lh_object
                                     print('\n  {}: {} {} {} {}'.\
-                                          format(indeed[self.Gel_net.GUI_lang_index],expr[intent_name_col],\
+                                          format(indeed[self.gel_net.GUI_lang_index],expr[intent_name_col],\
                                                  expr[lh_uid_col],expr[rel_type_name_col],expr[rh_name_col]))
                                     # Create candidate object and add object to list of candidates, if not yet present
                                     # Add expression to the list of candidate expressions, if not yet present
@@ -605,15 +606,15 @@ but the left hand object {} ({}) is a kind. Try again.'.format(self.q_rel_name, 
     ##                    if matchChain[0]:
     ##                        because    = ['because...','omdat...']
     ##                        print('\n  {}: {} {} {} {} {}'.\
-    ##                              format(indeed[self.Gel_net.GUI_lang_index],expr[intent_name_col],\
+    ##                              format(indeed[self.gel_net.GUI_lang_index],expr[intent_name_col],\
     ##                                     self.query_expr[q_lh_name_index],self.q_rel_name,self.query_expr[q_rh_name_index],\
-    ##                                     because[self.Gel_net.GUI_lang_index]))
+    ##                                     because[self.gel_net.GUI_lang_index]))
     ##                        for step in reversed(matchChain[1:]):
     ##                            print('\n    {} <{}> {}'.format(step[1],self.q_rel_name,step[3]))
     ##                    else:
     ##                        denial  = ['No, it is not true that','Nee, het niet waar dat']
     ##                        print('\n  {}: {} {} {}'.\
-    ##                              format(denial[self.Gel_net.GUI_lang_index],\
+    ##                              format(denial[self.gel_net.GUI_lang_index],\
     ##                              self.query_expr[q_lh_name_index],self.q_rel_name,self.query_expr[q_rh_name_index]))
     ##                        return
     ##            else:                   # self.q_lh_uid not on expr
@@ -624,8 +625,8 @@ but the left hand object {} ({}) is a kind. Try again.'.format(self.q_rel_name, 
     ##                        self.Record_and_verify_candidate_object(expr)
 
         # Unknown relation type: Any relation type is O.K. self.q_rel_uid not in vocabulary ('what')
-        if rel_integer == False or int_q_rel_uid < 100: 
-            if lh_integer == False or int_q_lh_uid >= 100:              # is self.q_lh_uid of self.query_expr in vocabulary?
+        if rel_integer is False or int_q_rel_uid < 100: 
+            if lh_integer is False or int_q_lh_uid >= 100:              # is self.q_lh_uid of self.query_expr in vocabulary?
                 # Search for facts about self.q_lh_uid
                 for lh_obj_rel in self.q_lh_obj.relations:
                     expr = lh_obj_rel.expression   
@@ -633,7 +634,7 @@ but the left hand object {} ({}) is a kind. Try again.'.format(self.q_rel_name, 
                         self.Record_and_verify_candidate_object(expr)
             else:
                 # self.q_lh_uid of self.query_expr not in vocabulary ('what')
-                if rh_integer == False or int_q_rh_uid >= 100:          # is self.q_rh_uid of self.query_expr in vocabulary?
+                if rh_integer is False or int_q_rh_uid >= 100:          # is self.q_rh_uid of self.query_expr in vocabulary?
                     if self.q_rh_uid == row[rh_uid_col]:
                         for rel_rh_obj in self.q_rh_obj.relations:
                             expr = rel_rh_obj.expression 
@@ -643,7 +644,7 @@ but the left hand object {} ({}) is a kind. Try again.'.format(self.q_rel_name, 
         if len(self.candidates) == 0:
         #if len(self.candid_expressions) == 0:
             noExpressions = ['No candidates found','Geen kandidaten gevonden']
-            print('\n{}'.format(noExpressions[self.Gel_net.GUI_lang_index]))
+            print('\n{}'.format(noExpressions[self.gel_net.GUI_lang_index]))
             return
         else: 
             # Candidates found
@@ -656,7 +657,7 @@ but the left hand object {} ({}) is a kind. Try again.'.format(self.q_rel_name, 
                     self.answer_expressions.append(candid_expr)
                     # Report confirmed candidate lh_name, rel_type_name, rh_name
                     print('\n    {} {}: <{}> <{}> <{}>'.\
-                          format(satisText[self.Gel_net.GUI_lang_index],len(self.answer_expressions),candid_expr[lh_name_col],\
+                          format(satisText[self.gel_net.GUI_lang_index],len(self.answer_expressions),candid_expr[lh_name_col],\
                                  candid_expr[rel_type_name_col], candid_expr[rh_name_col]))
 ##            if len(self.main.query_spec) > 1:
 ##                # Verify conditions on candidates (self.candidates / self.candid_expressions)
@@ -676,7 +677,7 @@ but the left hand object {} ({}) is a kind. Try again.'.format(self.q_rel_name, 
             if self.lhSel[1] == 'known':
                 if self.q_lh_category != 'kind' and self.q_lh_category != 'occurrence':
                     # The left hand object in self.query_expr is the object in focus
-                    object_in_focus = self.Gel_net.uid_dict[self.q_lh_uid]
+                    object_in_focus = self.gel_net.uid_dict[self.q_lh_uid]
                     self.objects_in_focus.append(object_in_focus)
 ##                    self.UIDsInFocus.append(self.q_lh_uid)
 ##                    self.namesInFocus.append(self.q_lh_name)
@@ -684,12 +685,12 @@ but the left hand object {} ({}) is a kind. Try again.'.format(self.q_rel_name, 
                 # if lhUID is not known, and rhUID (and rhName) is known in namingTable, then:
                 if self.q_rh_category != 'kind' and self.q_rh_category != 'occurrence':
                     # The right hand object in self.query_expr is the object in focus
-                    object_in_focus = self.Gel_net.uid_dict[self.q_rh_uid]
+                    object_in_focus = self.gel_net.uid_dict[self.q_rh_uid]
                     self.objects_in_focus.append(object_in_focus)
 ##                    self.UIDsInFocus.append(self.q_rh_uid)
 ##                    self.namesInFocus.append(self.q_rh_name)
             else:
-                if self.Gel_net.GUI_lang_index == 1:
+                if self.gel_net.GUI_lang_index == 1:
                     print('\n  Fout: Zowel linker object <%s> als ook rechter object <%s> is onbekend; \
 Probeer opnieuw.' % (self.q_lh_name,self.q_rh_name))
                 else:
@@ -699,30 +700,30 @@ Try again.' % (self.q_lh_name,self.q_rh_name))
             if self.test: print('UIDs in Focus:', self.rolePlayersQTypes, object_in_focus.name,\
                                 self.q_lh_category, self.q_rh_category)
             self.categoryInFocus = 'individual'
-            self.Gel_net.Build_single_product_view(object_in_focus)
+            self.gel_net.Build_single_product_view(object_in_focus)
 
         # Else if lh and rh role players of query expression are an individual and a kind    
         elif self.rolePlayersQTypes in ['mixed', 'individualAndKind', 'kindAndIndividual']:
             obj_list = []
             for expr in self.answer_expressions:
-                object_in_focus = self.Gel_net.uid_dict[expr[lh_uid_col]]
+                object_in_focus = self.gel_net.uid_dict[expr[lh_uid_col]]
                 obj_list.append(object_in_focus)
             self.categoryInFocus = 'individual'
 
             # Start building product models about found self.candid_expressions
-            self.Gel_net.Build_product_views(obj_list)
+            self.gel_net.Build_product_views(obj_list)
 
         # Build models/views for kinds
         elif self.rolePlayersQTypes in ['hierOfKinds', 'thingsOfKinds']:
             if self.lhSel[1] == 'known':
                 # The left hand object in the self.query_expr is the object in focus
-                object_in_focus = self.Gel_net.uid_dict[self.q_lh_uid]
+                object_in_focus = self.gel_net.uid_dict[self.q_lh_uid]
                 self.objects_in_focus.append(object_in_focus)
 ##                self.UIDsInFocus.append(self.q_lh_uid)
 ##                self.namesInFocus.append(self.q_lh_name)
             elif self.rhSel[1] == 'known':
                 # The right hand object in the self.query_expr is the object in focus
-                object_in_focus = self.Gel_net.uid_dict[self.q_rh_uid]
+                object_in_focus = self.gel_net.uid_dict[self.q_rh_uid]
                 self.objects_in_focus.append(object_in_focus)
 ##                self.UIDsInFocus.append(self.q_rh_uid)
 ##                self.namesInFocus.append(self.q_rh_name)
@@ -733,7 +734,7 @@ right hand kind <{}> unknown; Try again.'.format(self.q_lh_name,self.q_rh_name))
             self.categoryInFocus = 'kind'
             obj_list = []
             obj_list.append(object_in_focus)
-            self.Gel_net.Build_product_views(obj_list)
+            self.gel_net.Build_product_views(obj_list)
         else:
             self.Other_views()
 
@@ -743,7 +744,7 @@ right hand kind <{}> unknown; Try again.'.format(self.q_lh_name,self.q_rh_name))
         '''
         candid_uid = expr[lh_uid_col]
         if candid_uid not in self.candid_uid_dict:
-            candid = self.Gel_net.uid_dict[candid_uid]
+            candid = self.gel_net.uid_dict[candid_uid]
             self.candidates.append(candid)
             self.candid_uid_dict[candid_uid] = candid
         else:
@@ -753,7 +754,7 @@ right hand kind <{}> unknown; Try again.'.format(self.q_lh_name,self.q_rh_name))
             self.candid_expressions.append(expr)
             print('  {} {} {} [{}]: <{}> <{}> <{}>. '.\
                   format(expr[intent_name_col], len(self.candid_expressions),\
-                         self.about[self.Gel_net.GUI_lang_index], self.q_lh_name,\
+                         self.about[self.gel_net.GUI_lang_index], self.q_lh_name,\
                          expr[lh_name_col], expr[rel_type_name_col], expr[rh_name_col]))
 
             # If additional conditions are specified then verify conditions
@@ -770,7 +771,7 @@ right hand kind <{}> unknown; Try again.'.format(self.q_lh_name,self.q_rh_name))
             if expr[rel_type_uid_col] in self.q_rel_subtype_uids:
                 self.candid_expressions.append(expr)
                 print('\n  {} {} {} [{}]: <{}> <{}> <{}>.'.\
-                      format(expr[intent_name_col], len(self.candid_expressions), self.about[self.Gel_net.GUI_lang_index],\
+                      format(expr[intent_name_col], len(self.candid_expressions), self.about[self.gel_net.GUI_lang_index],\
                              self.q_rh_name, expr[lh_name_col], expr[rel_type_name_col], expr[rh_name_col]))
     
 ##                        #if row[rh_uid_col] in self.q_rh_subtype_uids or row[lh_uid_col] in self.q_rh_subtype_uids: 
@@ -781,16 +782,16 @@ right hand kind <{}> unknown; Try again.'.format(self.q_lh_name,self.q_rh_name))
 ##                                #self.UIDsInFocus.append (row[lh_uid_col])  # To be moved to condition verification
 ##                                #self.namesInFocus.append(row[lh_name_col]) # To be moved to condition verification
 ##                            print('\n  {} {} {} [{}]: <{}> <{}> <{}>.'.\
-##                                  format(row[intent_name_col], len(self.candid_expressions), self.about[self.Gel_net.GUI_lang_index],\
+##                                  format(row[intent_name_col], len(self.candid_expressions), self.about[self.gel_net.GUI_lang_index],\
 ##                                         self.q_rh_name, row[lh_name_col], row[rel_type_name_col], row[rh_name_col]))
         
             # If self.q_rel_uid is a transitive relation type 
-            if self.q_rel_uid in self.Gel_net.transitiveRelUIDs:
+            if self.q_rel_uid in self.gel_net.transitiveRelUIDs:
                 if expr[rh_uid_col] in self.hierarchical_net_uids: 
                     #print ('candidate:', self.q_rel_name,row[rh_uid_col],row[rh_name_col])
                     self.candid_expressions.append(expr)
                     print('\n  {} {} {} [{}]: <{}> <{}> <{}>.'.\
-                          format(expr[intent_name_col], len(self.candid_expressions), self.about[self.Gel_net.GUI_lang_index],\
+                          format(expr[intent_name_col], len(self.candid_expressions), self.about[self.gel_net.GUI_lang_index],\
                                  self.q_rh_name, expr[lh_name_col], expr[rel_type_name_col], expr[rh_name_col]))
                 
 ##                        # self.q_rh_uid of Query is not equal l/rhUIDEx; maybe a classification by a subtype
@@ -798,7 +799,7 @@ right hand kind <{}> unknown; Try again.'.format(self.q_lh_name,self.q_rh_name))
               # if not a relation between individual things
 ##                            if not self.rolePlayersQTypes == 'individuals':      
                   # 'what' is related by a <is related to (a)> or its subtypes.
-##                                if self.q_rel_uid in self.Gel_net.indOrMixRelUIDs:              
+##                                if self.q_rel_uid in self.gel_net.indOrMixRelUIDs:              
 ##                                    #print('row[rh_uid_col]:',row[rh_uid_col])
 ##                                    if self.rolePlayerQTypeRH == 'kind':
                           # If rhUID is a subtype of known kind (= self.q_rh_uid of self.query_expr)
@@ -809,7 +810,7 @@ right hand kind <{}> unknown; Try again.'.format(self.q_lh_name,self.q_rh_name))
 ##                                            #self.UIDsInFocus.append (row[lh_uid_col])  # To be moved to condition verification
 ##                                            #self.namesInFocus.append(row[lh_name_col]) # To be moved to condition verification
 ##                                            print('\n  {} {} {} [{}]: <{}> <{}> <{}>.'.\
-##                                                  format(row[intent_name_col], len(self.candid_expressions), self.about[self.Gel_net.GUI_lang_index],\
+##                                                  format(row[intent_name_col], len(self.candid_expressions), self.about[self.gel_net.GUI_lang_index],\
 ##                                                         self.q_rh_name, row[lh_name_col], row[rel_type_name_col], row[rh_name_col]))
 #--------------------------------------------------
     def Transitive_hier_network(self, base_objects, rel_subtype_uids, phrase_type_uid): # ,target_uid
@@ -865,7 +866,7 @@ right hand kind <{}> unknown; Try again.'.format(self.q_lh_name,self.q_rh_name))
         condText = ['Condition','Voorwaarde']
         cond_satified = True
 
-        if self.main.extended_query == False:
+        if self.main.extended_query is False:
             return
         
         # Get conditions and find condition UIDs
@@ -876,25 +877,25 @@ right hand kind <{}> unknown; Try again.'.format(self.q_lh_name,self.q_rh_name))
                 continue
             string_commonality = 'csi' # case sensitive identical
             # Find uid, name and description of lh_cond_name
-            unknown_lh, lh_uid_name_desc = self.Gel_net.Find_object_by_name(lh_cond_name, string_commonality)
-            if unknown_lh == False:
+            unknown_lh, lh_uid_name_desc = self.gel_net.Find_object_by_name(lh_cond_name, string_commonality)
+            if unknown_lh is False:
                 lh_cond_uid = lh_uid_name_desc[0]
             else:
                 lh_cond_uid = 0
                 print('Error: object {} not found'.format(lh_cond_name))
                       
             rel_cond_name = self.relCondVal[condNr].get()
-            unknown_rel, rel_uid_name_desc = self.Gel_net.Find_object_by_name(rel_cond_name, string_commonality)
+            unknown_rel, rel_uid_name_desc = self.gel_net.Find_object_by_name(rel_cond_name, string_commonality)
             #print('Condition name, known, uid-name-descr', rel_cond_name, unknown_rel, rel_uid_name_desc)
-            if unknown_rel == False:
+            if unknown_rel is False:
                 rel_cond_uid = rel_uid_name_desc[0]
             else:
                 rel_cond_uid = 0
                 print('Error: object {} not found'.format(rel_cond_name))
 
             rh_cond_name  = self.rhCondVal[condNr].get()
-            unknown_rh, rh_uid_name_desc = self.Gel_net.Find_object_by_name(rh_cond_name, string_commonality)
-            if unknown_rh == False:
+            unknown_rh, rh_uid_name_desc = self.gel_net.Find_object_by_name(rh_cond_name, string_commonality)
+            if unknown_rh is False:
                 rh_cond_uid = rh_uid_name_desc[0]
             else:
                 rh_cond_uid = 0
@@ -902,8 +903,8 @@ right hand kind <{}> unknown; Try again.'.format(self.q_lh_name,self.q_rh_name))
 
             uom_cond_name = self.uomCondVal[condNr].get()
             if uom_cond_name != '':
-                unknown_uom, uom_uid_name_desc = self.Gel_net.Find_object_by_name(uom_cond_name, string_commonality)
-                if unknown_uom == False:
+                unknown_uom, uom_uid_name_desc = self.gel_net.Find_object_by_name(uom_cond_name, string_commonality)
+                if unknown_uom is False:
                     uom_cond_uid = uom_uid_name_desc[0]
                 else:
                     uom_cond_uid = 0
@@ -913,7 +914,7 @@ right hand kind <{}> unknown; Try again.'.format(self.q_lh_name,self.q_rh_name))
             condition   = [lh_cond_uid, lh_cond_name, rel_cond_uid, rel_cond_name,\
                            rh_cond_uid, rh_cond_name, uom_cond_uid, uom_cond_name]
             print('\n{} {} {} ({}) {} ({}) {} ({}) {} ({})'.\
-                  format(condText[self.Gel_net.GUI_lang_index],condNr+1, lh_cond_name,lh_cond_uid,\
+                  format(condText[self.gel_net.GUI_lang_index],condNr+1, lh_cond_name,lh_cond_uid,\
                          rel_cond_name,rel_cond_uid,rh_cond_name,rh_cond_uid, uom_cond_name, uom_cond_uid))
             #self.condition_table.append(condition[:])
             self.main.query_spec.append(condition[:])
@@ -933,7 +934,7 @@ right hand kind <{}> unknown; Try again.'.format(self.q_lh_name,self.q_rh_name))
         nothing_satisfies  = ['There are no expressions found that satisfy the condition(s).',\
                        'Er zijn geen uitdrukkingen gevonden die aan de voorwaarde(n) voldoen.']
         
-        print('\n{}:'.format(answerHead[self.Gel_net.GUI_lang_index]))
+        print('\n{}:'.format(answerHead[self.gel_net.GUI_lang_index]))
         candidNr = 0 
 
         # Verify for the candidate object whether it satisfies the other conditions.
@@ -957,11 +958,11 @@ right hand kind <{}> unknown; Try again.'.format(self.q_lh_name,self.q_rh_name))
         for condit in self.main.query_spec[1:]:
             condNr += + 1
             #print('\nVerify condition on', candid_obj.uid, candid_obj.name, condit)
-            condit_rel_subs, condit_rel_sub_uids = self.Gel_net.DetermineSubtypeList(condit[2])
+            condit_rel_subs, condit_rel_sub_uids = self.gel_net.DetermineSubtypeList(condit[2])
             #print('Condit_rel_subs', condit_rel_sub_uids)
 
-            cond_obj = self.Gel_net.uid_dict[condit[0]]
-            condit_lh_subs, condit_lh_sub_uids = self.Gel_net.DetermineSubtypeList(condit[0])
+            cond_obj = self.gel_net.uid_dict[condit[0]]
+            condit_lh_subs, condit_lh_sub_uids = self.gel_net.DetermineSubtypeList(condit[0])
             if candid_obj.uid in condit_lh_sub_uids:
                 # A new condition for the same object is identified.
                 # Determine whether there is a relation that satisfies the condition
@@ -978,7 +979,7 @@ right hand kind <{}> unknown; Try again.'.format(self.q_lh_name,self.q_rh_name))
                                          candid_expr[uom_name_col]))
                             satisfied_cond = True
                             break
-                if satisfied_cond == False:
+                if satisfied_cond is False:
                     print('No expression found that satisfies condition nr {}.'.format(condNr))
             else:
                 # A condition on another object is detected. Possibly a qualification of the rh_role
@@ -999,7 +1000,7 @@ right hand kind <{}> unknown; Try again.'.format(self.q_lh_name,self.q_rh_name))
                 else:
                     # rh_role_uid is not ''
                     # Does rh_role object have a (e.g. qualification) relation that satisfies condition
-                    role_obj = self.Gel_net.uid_dict[candid_rh_role_uid]
+                    role_obj = self.gel_net.uid_dict[candid_rh_role_uid]
                     for role_obj_rel in role_obj.relations:
                         expr = role_obj_rel.expression
                         #print('Lh_name and cond_name <{}> <{}> and lh_rel and cond_rel <{}> <{}>.'.\
@@ -1079,15 +1080,15 @@ right hand kind <{}> unknown; Try again.'.format(self.q_lh_name,self.q_rh_name))
                                 rhCandidRoleUIDs.append(expr[rh_role_uid_col])
                                 rhCandidUIDs.append(expr[rh_uid_col])
                                 print('    {} {}: <{}> <{}> <{}> <{}>'.format\
-                                      (conditText[self.Gel_net.GUI_lang_index], condNr, expr[lh_name_col],\
+                                      (conditText[self.gel_net.GUI_lang_index], condNr, expr[lh_name_col],\
                                        expr[rel_type_name_col], expr[rh_name_col], expr[uom_name_col]))
                                 int_condit_4, integer = Convert_numeric_to_integer(condit[4])
                                 if int_condit_4 >= 100:
                                     break
 
-            if cond_satified == False:
+            if cond_satified is False:
                 # If rel_cond_uid is a transitive relation type then: is the condition satisfied?
-                if condit[2] in self.Gel_net.transitiveRelUIDs:
+                if condit[2] in self.gel_net.transitiveRelUIDs:
                     #if expr[lh_uid_col] == ? :
                     matchChain = TransitiveMatchChain(expr[lh_uid_col],condit_rel_subs,condit[4])
                     #elif expr[rh_uid_col] == ? :
@@ -1096,8 +1097,8 @@ right hand kind <{}> unknown; Try again.'.format(self.q_lh_name,self.q_rh_name))
                         indeed  = ['Indeed','Inderdaad']
                         because = ['because...','omdat...']
                         print('    {}: {} {} {} {}'.\
-                              format(indeed[self.Gel_net.GUI_lang_index], expr[lh_name_col], condit[3],\
-                                     condit[5], because[self.Gel_net.GUI_lang_index]))
+                              format(indeed[self.gel_net.GUI_lang_index], expr[lh_name_col], condit[3],\
+                                     condit[5], because[self.gel_net.GUI_lang_index]))
                         for step in reversed(matchChain[1:]):
                             print('      {} <{}> {}'.format(step[1],condit[3],step[3]))
                         cond_satified = True
@@ -1106,7 +1107,7 @@ right hand kind <{}> unknown; Try again.'.format(self.q_lh_name,self.q_rh_name))
                         # Condition is not satisfied (even being transitive)
                         break
                 else:
-                    # Condition is not satisfied (cond_satified == False) and relation type is not transitive.
+                    # Condition is not satisfied (cond_satified is False) and relation type is not transitive.
                     break
             
         # if last condition is also true, then:
@@ -1116,29 +1117,29 @@ right hand kind <{}> unknown; Try again.'.format(self.q_lh_name,self.q_rh_name))
             becauseText = ['    because:','     omdat:']
             andText     = ['        and:','        en:']
             print('    {} {}: <{}> <{}> <{}> {}'.\
-                  format(satisText[self.Gel_net.GUI_lang_index],len(self.answer_expressions), \
+                  format(satisText[self.gel_net.GUI_lang_index],len(self.answer_expressions), \
                          condit[1], condit[3], condit[5], condit[7]))
             first = True
             for candidAspect in candidAspectExpr:
                 if first == True:
                     print('    {} <{}> <{}> <{}> <{}>'.\
-                          format(becauseText[self.Gel_net.GUI_lang_index],    candidAspect[lh_name_col],\
+                          format(becauseText[self.gel_net.GUI_lang_index],    candidAspect[lh_name_col],\
                                  candidAspect[rel_type_name_col], candidAspect[rh_name_col],\
                                  candidAspect[uom_name_col]))
                     first = False
                 else:
                     print('    {} <{}> <{}> <{}> <{}>'.\
-                          format(andText[self.Gel_net.GUI_lang_index],candidAspect[lh_name_col],\
+                          format(andText[self.gel_net.GUI_lang_index],candidAspect[lh_name_col],\
                                  candidAspect[rel_type_name_col],candidAspect[rh_name_col],\
                                  candidAspect[uom_name_col]))
         else:
             denial  = ['No, the condition is not satisfied that','Nee, er is niet voldaan aan de voorwaarde dat']
             print('    {}: {} {} {}'.\
-                  format(denial[self.Gel_net.GUI_lang_index],expr[lh_name_col],condit[3],condit[5]))
-            if candid_obj not in self.Gel_net.ex_candids:
-                self.Gel_net.ex_candids.append(candid_obj)
+                  format(denial[self.gel_net.GUI_lang_index],expr[lh_name_col],condit[3],condit[5]))
+            if candid_obj not in self.gel_net.ex_candids:
+                self.gel_net.ex_candids.append(candid_obj)
         if len(self.answer_expressions) == 0:
-            print('\n  {}'.format(nothing_satisfies[self.Gel_net.GUI_lang_index]))
+            print('\n  {}'.format(nothing_satisfies[self.gel_net.GUI_lang_index]))
 
     #-------------------------------------------------------------------------------
     def Verify_model(self):
@@ -1147,8 +1148,8 @@ right hand kind <{}> unknown; Try again.'.format(self.q_lh_name,self.q_rh_name))
             and verify that model against the requirements about the kind.
         """
 
-        shallUID = 5735
-        subtypesOfShall, subShallUIDs = self.Gel_net.DetermineSubtypeList(shallUID)
+        shallUID = '5735'
+        subtypesOfShall, subShallUIDs = self.gel_net.DetermineSubtypeList(shallUID)
         for obj in self.objects_in_focus:
             print('Verify model of %s on requirements about %s' % (nameInF, self.kindName))
             for obj_rel in obj.relations:
