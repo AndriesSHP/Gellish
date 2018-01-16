@@ -13,8 +13,8 @@ from Create_output_file import Create_gellish_expression, Convert_numeric_to_int
 
 class Query_view():
     ''' Defines a query window for specification of queries in dictionary and models.'''
-    def __init__(self, gel_net, main):
-        self.gel_net = gel_net
+    def __init__(self, main):
+        self.gel_net = main.gel_net
         self.main = main
         self.query = main.query
         self.root = main.root
@@ -23,7 +23,7 @@ class Query_view():
         self.lang_uid   = self.gel_net.GUI_lang_uid
         self.lang_index = self.gel_net.GUI_lang_index
 
-        self.views = Display_views(self.gel_net, self.main)
+        #self.views = Display_views(self.main)
         self.gel_net.lh_options  = []
         self.gel_net.rh_options  = []
         self.gel_net.rel_options = []
@@ -58,7 +58,10 @@ class Query_view():
             rhTermListD  = rhTermListEN
             uomTermListD = uomTermListEN
 
-        query_text = ["Query","Vraag"]
+        if self.main.extended_query:
+            query_text = ["Query","Vraag"]
+        else:
+            query_text = ["Search","Zoek"]
         self.QWindow = Toplevel(self.root)
         self.QWindow.title(query_text[self.lang_index])
         self.query_frame = ttk.Frame(self.QWindow)
@@ -947,7 +950,7 @@ class Query_view():
                     
                 # Report final query
                 queryText = ['Query ','Vraag   ']
-                self.views.log_messages.insert('end','\n\n{}: {} ({}) {} ({}) {} ({})'.format\
+                self.main.views.log_messages.insert('end','\n\n{}: {} ({}) {} ({}) {} ({})'.format\
                                         (queryText[self.lang_index], \
                                          self.query.q_lh_name , self.query.q_lh_uid,\
                                          self.query.q_rel_name, self.query.q_rel_uid,\
@@ -970,7 +973,7 @@ class Query_view():
         # Prepare query for execution and execute query
         self.query.Interpret_query_spec()
         # Display query results in notebook sheets
-        self.views.Notebook_views()
+        self.main.views.Notebook_views()
 
     def Close_query(self):
         self.QWindow.destroy()
@@ -981,6 +984,6 @@ if __name__ == "__main__":
     root = Tk()
     main = Main()
     gel_net = Semantic_network()
-    GUI = Query_views(gel_net, main)
+    GUI = Query_views(main)
     
     root.mainloop()

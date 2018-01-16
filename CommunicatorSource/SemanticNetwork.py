@@ -8,7 +8,7 @@ from tkinter import *
 from tkinter.ttk import *
 
 from Expr_Table_Def import *
-from Anything import Anything, Object, Individual, Kind, Relation, RelationType
+from Anything import Anything, Relation # , Object, Individual, Kind, RelationType
 from Bootstrapping import *
 from GellishDict import GellishDict
 from ModelViews import Display_views
@@ -70,8 +70,8 @@ class Semantic_Network():
         self.new_rel_uid = 500  # default start UID for unknown relations in model mappings
         self.select_dict = {}
         self.unknowns    = []   # The list(s) unkown objects that are denoted by an unknown in a query
-        self.names_of_unknowns   = []
-        self.unknown_kind        = ['unknown kind' ,'onbekende soort']
+        self.names_of_unknowns = []
+        self.unknown_kind = ['unknown kind' ,'onbekende soort']
         self.base_ontology = False
 
         self.lh_options  = [] 
@@ -141,6 +141,7 @@ class Semantic_Network():
         self.max_nr_of_rows = 500   # in treeviews
 
         self.nameless = ['nameless', 'naamloos', '']
+        self.unknown = ['unknown', 'onbekend']
         self.categories_of_kinds = ['kind', 'kind of physical object', 'kind of occurrence',\
                                     'kind of aspect'  , 'kind of role', \
                                     'kind of relation', 'qualitative kind']
@@ -196,7 +197,7 @@ class Semantic_Network():
         '''Create relation_type objects conform Bootstrapping base_rel_type_uids'''
         for rel_type_uid in base_rel_type_uids:
             rel_type_name = base_rel_type_uids[rel_type_uid]
-            rel_type = RelationType(rel_type_uid, rel_type_name)
+            rel_type = Anything(rel_type_uid, rel_type_name, 'kind of relation')
             self.rel_types.append(rel_type)
             self.uid_dict[rel_type_uid] = rel_type
             #self.object_uids.append(rel_type_uid)
@@ -1255,7 +1256,7 @@ moeten dezelfde UIDs hebben, in plaats van {} en {}. Idee {} is genegeerd'.\
                 lang_name, comm_name_supertype, supertype_name, descr_of_super = \
                            self.Determine_name_in_language_and_community(obj.supertypes[0])
             else:
-                supertype_name = 'unknown'
+                supertype_name = self.unknown[self.GUI_lang_index]
 
 ##            self.possibility_row[0] = obj.uid
 ##            self.possibility_row[1] = obj_name
@@ -1388,8 +1389,8 @@ moeten dezelfde UIDs hebben, in plaats van {} en {}. Idee {} is genegeerd'.\
                        self.Determine_name_in_language_and_community(kind)
             kind_uid = kind.uid
         else:
-            kind_uid = 'unknown'
-            kind_name = 'unknown'
+            kind_uid = self.unknown[self.GUI_lang_index]
+            kind_name = self.unknown[self.GUI_lang_index]
         return kind_name, kind_uid
 
 ##    def Determine_preferred_phrase(self, rel_type, base_or_inverse):
@@ -1467,7 +1468,6 @@ moeten dezelfde UIDs hebben, in plaats van {} en {}. Idee {} is genegeerd'.\
             Search for aspects of the occurrences (such as duration).
             Store results in prod_model and the composition in partWholeOcc.
         """
-
         occur_head   = ['Occurrences' ,'Gebeurtenissen']
         role_head    = ['Role'        ,'Rol']
         involv_head  = ['Involved object','Betrokken object']
@@ -1517,7 +1517,7 @@ moeten dezelfde UIDs hebben, in plaats van {} en {}. Idee {} is genegeerd'.\
                 occ_kind_uid = occ_kind.uid
             else:
                 print('Occurrence {} classifier is unknown'.format(occ.name))
-                occ_kind_name = 'unknown'
+                occ_kind_name = self.unknown[self.GUI_lang_index]
                 occ_kind_uid = ''
 
             #self.occ_model.append([occ.uid, occ.name, higher.name, involv.uid, occ_kind.uid,\
@@ -1575,7 +1575,7 @@ moeten dezelfde UIDs hebben, in plaats van {} en {}. Idee {} is genegeerd'.\
                     involved_kind_name = involved_kind.name
                 else:
                     print('Involved object {} has no classifier'.format(involved.name))
-                    involved_kind_name = 'unknown'
+                    involved_kind_name = self.unknown[self.GUI_lang_index]
                 
                 # Search for aspects of objects that are involved in occurrence
                 # Find possession of aspect relations of involved object
@@ -1591,7 +1591,7 @@ moeten dezelfde UIDs hebben, in plaats van {} en {}. Idee {} is genegeerd'.\
 
             # Search for successors or predecessors of found occurrence
             #   with inputs and outputs and parts (? see below)
-            self.OccurrenceSequences(occ)
+            self.Determine_sequences_of_occurrences(occ)
 
             # Search for parts of found occurrence and parts of parts, etc.
             occ_level = 1
@@ -1608,16 +1608,15 @@ moeten dezelfde UIDs hebben, in plaats van {} en {}. Idee {} is genegeerd'.\
 ##            prod_head_5A = ['','','',self.line_nr, none[self.GUI_lang_index],'','','','','','','','']
 ##            self.prod_model.append(prod_head_5A)
 
-    def OccurrenceSequences(self, occ):
-        """ Build activities and their components with sequence between the components in the seq_table
+    def Determine_sequences_of_occurrences(self, occ):
+        """ Build occurrences (activities or processes or events) and their components
+            with sequences between the occurrences and between components in the seq_table
             and inputs and outputs in involv_table.
-            seq_table:    previusUID, previusName, nextUID,     nextName.
-            involv_table: occurUID,   occurName,   involvedUID, involvedName, roleUID, roleName (of invObj), invKindName.
-            p_occ_table:  wholeUID,   wholeName,   partUID,     partName,  kindOfPartName
+            seq_table:    previus_obj, next_obj.
+            involv_table: occur_obj,   involved_obj, role_obj (of invObj), invKindName.
+            p_occ_table:  whole_obj,   part_obj,     kindOfPartName
         """    
-
-        #print('OccurrenceSequences',occ.uid, occ.name)
-        
+        #print('Determine_sequences_of_occurrences',occ.uid, occ.name)
         part_uids = []
         nr_of_sequences = 0
         nr_of_ins_and_outs = 0
@@ -1640,35 +1639,24 @@ moeten dezelfde UIDs hebben, in plaats van {} en {}. Idee {} is genegeerd'.\
                 involved = self.uid_dict[expr[rh_uid_col]]
                 if len(involved.classifiers) > 0:
                     inv_kind_name = involved.classifiers[0].name
-                if expr[rh_role_uid_col] != '':
-                    inv_role_kind = self.uid_dict[expr[rh_role_uid_col]]
                 else:
-                    inv_role_kind = self.uid_dict['160170']
-##                ioRow = []
-##                ioRow.append(expr[lh_uid_col])       # occurrence UID
-##                ioRow.append(expr[lh_name_col])      # occName
-##                ioRow.append(expr[rh_uid_col])       # involved object UID
-##                ioRow.append(expr[rh_name_col])      # involved object Name
-##                ioRow.append(expr[rh_role_uid_col])   # role UID of involved object
-##                ioRow.append(expr[rhKindRoleNameExC])  # role Name of involved object
-##                kindOfInvData = FindClassification(expr[rh_uid_col],expr[rh_name_col])
-##                ioRow.append(kindOfInvData[1])
+                    inv_kind_name = self.unknown[self.GUI_lang_index]
+                rel_type = self.uid_dict[expr[rel_type_uid_col]]
+                inv_role_kind = rel_type.second_role
+
                 self.involv_table.append([occ, involved, inv_role_kind, inv_kind_name])
                 nr_of_ins_and_outs += 1
-            elif expr[rh_uid_col] == occ.uid and expr[rel_type_uid_col] in self.subInvolvUIDs: # inverse
+                
+            # Search for inverse relation
+            elif expr[rh_uid_col] == occ.uid and expr[rel_type_uid_col] in self.subInvolvUIDs:
                 involved = self.uid_dict[expr[lh_uid_col]]
                 if len(involved.classifiers) > 0:
                     inv_kind_name = involved.classifiers[0].name
-                inv_role_kind = self.uid_dict[expr[lh_role_uid_col]]
-##                ioRow = []
-##                ioRow.append(expr[rh_uid_col])       # occurrence UID
-##                ioRow.append(expr[rh_name_col])      # occName
-##                ioRow.append(expr[lh_uid_col])       # involved object UID
-##                ioRow.append(expr[lh_name_col])      # involved object Name
-##                ioRow.append(expr[lh_role_uid_col])   # role UID of involved object
-##                ioRow.append(expr[lhKindRoleNameExC])  # role Name of involved object
-##                kindOfInvData = FindClassification(expr[lh_uid_col],expr[lh_name_col])
-##                ioRow.append(kindOfInvData[1])
+                else:
+                    inv_kind_name = self.unknown[self.GUI_lang_index]
+                rel_type = self.uid_dict[expr[rel_type_uid_col]]
+                inv_role_kind = rel_type.second_role
+
                 self.involv_table.append([occ, involved, inv_role_kind, inv_kind_name])
                 nr_of_ins_and_outs += 1
                 
@@ -1687,7 +1675,7 @@ moeten dezelfde UIDs hebben, in plaats van {} en {}. Idee {} is genegeerd'.\
         if len(occ.parts) > 0:
             # Determine sequences, IOs and parts of parts
             for part_occ in occ.parts:
-                self.OccurrenceSequences(part_occ)
+                self.Determine_sequences_of_occurrences(part_occ)
 
     def PartOfOccur(self, occ, occ_level):
         """ Determine whole-parts hierarchy for occurrences
@@ -1719,9 +1707,9 @@ moeten dezelfde UIDs hebben, in plaats van {} en {}. Idee {} is genegeerd'.\
                     kind_part_occ_name = kind_part_occ.name
                 else:
                     print('Part of occurrnce {} has no classifier'.format(part_occ.name))
-                    kind_part_occ = 'unknown'
+                    kind_part_occ = self.unknown[self.GUI_lang_index]
                     kind_part_occ_uid = '0'
-                    kind_part_occ_name = 'unknown'
+                    kind_part_occ_name = self.unknown[self.GUI_lang_index]
                     
                 if occ_level < 2:
                     self.line_nr += + 1
@@ -1787,14 +1775,17 @@ moeten dezelfde UIDs hebben, in plaats van {} en {}. Idee {} is genegeerd'.\
                 obj_name  = names_in_contexts[0][2]
                 lang_name = self.lang_uid_dict[names_in_contexts[0][0]]
                 comm_name = self.community_dict[names_in_contexts[0][1]] # community uid
-                part_def  = names_in_contexts[0][4]
+                if base_or_inverse == 'normal':
+                    part_def = names_in_contexts[0][4]
+                else:
+                    part_def = ''
         else:
             numeric_uid, integer = Convert_numeric_to_integer(obj.uid)
             if integer is False or numeric_uid not in range(1000000000, 3000000000):
                 print('No names in contexts for {}'.format(obj.name))
             obj_name  = obj.name
-            lang_name = 'unknown'
-            comm_name = 'unknown'
+            lang_name = self.unknown[self.GUI_lang_index]
+            comm_name = self.unknown[self.GUI_lang_index]
             part_def  = ''
 
         # Determine full_def by determining supertype name in the preferred language
@@ -1824,7 +1815,7 @@ moeten dezelfde UIDs hebben, in plaats van {} en {}. Idee {} is genegeerd'.\
         status_text = ['accepted', 'geaccepteerd'] # === should become the status of the classification cr specialization relation ===
         if len(obj.classifiers) == 0 and len(obj.supertypes) == 0:
             obj_kind_uid  = ''
-            obj_kind_name = 'unknown'
+            obj_kind_name = self.unknown[self.GUI_lang_index]
             status = status_text[self.GUI_lang_index]
         else:
             obj_kind_uid  = obj.kind.uid
@@ -2049,7 +2040,7 @@ moeten dezelfde UIDs hebben, in plaats van {} en {}. Idee {} is genegeerd'.\
                     else:
                         asp_supertype_name = asp.supertypes[0].name
                 else:
-                    asp_supertype_name = 'unknown'
+                    asp_supertype_name = self.unknown[self.GUI_lang_index]
                 # Obj name
                 if len(obj.names_in_contexts) > 0:
                     lang_name, comm_name, object_name, descr = \
@@ -2079,7 +2070,7 @@ moeten dezelfde UIDs hebben, in plaats van {} en {}. Idee {} is genegeerd'.\
                         if len(obj.names_in_contexts) > 0:
                             community_name = self.community_dict[obj.names_in_contexts[0][1]] # community uid
                         else:
-                            community_name = 'unknown'
+                            community_name = self.unknown[self.GUI_lang_index]
                         self.possibility_row[0] = obj.uid
                         self.possibility_row[1] = aspect_name + of_text[self.GUI_lang_index] + obj_name + ')'
                         self.possibility_row[2] = poss_asp_of_obj_text
@@ -2162,7 +2153,7 @@ moeten dezelfde UIDs hebben, in plaats van {} en {}. Idee {} is genegeerd'.\
                         supertype_name = obj.supertypes[0].name
                     else:
                         supertype_uid  = ''
-                        supertype_name = 'unknown'
+                        supertype_name = self.unknown[self.GUI_lang_index]
                     self.Add_prod_model_line_type3(subtype_level, \
                                                    obj_i.uid, supertype_uid, aspect_uid, nr_of_aspects, obj.name, role, \
                                                    supertype_name, aspect_name, equality, value_name, uom_name, status)
@@ -2361,7 +2352,6 @@ moeten dezelfde UIDs hebben, in plaats van {} en {}. Idee {} is genegeerd'.\
         partHead = ['Part of part','Deel van deel']
         par3Head = ['Further part','Verder deel']
         kindHead = ['Kind','Soort']
-        kind_unknown = ['unknown', 'onbekend']
 
         #self.coll_of_subtype_uids = []
         self.nr_of_parts = 0
@@ -2411,7 +2401,7 @@ moeten dezelfde UIDs hebben, in plaats van {} en {}. Idee {} is genegeerd'.\
                     # Verify if the classification of the part is known
                     if len(part.classifiers) == 0:
                         part_kind_uid  = ''
-                        part_kind_name = kind_unknown[self.GUI_lang_index]
+                        part_kind_name = unknownClassifierText[self.GUI_lang_index]
                     else:
                         part_kind_uid  = part.classifiers[0].uid
                         # Determine name etc. of the kind that classifies the part
@@ -2422,7 +2412,7 @@ moeten dezelfde UIDs hebben, in plaats van {} en {}. Idee {} is genegeerd'.\
                         else:
                             part_kind_name = part.classifiers[0].name
                             #print('Part_classifier_name', part_kind_name)
-                            comm_name = 'unknown'
+                            comm_name = self.unknown[self.GUI_lang_index]
                             
                     # Determine the preferred name of the part
                     if len(part.names_in_contexts) > 0:
@@ -2430,7 +2420,7 @@ moeten dezelfde UIDs hebben, in plaats van {} en {}. Idee {} is genegeerd'.\
                                        self.Determine_name_in_language_and_community(part)
                     else:
                         part_name = part.name
-                        community_name = 'unknown'
+                        community_name = self.unknown[self.GUI_lang_index]
                         print('Part {} has no defined community name'.format(part.name))
                         
                     self.indiv_row[0] = part.uid
@@ -2525,7 +2515,7 @@ moeten dezelfde UIDs hebben, in plaats van {} en {}. Idee {} is genegeerd'.\
                                self.Determine_name_in_language_and_community(part)
                 else:
                     part_name = part.name
-                    community_name = 'unknown'
+                    community_name = self.unknown[self.GUI_lang_index]
 
                 # Determine preferred name of first supertype of part
                 if len(part.supertypes) > 0:
@@ -2535,7 +2525,7 @@ moeten dezelfde UIDs hebben, in plaats van {} en {}. Idee {} is genegeerd'.\
                     else:
                         part_kind_name = part.supertypes[0].name
                 else:
-                    part_kind_name = 'unknown'
+                    part_kind_name = self.unknown[self.GUI_lang_index]
 
                 # Create row about possible aspect of kind in possibilities_model
                 self.possibility_row[0] = part.uid
@@ -2691,7 +2681,7 @@ moeten dezelfde UIDs hebben, in plaats van {} en {}. Idee {} is genegeerd'.\
             # Verify if the individual object is classified
             if len(indiv.classifiers) == 0:
                 indiv.kind_uid  = ''
-                indiv.kind_name = 'unknown kind'
+                indiv.kind_name = self.unknown_kind[self.GUI_lang_index]
             else:
                 # Determine the preferred name of the first classifier of the individual object
                 lang_name_cl, comm_name_cl, pref_cl_name, descr = \
@@ -2705,7 +2695,7 @@ moeten dezelfde UIDs hebben, in plaats van {} en {}. Idee {} is genegeerd'.\
                 aspect_name = aspect.name
                 if len(aspect.classifiers) == 0:
                     aspect.kind_uid  = ''
-                    aspect.kind_name = 'unknown kind'
+                    aspect.kind_name = self.unknown_kind[self.GUI_lang_index]
                 else:
                     # Determine the preferred name of the first classifier of the individual aspect
                     #print('Lang_prefs for classifier of aspect', self.reply_lang_pref_uids, aspect.classifiers[0].names_in_contexts)
@@ -2945,7 +2935,7 @@ moeten dezelfde UIDs hebben, in plaats van {} en {}. Idee {} is genegeerd'.\
                 qualified = False
                 presented = False
                 super_info_uid  = ''
-                super_info_name = 'unknown'
+                super_info_name = self.unknown[self.GUI_lang_index]
                 info.description = ''
                 for rel_info in info.relations:
                     info_expr = rel_info.expression
@@ -2978,7 +2968,7 @@ moeten dezelfde UIDs hebben, in plaats van {} en {}. Idee {} is genegeerd'.\
                         if len(carrier.classifiers) > 0:
                             carrier_kind_name = carrier.classifiers[0].name
                         else:
-                            carrier_kind_name = 'unknown'
+                            carrier_kind_name = self.unknown[self.GUI_lang_index]
 
                         # Find directory where carrier file is located
                         directory_name = ''

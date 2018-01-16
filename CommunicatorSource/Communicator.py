@@ -5,6 +5,7 @@ import pickle
 import tkinter as tk
 import SystemUsers as SU
 from MainView import Main_view
+from ModelViews import Display_views
 from Expression_list import Expression_list
 from SemanticNetwork import Semantic_Network
 from QueryModule import Query
@@ -20,6 +21,7 @@ class Main():
         self.gel_net = None
         self.user = None
         self.exprs = None
+        self.views = None
         self.use_GUI = False
         self.GUI_lang_names = ("English", "Nederlands")
         self.lang_uid_dict = {"English": '910036', "Nederlands": '910037'}
@@ -107,6 +109,9 @@ class Main():
     def start_gui(self):
         main.root = tk.Tk()
         main.GUI = Main_view(self)
+        # Create a query object
+        self.query = Query(self.gel_net, self)
+        main.views = Display_views(self)
         tk.mainloop()
 
     def verify_presence_of_network(self):
@@ -118,25 +123,22 @@ class Main():
 
     def search_net(self):
         self.extended_query = False
-        self.extended_query_net()
+        self.query_the_network()
 
     def query_net(self):
         self.extended_query = True
-        self.extended_query_net()
+        self.query_the_network()
 
-    def extended_query_net(self):
+    def query_the_network(self):
         # Query the semantic network
         if self.gel_net is None:
             print('First create a semantic network')
         else:
-            # Create a query object
-            # WHAT IS THIS? main is a global instance of Main being used in a method of Main
-            self.query = Query(self.gel_net, self)
             # Enter and Interpret query
             if self.use_GUI:
-                Q_view = Query_view(self.gel_net, self)
+                q_view = Query_view(self)
                 # Specify a query via GUI
-                Q_view.Query_window()
+                q_view.Query_window()
             else:
                 # Specify a query via command line
                 self.query.Specify_query_via_command_line()

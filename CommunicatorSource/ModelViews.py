@@ -11,8 +11,8 @@ from Create_output_file import Create_gellish_expression, Convert_numeric_to_int
 from Occurrences_diagrams import Occurrences_diagram
 
 class Display_views():
-    def __init__(self, gel_net, main):
-        self.gel_net = gel_net
+    def __init__(self, main):
+        self.gel_net = main.gel_net
         self.main = main
         self.root = main.root
         self.user = main.user
@@ -20,27 +20,27 @@ class Display_views():
         self.lang_index = self.gel_net.GUI_lang_index
         self.uid_dict = self.gel_net.uid_dict
 
-        self.kind_model   = gel_net.kind_model
-        self.prod_model   = gel_net.prod_model
-        self.taxon_model  = gel_net.taxon_model
-        self.summ_model   = gel_net.summ_model
-        self.possibilities_model = gel_net.possibilities_model
-        self.indiv_model  = gel_net.indiv_model
-        self.query_table  = gel_net.query_table
-        self.network_model  = gel_net.network_model
-        self.occ_model    = gel_net.occ_model
-        self.involv_table    = gel_net.involv_table
-        #self.part_whole_occs = gel_net.part_whole_occs
+        self.kind_model   = self.gel_net.kind_model
+        self.prod_model   = self.gel_net.prod_model
+        self.taxon_model  = self.gel_net.taxon_model
+        self.summ_model   = self.gel_net.summ_model
+        self.possibilities_model = self.gel_net.possibilities_model
+        self.indiv_model  = self.gel_net.indiv_model
+        self.query_table  = self.gel_net.query_table
+        self.network_model  = self.gel_net.network_model
+        self.occ_model    = self.gel_net.occ_model
+        self.involv_table    = self.gel_net.involv_table
+        #self.part_whole_occs = self.gel_net.part_whole_occs
 
-        #self.summ_of_aspect_uids = gel_net.summ_of_aspect_uids
-        self.taxon_column_names  = gel_net.taxon_column_names
-        self.taxon_uom_names     = gel_net.taxon_uom_names
-        self.summ_column_names   = gel_net.summ_column_names
-        self.summ_uom_names      = gel_net.summ_uom_names
-        self.possib_column_names = gel_net.possib_column_names
-        self.possib_uom_names    = gel_net.possib_uom_names
-        self.indiv_column_names  = gel_net.indiv_column_names
-        self.indiv_uom_names     = gel_net.indiv_uom_names
+        #self.summ_of_aspect_uids = self.gel_net.summ_of_aspect_uids
+        self.taxon_column_names  = self.gel_net.taxon_column_names
+        self.taxon_uom_names     = self.gel_net.taxon_uom_names
+        self.summ_column_names   = self.gel_net.summ_column_names
+        self.summ_uom_names      = self.gel_net.summ_uom_names
+        self.possib_column_names = self.gel_net.possib_column_names
+        self.possib_uom_names    = self.gel_net.possib_uom_names
+        self.indiv_column_names  = self.gel_net.indiv_column_names
+        self.indiv_uom_names     = self.gel_net.indiv_uom_names
 
         self.subs_head     = ['Subtypes'      , 'Subtypen']
         self.comp_head     = ['Part hierarchy', 'Compositie']
@@ -1383,6 +1383,7 @@ File is saved under name <QueryResults.csv')
     
     def Display_occ_model_view(self):
         ''' Display activities and occurrences in self.act_tree
+            Followed by a display of IDEF0 diagram(s)
         '''
         
         self.act_tree.tag_configure('headTag', option=None, background='#dfd')
@@ -1396,13 +1397,13 @@ File is saved under name <QueryResults.csv')
                     self.top_occurrences.append(top_occ)
                 level  = 0
                 # Display self.act_tree line
-                self.OccurrenceTree(occ_line, level) #,wholes
+                self.Display_occurrence_tree(occ_line, level) #,wholes
 
             # IDEF0: Display drawings of occurrences
             diagram = Occurrences_diagram(self.root, self.gel_net)
             diagram.Create_occurrences_diagram(self.top_occurrences)
 
-    def OccurrenceTree(self, occ_line, level):
+    def Display_occurrence_tree(self, occ_line, level):
         """ Display occurrences compositions with inputs and outputs and roles.
             occ_line = line in occ_model
             occ_model.append([occ.uid, occ.name, higher.name, involv.uid, kind_occ.uid,\
@@ -1421,7 +1422,7 @@ File is saved under name <QueryResults.csv')
                                   iid=occ_line[1], text=occ_line[1], tags='occTag' , open=True)
             
         # Find and display its inputs and outputs
-        # involv_table = occ, involved, inv_role_kind, inv_kind_name
+        # involv_table = occ, involved_obj, inv_role_kind, inv_kind_name
         for io_objects in self.involv_table:
             io_line = ['','','','','','','', io_objects[1].name, io_objects[3], io_objects[2].name]
             #print('involv_table-line:', occ_line[1], io_objects[0].uid, io_objects[1].uid, io_line)
@@ -1430,12 +1431,12 @@ File is saved under name <QueryResults.csv')
                 self.act_tree.insert(id, index='end', values=(io_line), tags='ioTag' , open=True)
         level = 1
 ##        for whole_occ, part_occ, part_kind_occ in self.part_whole_occs:
-##            # For each part of occurrence call OccurrenceTree recursively
+##            # For each part of occurrence call Display_occurrence_tree recursively
 ##            # If uid of occurrence == uid whole then there is a part
 ##            if occ_line[0] == whole_part[0].uid:
 ##                print('part in part_whole_occs:', whole_occ.name, part_occ.name, part_kind_occ.name)
 ##                #self.act_tree.insert(id,index='end',values=(wholePart[3],wholePart[2]),tags='actTag')
-##                self.OccurrenceTree(whole_part, level)
+##                self.Display_occurrence_tree(whole_part, level)
 
     def Define_and_display_documents(self):
         # Destroy earlier documents sheet
@@ -1978,8 +1979,8 @@ class User():
 if __name__ == "__main__":
     root = Tk()
     main = Main()
-    gel_net = Semantic_network()
-    views = Display_views(gel_net, main)
+    main.gel_net = Semantic_network()
+    views = Display_views(main)
     views.lang_index = 0
     views.lang_name = 'English'
     views.categoryInFocus = 'kind'

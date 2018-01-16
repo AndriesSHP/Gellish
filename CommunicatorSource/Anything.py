@@ -132,33 +132,33 @@ class Anything:
         if phrase_in_context[2] not in self.inverse_phrases:
             self.inverse_phrases.append(phrase_in_context[2])
 
-    def add_first_kind_of_role(self, first_role_type):
-        self.first_role_type = first_role_type
+##    def add_first_kind_of_role(self, first_role_type):
+##        self.first_role_type = first_role_type
+##
+##    def add_second_kind_of_role(self, second_role_type):
+##        self.second_role_type = second_role_type
 
-    def add_second_kind_of_role(self, second_role_type):
-        self.second_role_type = second_role_type
-
-class Object(Anything):
-    pass
-
-class Individual(Object):
-    #category = "individual thing"
-    pass
-
-class Kind(Object):
-    #category = "kind"
-    pass
-    
-class RelationType(Kind):
-##    def __init__(self, uid, category = "kind of relation"):
-##        Kind.__init__(self, uid, category = None):
-##            self.base_phrases    = []
-##            self.inverse_phrases = []
-    pass
-
-class Intention_type(Kind):
-    #category = "intention"
-    pass
+##class Object(Anything):
+##    pass
+##
+##class Individual(Object):
+##    #category = "individual thing"
+##    pass
+##
+##class Kind(Object):
+##    #category = "kind"
+##    pass
+##    
+##class RelationType(Kind):
+####    def __init__(self, uid, category = "kind of relation"):
+####        Kind.__init__(self, uid, category = None):
+####            self.base_phrases    = []
+####            self.inverse_phrases = []
+##    pass
+##
+##class Intention_type(Kind):
+##    #category = "intention"
+##    pass
 
 class Relation(Anything):
     ''' lh, rel_type, rh, phrase_type, uom and expression that expresses a binary relation with contextual facts.
@@ -209,13 +209,13 @@ if __name__ == "__main__":
                        #lhobUID, lhobName, relTypeUID, relTypePhrase, phraseTypeUID, \
                        #rhobUID, rhobName, uomUID, uomName)
 
-        R1 = [0   , "has approval status",790375, "accepted"]
-        R2 = [6023, "has as originator",0,"Andries van Renssen"]
+        R1 = ['0'   , "has approval status",'790375', "accepted"]
+        R2 = ['6023', "has as originator",'0',"Andries van Renssen"]
         rel.add_contextual_fact(R1)
         rel.add_contextual_fact(R2)
         rel.show(gel_net)
 
-        naming_rel_uid = 5117
+        naming_rel_uid = '5117'
         description = 'text'
         O1 = Object(lhobUID, fullDef)
         if O1 not in gel_net.obj_uids:
@@ -230,7 +230,7 @@ if __name__ == "__main__":
             O2.add_name_in_context(rhobName)
         Q2.show(gel_net)
 
-        RT = RelationType(1260,'bla, bla')
+        RT = Anything('1260','name', 'cat')
         rt_name_in_context = [langUID, commUID, "composition relation between an individual thing \
 and a composed individual thing", naming_rel_uid, description]
         RT.add_name_in_context(rt_name_in_context)
