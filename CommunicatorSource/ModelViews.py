@@ -17,7 +17,7 @@ class Display_views():
         self.root = main.root
         self.user = main.user
         self.query = main.query
-        self.lang_index = self.gel_net.GUI_lang_index
+        self.GUI_lang_index = self.gel_net.GUI_lang_index
         self.uid_dict = self.gel_net.uid_dict
 
         self.kind_model   = self.gel_net.kind_model
@@ -55,14 +55,14 @@ class Display_views():
         self.parent_head   = ['Upper concept' , 'Hoger concept']
         self.comm_head     = ['Community'     , 'Taalgemeenschap']
 
-        self.modification = ''
+        self.modification = None
         
     def Notebook_views(self):
         """ Defines a Notebook with various view layouts and displays view contents.
             Starting in grid on row 1.
         """
         # Define the overall views_notebook
-        self.views_noteb  = Notebook(self.main.GUI.main_frame, height=600)  #, height=400, width=1000)
+        self.views_noteb = Notebook(self.main.GUI.main_frame, height=600)  #, height=400, width=1000)
         self.views_noteb.grid(column=0, row=1,sticky=NSEW, columnspan=2) #pack(fill=BOTH, expand=1)
         self.views_noteb.columnconfigure(0,weight=1)
         self.views_noteb.rowconfigure(0,weight=1)
@@ -164,7 +164,7 @@ class Display_views():
         self.log_frame.grid (column=0, row=0,sticky=NSEW) 
         self.log_frame.columnconfigure(0, weight=1)
         log_head = ['Messages and warnings','Berichten en foutmeldingen']
-        self.views_noteb.add(self.log_frame, text=log_head[self.lang_index], sticky=NSEW)
+        self.views_noteb.add(self.log_frame, text=log_head[self.GUI_lang_index], sticky=NSEW)
         self.views_noteb.insert("end", self.log_frame, sticky=NSEW)
 
         # Messages area - text widget definition
@@ -173,7 +173,7 @@ class Display_views():
         self.log_messages.config(yscrollcommand=log_mess_scroll.set)
 
         self.log_messages.grid (column=0, row=0, columnspan=1, rowspan=1, sticky=NSEW)
-        log_mess_scroll.grid   (column=1, row=0, sticky=NS+E)
+        log_mess_scroll.grid   (column=0, row=0, sticky=NS+E)
 
     def Define_and_display_network(self):
         # Destroy earlier network_frame
@@ -191,18 +191,31 @@ class Display_views():
             for display in a tab of Notebook
         '''
         self.network_frame = Frame(self.views_noteb)
-        self.network_frame.grid (column=0, row=0, sticky=NSEW, rowspan=2) #pack(fill=BOTH, expand=1)  
+        self.network_frame.grid (column=0, row=0, sticky=NSEW, rowspan=2, columnspan=4)  
         self.network_frame.columnconfigure(0, weight=1)
         self.network_frame.rowconfigure(0,weight=0)
         self.network_frame.rowconfigure(1,weight=1)
         
         network_text = ['Network','Netwerk']
-        self.views_noteb.add(self.network_frame, text=network_text[self.lang_index], sticky=NSEW)
+        self.views_noteb.add(self.network_frame, text=network_text[self.GUI_lang_index], sticky=NSEW)
         #self.views_noteb.insert("end", self.network_frame, sticky=NSEW)
 
-        network_head = ['Network of objects and aspects',\
-                        'Netwerk van objecten en aspecten']
-        network_lbl  = Label(self.network_frame,text=network_head[self.lang_index])
+##        network_head = ['Network of objects and aspects',\
+##                        'Netwerk van objecten en aspecten']
+##        network_lbl  = Label(self.network_frame,text=network_head[self.GUI_lang_index])
+        net_button_text = ['Network of left-object', 'Netwerk van linker object']
+        lh_button_text = ['Details of left object', 'Details van linker object']
+        rh_button_text = ['Details of kind', 'Details van soort']
+        classif_button_text = ['Classification', 'Classificatie']
+
+        self.net_button = Button(self.network_frame, text=net_button_text[self.GUI_lang_index], \
+                                command=self.Prepare_lh_object_network_view)
+        self.lh_button = Button(self.network_frame, text=lh_button_text[self.GUI_lang_index], \
+                                command=lambda:self.Prepare_network_object_detail_view('lh_obj'))
+        self.rh_button = Button(self.network_frame, text=rh_button_text[self.GUI_lang_index], \
+                                command=lambda:self.Prepare_network_object_detail_view('rh_obj'))
+        self.classif_button = Button(self.network_frame, text=classif_button_text[self.GUI_lang_index], \
+                                command=self.Prepare_for_classification)
         
         headings = ['UID','Name', 'Parent','Kind','Aspect1','Aspect2','Aspect3','Aspect4','Aspect5'  ,\
                                  'Aspect6','Aspect7','Aspect8','Aspect9','Aspect10']
@@ -214,9 +227,9 @@ class Display_views():
 
         self.network_tree.heading('#0'        ,text='Object'   , anchor=W)
         self.network_tree.heading('UID'       ,text='UID'      , anchor=W)
-        self.network_tree.heading('Name'      ,text=self.name_head[self.lang_index], anchor=W)
-        self.network_tree.heading('Parent'    ,text=self.parent_head[self.lang_index], anchor=W)
-        self.network_tree.heading('Kind'      ,text=self.kind_head[self.lang_index], anchor=W)
+        self.network_tree.heading('Name'      ,text=self.name_head[self.GUI_lang_index], anchor=W)
+        self.network_tree.heading('Parent'    ,text=self.parent_head[self.GUI_lang_index], anchor=W)
+        self.network_tree.heading('Kind'      ,text=self.kind_head[self.GUI_lang_index], anchor=W)
         
         self.network_tree.column ('#0'        ,minwidth=100    , width=200)
         self.network_tree.column ('Parent'    ,minwidth=20     , width=50)
@@ -235,15 +248,20 @@ class Display_views():
         self.network_tree.tag_configure('uomTag', option=None, background='#ccf')
         self.network_tree.tag_configure('sumTag', option=None, background='#cfc')
 
-        network_scroll = Scrollbar(self.network_frame, orient=VERTICAL, command=self.network_tree.yview)
-        network_lbl.grid       (column=0, row=0,sticky=EW)
-        self.network_tree.grid (column=0, row=1,sticky=NSEW)
-        network_scroll.grid    (column=0, row=1,sticky=NS+E)
+        network_scroll = Scrollbar(self.network_frame, orient=VERTICAL, \
+                                   command=self.network_tree.yview)
+##        network_lbl.grid       (column=0, row=0, sticky=W)
+        self.net_button.grid   (column=0, row=0, sticky=W)
+        self.lh_button.grid    (column=1, row=0, sticky=W)
+        self.rh_button.grid    (column=2, row=0, sticky=W)
+        self.classif_button.grid (column=3, row=0, sticky=W)
+        self.network_tree.grid (column=0, row=1, sticky=NSEW, columnspan=4)
+        network_scroll.grid    (column=3, row=1, sticky=NS+E)
         self.network_tree.config(yscrollcommand=network_scroll.set)
 
-        self.network_tree.bind(sequence='<Double-1>', func=self.Object_detail_view)
-        self.network_tree.bind(sequence='i'         , func=self.Object_detail_view)
-        self.network_tree.bind(sequence='<Double-3>', func=self.Object_detail_view)
+        self.network_tree.bind(sequence='<Double-1>', func=self.Network_object_detail_view)
+        self.network_tree.bind(sequence='i'         , func=self.Network_object_detail_view)
+        self.network_tree.bind(sequence='<Double-3>', func=self.Network_object_detail_view)
 
     def Display_network_view(self):
         # Display header row with units of measure
@@ -289,12 +307,12 @@ class Display_views():
         self.taxon_frame.rowconfigure(1,weight=1)
         
         taxon_text = ['Taxonomy','Taxonomie']
-        self.views_noteb.add(self.taxon_frame, text=taxon_text[self.lang_index], sticky=NSEW)
+        self.views_noteb.add(self.taxon_frame, text=taxon_text[self.GUI_lang_index], sticky=NSEW)
         #self.views_noteb.insert("end", self.taxon_frame, sticky=NSEW)
 
         taxon_head = ['Hierarchy of kinds and aspects per object of a particular kind',\
                       'Hiërarchie van soorten en aspecten per object van een bepaalde soort']
-        taxon_lbl  = Label(self.taxon_frame,text=taxon_head[self.lang_index])
+        taxon_lbl  = Label(self.taxon_frame,text=taxon_head[self.GUI_lang_index])
         
         headings = ['UID','Name', 'Kind','Community','Aspect1','Aspect2','Aspect3','Aspect4','Aspect5'  ,\
                                  'Aspect6','Aspect7','Aspect8','Aspect9','Aspect10']
@@ -367,11 +385,11 @@ class Display_views():
         #self.summ_frame.rowconfigure(1,weight=1)
         
         summary = ['Summary','Overzicht']
-        self.views_noteb.add(self.summ_frame, text=summary[self.lang_index], sticky=NSEW)
+        self.views_noteb.add(self.summ_frame, text=summary[self.GUI_lang_index], sticky=NSEW)
         self.views_noteb.insert("end", self.summ_frame, sticky=NSEW)
 
         summHead = ['Aspects per object of a particular kind','Aspecten per object van een bepaalde soort']
-        summ_lbl = Label(self.summ_frame,text=summHead[self.lang_index])
+        summ_lbl = Label(self.summ_frame,text=summHead[self.GUI_lang_index])
         
         headings = ['UID','Name', 'Kind','Community','Aspect1','Aspect2','Aspect3','Aspect4','Aspect5'  ,\
                                  'Aspect6','Aspect7','Aspect8','Aspect9','Aspect10']
@@ -385,9 +403,9 @@ class Display_views():
 
         self.summ_tree.heading('#0'        ,text='Object'   , anchor=W)     
         self.summ_tree.heading('UID'       ,text='UID'      , anchor=W)
-        self.summ_tree.heading('Name'      ,text=self.name_head[self.lang_index], anchor=W)
-        self.summ_tree.heading('Kind'      ,text=self.kind_head[self.lang_index], anchor=W)
-        self.summ_tree.heading('Community' ,text=self.comm_head[self.lang_index], anchor=W)
+        self.summ_tree.heading('Name'      ,text=self.name_head[self.GUI_lang_index], anchor=W)
+        self.summ_tree.heading('Kind'      ,text=self.kind_head[self.GUI_lang_index], anchor=W)
+        self.summ_tree.heading('Community' ,text=self.comm_head[self.GUI_lang_index], anchor=W)
         
         self.summ_tree.column ('#0'        ,minwidth=100    , width=200)
         self.summ_tree.column ('Community' ,minwidth=20     , width=50)
@@ -408,7 +426,7 @@ class Display_views():
         summScroll = Scrollbar(self.summ_frame, orient=VERTICAL, command=self.summ_tree.yview)
         summ_lbl.grid      (column=0, row=0,sticky=EW)
         self.summ_tree.grid(column=0, row=1,sticky=NSEW)
-        summScroll.grid    (column=1, row=1,sticky=NS+E)
+        summScroll.grid    (column=0, row=1,sticky=NS+E)
         self.summ_tree.config(yscrollcommand=summScroll.set)
 
         self.summ_tree.bind(sequence='<Double-1>', func=self.Summ_detail_view)
@@ -469,12 +487,12 @@ class Display_views():
         self.possib_frame.rowconfigure(1, weight=1)
         
         possib_text = ['Possibilities','Mogelijkheden']
-        self.views_noteb.add(self.possib_frame, text=possib_text[self.lang_index], sticky=NSEW)
+        self.views_noteb.add(self.possib_frame, text=possib_text[self.GUI_lang_index], sticky=NSEW)
         self.views_noteb.insert("end", self.possib_frame, sticky=NSEW)
 
         possib_head  = ['Possible aspects per object of a particular kind',\
                         'Mogelijke aspecten per object van een bepaalde soort']
-        possib_label = Label(self.possib_frame,text=possib_head[self.lang_index])
+        possib_label = Label(self.possib_frame,text=possib_head[self.GUI_lang_index])
         headings = ['UID','Name','Parent','Kind','Community','Aspect1','Aspect2','Aspect3','Aspect4',\
                     'Aspect5'   ,'Aspect6','Aspect7','Aspect8','Aspect9','Aspect10']
         nr_of_cols = len(self.possib_column_names)
@@ -486,10 +504,10 @@ class Display_views():
                                     displaycolumns=display_cols, selectmode='browse', height=30)
 
         self.possib_tree.heading('UID'       ,text='UID'      , anchor=W)
-        self.possib_tree.heading('Name'      ,text=self.name_head[self.lang_index], anchor=W)
-        self.possib_tree.heading('Parent'    ,text=self.parent_head[self.lang_index], anchor=W)
-        self.possib_tree.heading('Kind'      ,text=self.kind_head[self.lang_index], anchor=W)
-        self.possib_tree.heading('Community' ,text=self.comm_head[self.lang_index], anchor=W)
+        self.possib_tree.heading('Name'      ,text=self.name_head[self.GUI_lang_index], anchor=W)
+        self.possib_tree.heading('Parent'    ,text=self.parent_head[self.GUI_lang_index], anchor=W)
+        self.possib_tree.heading('Kind'      ,text=self.kind_head[self.GUI_lang_index], anchor=W)
+        self.possib_tree.heading('Community' ,text=self.comm_head[self.GUI_lang_index], anchor=W)
         
         self.possib_tree.column ('#0'        ,minwidth=100    , width=200)
         self.possib_tree.column ('Kind'      ,minwidth=20     , width=50)
@@ -540,11 +558,11 @@ class Display_views():
         self.indiv_frame.rowconfigure(1,weight=1)
         
         indiv_text = ['Composition','Samenstelling']
-        self.views_noteb.add(self.indiv_frame, text=indiv_text[self.lang_index], sticky=NSEW)
+        self.views_noteb.add(self.indiv_frame, text=indiv_text[self.GUI_lang_index], sticky=NSEW)
         self.views_noteb.insert("end", self.indiv_frame, sticky=NSEW)
 
         indiv_Head = ['Aspects per individual object','Aspecten per individueel object']
-        indiv_Lbl  = Label(self.indiv_frame,text=indiv_Head[self.lang_index])
+        indiv_Lbl  = Label(self.indiv_frame,text=indiv_Head[self.GUI_lang_index])
         headings = ['UID','Name','Parent','Kind','Community','Aspect1','Aspect2','Aspect3','Aspect4','Aspect5'  ,\
                                  'Aspect6','Aspect7','Aspect8','Aspect9','Aspect10']
         nr_of_cols = len(self.indiv_column_names)
@@ -557,10 +575,10 @@ class Display_views():
 
         self.indiv_tree.heading('#0'        ,text='Object'   , anchor=W)
         self.indiv_tree.heading('UID'       ,text='UID'      , anchor=W)
-        self.indiv_tree.heading('Name'      ,text=self.name_head[self.lang_index], anchor=W)
-        self.indiv_tree.heading('Parent'    ,text=self.parent_head[self.lang_index], anchor=W)
-        self.indiv_tree.heading('Kind'      ,text=self.kind_head[self.lang_index], anchor=W)
-        self.indiv_tree.heading('Community' ,text=self.comm_head[self.lang_index], anchor=W)
+        self.indiv_tree.heading('Name'      ,text=self.name_head[self.GUI_lang_index], anchor=W)
+        self.indiv_tree.heading('Parent'    ,text=self.parent_head[self.GUI_lang_index], anchor=W)
+        self.indiv_tree.heading('Kind'      ,text=self.kind_head[self.GUI_lang_index], anchor=W)
+        self.indiv_tree.heading('Community' ,text=self.comm_head[self.GUI_lang_index], anchor=W)
         
         self.indiv_tree.column ('#0'        ,minwidth=100    , width=200)
         self.indiv_tree.column ('Kind'      ,minwidth=20     , width=50)
@@ -581,9 +599,9 @@ class Display_views():
         self.indiv_tree.tag_configure('sumTag', option=None, background='#cfc')
 
         indiv_Scroll = Scrollbar(self.indiv_frame, orient=VERTICAL, command=self.indiv_tree.yview)
-        indiv_Lbl.grid       (column=0, row=0,sticky=EW)
+        indiv_Lbl.grid      (column=0, row=0,sticky=EW)
         self.indiv_tree.grid(column=0, row=1,sticky=NSEW)
-        indiv_Scroll.grid    (column=1, row=1,sticky=NS+E)
+        indiv_Scroll.grid   (column=0, row=1,sticky=NS+E)
         self.indiv_tree.config(yscrollcommand=indiv_Scroll.set)
 
         self.indiv_tree.bind(sequence='<Double-1>', func=self.Indiv_detail_view)
@@ -607,7 +625,7 @@ class Display_views():
         ''' Define expressions view sheet for display of expr_table in Notebook tab
         '''
         self.expr_frame = Frame(self.views_noteb)
-        self.expr_frame.grid (column=0, row=0,sticky=NSEW, rowspan=4) #pack(fill=BOTH, expand=1)  
+        self.expr_frame.grid (column=0, row=0,sticky=NSEW, rowspan=4) 
         self.expr_frame.columnconfigure(0,weight=1)
         self.expr_frame.rowconfigure(0,weight=0)
         self.expr_frame.rowconfigure(1,weight=0)
@@ -617,17 +635,19 @@ class Display_views():
         expressions = ['Expressions' ,'Uitdrukkingen']
         save_on_CSV_file  = ['Save on CSV file','Opslaan op CSV file']
         save_on_JSON_file = ['Save on JSON file','Opslaan op JSON file']
-        self.views_noteb.add(self.expr_frame, text=expressions[self.lang_index],sticky=NSEW)
+        
+        self.views_noteb.add(self.expr_frame, text=expressions[self.GUI_lang_index],sticky=NSEW)
         self.views_noteb.insert("end",self.expr_frame,sticky=NSEW)
         # Define button for display of contextual facts
         details_button   = Button(self.expr_frame, text='Context', command=self.Contextual_facts)
-        save_CSV_button  = Button(self.expr_frame, text=save_on_CSV_file[self.lang_index], \
+        save_CSV_button  = Button(self.expr_frame, text=save_on_CSV_file[self.GUI_lang_index], \
                                   command=self.Save_on_CSV_file)
-        save_JSON_button = Button(self.expr_frame, text=save_on_JSON_file[self.lang_index], \
+        save_JSON_button = Button(self.expr_frame, text=save_on_JSON_file[self.GUI_lang_index], \
                                   command=self.Save_on_JSON_file)
 
         header = ['Model expressions in Gellish','Uitdrukkingen in Gellish']
-        expr_lbl = Label(self.expr_frame, text=header[self.lang_index],justify='left')
+        expr_lbl = Label(self.expr_frame, text=header[self.GUI_lang_index],justify='left')
+        
         self.expr_tree = Treeview(self.expr_frame,\
                             columns=('seq'       ,'langUID'    ,'langName'  ,'commUID'    ,'commName' ,\
                                      'reality'   ,'intentUID'  ,'intentName','lhCard'     ,'lhUID'    ,\
@@ -774,12 +794,12 @@ class Display_views():
                                                   initialfile= 'QueryResults.csv',\
                                                   parent     = self.expr_frame)
         if outputFile == '':
-            if self.lang_index == 1:
-                print('De filenaam voor opslaan is blanco of the file selectie is gecancelled. \
-    De file is opgeslagen met de naam <QueryResults.csv')
+            if self.GUI_lang_index == 1:
+                print('De filenaam voor opslaan is blanco of the file opslag is gecancelled. \
+                       Indien de file is gemaakt, dan is hij opgeslagen met de naam <QueryResults.csv>')
             else:
                 print('File name for saving is blank or file selection is cancelled. \
-File is saved under name <QueryResults.csv')
+                       If generated, the file is saved under the name <QueryResults.csv')
             outputFile = 'QueryResults.csv'
         
         queryFile  = open(outputFile,mode='w',newline='')
@@ -794,7 +814,7 @@ File is saved under name <QueryResults.csv')
             fileWriter.writerow(expression)
         
         queryFile.close()
-        if self.lang_index == 1:
+        if self.GUI_lang_index == 1:
             print('File %s is opgeslagen.' % (outputFile))
         else:
             print('File %s is saved.' % (outputFile))
@@ -829,12 +849,12 @@ File is saved under name <QueryResults.csv')
         self.kind_frame.rowconfigure(1,weight=1)
 
         comp = ['Model of a kind','Model van een soort']
-        self.views_noteb.add(self.kind_frame, text=comp[self.lang_index],sticky=NSEW)
+        self.views_noteb.add(self.kind_frame, text=comp[self.GUI_lang_index],sticky=NSEW)
         self.views_noteb.insert("end",self.kind_frame,sticky=NSEW)
 
         structure = ['Tree structure','Boomstructuur']
 
-        kind_label = Label(self.kind_frame, text=structure[self.lang_index],justify='left')
+        kind_label = Label(self.kind_frame, text=structure[self.GUI_lang_index],justify='left')
         heads = ['uid_1','uid_2','uid-3','inFocus','Level1','Level2','Level3','kind',\
                 'aspect','kAspect','>=<','value', 'UoM','status']
         display_heads = heads[3:]
@@ -847,19 +867,19 @@ File is saved under name <QueryResults.csv')
         col = -1
         for head_field in display_heads:
             col += + 1
-            self.kind_tree.heading(head_field ,text=self.kind_treeHead[self.lang_index][col],anchor=W)
+            self.kind_tree.heading(head_field ,text=self.kind_treeHead[self.GUI_lang_index][col],anchor=W)
             
-##        self.kind_tree.heading('inFocus' ,text=self.kind_treeHead[self.lang_index][0],anchor=W)
-##        self.kind_tree.heading('Level1'  ,text=self.kind_treeHead[self.lang_index][1],anchor=W)
-##        self.kind_tree.heading('Level2'  ,text=self.kind_treeHead[self.lang_index][2],anchor=W)
-##        self.kind_tree.heading('Level3'  ,text=self.kind_treeHead[self.lang_index][3],anchor=W)
-##        self.kind_tree.heading('kind'    ,text=self.kind_treeHead[self.lang_index][4],anchor=W)
-##        self.kind_tree.heading('aspect'  ,text=self.kind_treeHead[self.lang_index][5],anchor=W)
-##        self.kind_tree.heading('kAspect' ,text=self.kind_treeHead[self.lang_index][6],anchor=W)
-##        self.kind_tree.heading('>=<'     ,text=self.kind_treeHead[self.lang_index][7],anchor=W)
-##        self.kind_tree.heading('value'   ,text=self.kind_treeHead[self.lang_index][8],anchor=W)
-##        self.kind_tree.heading('UoM'     ,text=self.kind_treeHead[self.lang_index][9],anchor=W)
-##        self.kind_tree.heading('status'  ,text=self.kind_treeHead[self.lang_index][10],anchor=W)
+##        self.kind_tree.heading('inFocus' ,text=self.kind_treeHead[self.GUI_lang_index][0],anchor=W)
+##        self.kind_tree.heading('Level1'  ,text=self.kind_treeHead[self.GUI_lang_index][1],anchor=W)
+##        self.kind_tree.heading('Level2'  ,text=self.kind_treeHead[self.GUI_lang_index][2],anchor=W)
+##        self.kind_tree.heading('Level3'  ,text=self.kind_treeHead[self.GUI_lang_index][3],anchor=W)
+##        self.kind_tree.heading('kind'    ,text=self.kind_treeHead[self.GUI_lang_index][4],anchor=W)
+##        self.kind_tree.heading('aspect'  ,text=self.kind_treeHead[self.GUI_lang_index][5],anchor=W)
+##        self.kind_tree.heading('kAspect' ,text=self.kind_treeHead[self.GUI_lang_index][6],anchor=W)
+##        self.kind_tree.heading('>=<'     ,text=self.kind_treeHead[self.GUI_lang_index][7],anchor=W)
+##        self.kind_tree.heading('value'   ,text=self.kind_treeHead[self.GUI_lang_index][8],anchor=W)
+##        self.kind_tree.heading('UoM'     ,text=self.kind_treeHead[self.GUI_lang_index][9],anchor=W)
+##        self.kind_tree.heading('status'  ,text=self.kind_treeHead[self.GUI_lang_index][10],anchor=W)
         
         self.kind_tree.column ('#0'      ,minwidth=40,width=50)
         self.kind_tree.column ('inFocus' ,minwidth=10,width=10)
@@ -896,9 +916,9 @@ File is saved under name <QueryResults.csv')
         self.kind_tree.rowconfigure(0,weight=1)
         self.kind_tree.rowconfigure(1,weight=1)
 
-        compScroll = Scrollbar(self.kind_frame,orient=VERTICAL,command=self.kind_tree.yview)
-        compScroll.grid (column=1,row=1,sticky=NS+E)
-        self.kind_tree.config(yscrollcommand=compScroll.set)
+        kind_scroll = Scrollbar(self.kind_frame,orient=VERTICAL,command=self.kind_tree.yview)
+        kind_scroll.grid (column=0,row=1,sticky=NS+E)
+        self.kind_tree.config(yscrollcommand=kind_scroll.set)
 
         self.kind_tree.tag_configure('focusTag' ,background='#9f9') # hell green
         self.kind_tree.tag_configure('headTag'  ,background='#bfb')
@@ -917,6 +937,10 @@ File is saved under name <QueryResults.csv')
         '''
         unknownVal   = ['unknown value','onbekende waarde']
         unknownKind  = ['unknown kind' ,'onbekende soort']
+        level0Part = ''
+        level1Part = ''
+        level2Part = ''
+
         for kindLine in self.kind_model:
             head = False
             head_line = []
@@ -979,25 +1003,31 @@ File is saved under name <QueryResults.csv')
                     previusPart = level2Part
 
     def Define_product_model_sheet(self):
-        # Product_model view tab sheet in Notebook
-        self.prod_frame  = Frame(self.views_noteb)
-        self.prod_frame.grid (column=0, row=0,sticky=NSEW) #pack(fill=BOTH, expand=1)  
+        ''' Product_model view tab sheet in Notebook
+            Preceded by a frame with a number of buttons corresponding with binds
+        '''
+        self.prod_frame = Frame(self.views_noteb)
+        self.prod_frame.grid (column=0, row=0,sticky=NSEW, columnspan=6, rowspan=4) 
         self.prod_frame.columnconfigure(0,weight=1)
-        self.prod_frame.rowconfigure(0,weight=1)
-        self.prod_frame.rowconfigure(1,weight=1)
+        self.prod_frame.rowconfigure(0,weight=0)
+        self.prod_frame.rowconfigure(1,weight=0)
 
         prod_text = ['Product model','Productmodel']
-        self.views_noteb.add(self.prod_frame, text=prod_text[self.lang_index],sticky=NSEW)
+        self.views_noteb.add(self.prod_frame, text=prod_text[self.GUI_lang_index],sticky=NSEW)
         self.views_noteb.insert("end",self.prod_frame,sticky=NSEW)
-
-        structure = ['Tree structure','Boomstructuur']
-
-        prod_label = Label(self.prod_frame, text=structure[self.lang_index],justify='left')
+        
+##        structure = ['Tree structure','Boomstructuur']
+##        prod_label = Label(self.prod_frame, text=structure[self.GUI_lang_index], justify='left')
+##        prod_label.grid(column=0, row=0, sticky=W)
+        
         heads = ['uid_1','uid_2','uid-3','inFocus','Level1','Level2','Level3','kind',\
                 'aspect','kAspect','>=<','value', 'UoM','status']
         display_heads = heads[5:]
         self.prod_tree = Treeview(self.prod_frame,columns=(heads), displaycolumns=display_heads, \
                                   selectmode='browse', height=30, padding=2)
+        
+        self.prod_tree.grid(column=0, row=1, columnspan=6, sticky=NSEW)
+        
         self.prod_treeHead = [('','' ,'Kind' ,'Aspect','Kind of aspect',\
                                '>=<','Value' ,'UoM'    ,'Status'),\
                               ('','','Soort','Aspect','Soort aspect'  ,\
@@ -1006,19 +1036,7 @@ File is saved under name <QueryResults.csv')
         col = -1
         for head_field in display_heads:
             col += + 1
-            self.prod_tree.heading(head_field ,text=self.prod_treeHead[self.lang_index][col],anchor=W)
-            
-##        self.prod_tree.heading('inFocus' ,text=self.prod_treeHead[self.lang_index][0],anchor=W)
-##        self.prod_tree.heading('Level1'  ,text=self.prod_treeHead[self.lang_index][1],anchor=W)
-##        self.prod_tree.heading('Level2'  ,text=self.prod_treeHead[self.lang_index][2],anchor=W)
-##        self.prod_tree.heading('Level3'  ,text=self.prod_treeHead[self.lang_index][3],anchor=W)
-##        self.prod_tree.heading('kind'    ,text=self.prod_treeHead[self.lang_index][4],anchor=W)
-##        self.prod_tree.heading('aspect'  ,text=self.prod_treeHead[self.lang_index][5],anchor=W)
-##        self.prod_tree.heading('kAspect' ,text=self.prod_treeHead[self.lang_index][6],anchor=W)
-##        self.prod_tree.heading('>=<'     ,text=self.prod_treeHead[self.lang_index][7],anchor=W)
-##        self.prod_tree.heading('value'   ,text=self.prod_treeHead[self.lang_index][8],anchor=W)
-##        self.prod_tree.heading('UoM'     ,text=self.prod_treeHead[self.lang_index][9],anchor=W)
-##        self.prod_tree.heading('status'  ,text=self.prod_treeHead[self.lang_index][10],anchor=W)
+            self.prod_tree.heading(head_field ,text=self.prod_treeHead[self.GUI_lang_index][col],anchor=W)
         
         self.prod_tree.column ('#0'      ,minwidth=40,width=100)
         #self.prod_tree.column ('inFocus' ,minwidth=10,width=10)
@@ -1032,12 +1050,7 @@ File is saved under name <QueryResults.csv')
         self.prod_tree.column ('value'   ,minwidth=20,width=100)
         self.prod_tree.column ('UoM'     ,minwidth=20,width=50)
         self.prod_tree.column ('status'  ,minwidth=20,width=80)
-        
-        #self.prod_frame.grid  (column=0, row=3,sticky=EW)
-        prod_label.grid       (column=0, row=0,sticky=EW)
-        self.prod_tree.grid(column=0, row=1,sticky=NSEW)
-        #self.prod_tree.grid(column=0, row=2,sticky=NSEW)
-        
+
         self.prod_tree.columnconfigure(0,weight=1)
         self.prod_tree.columnconfigure(1,weight=1)
         self.prod_tree.columnconfigure(2,weight=1)
@@ -1055,9 +1068,9 @@ File is saved under name <QueryResults.csv')
         self.prod_tree.rowconfigure(0,weight=1)
         self.prod_tree.rowconfigure(1,weight=1)
 
-        compScroll = Scrollbar(self.prod_frame,orient=VERTICAL,command=self.prod_tree.yview)
-        compScroll.grid (column=1,row=1,sticky=NS+E)
-        self.prod_tree.config(yscrollcommand=compScroll.set)
+        prod_scroll = Scrollbar(self.prod_frame,orient=VERTICAL,command=self.prod_tree.yview)
+        prod_scroll.grid (column=5,row=1,sticky=NS+E)
+        self.prod_tree.config(yscrollcommand=prod_scroll.set)
 
         self.prod_tree.tag_configure('focusTag' ,background='#9f9') # hell green
         self.prod_tree.tag_configure('headTag'  ,background='#bfb')
@@ -1080,6 +1093,9 @@ File is saved under name <QueryResults.csv')
         further_part = ['Further part' ,'Verder deel']
         kind_of_part = ['Kind of part', 'Soort deel']
         possible_roles = False # No roles expected
+        level0Part = ''
+        level1Part = ''
+        level2Part = ''
         
         for prod_line_0 in self.prod_model:
             prod_line = prod_line_0[:]
@@ -1186,7 +1202,7 @@ File is saved under name <QueryResults.csv')
         self.data_sheet.rowconfigure(0,weight=0)
         #self.data_sheet.rowconfigure(1,weight=0)
         prodText = ['Data sheet', 'Data sheet']
-        self.views_noteb.add(self.data_sheet, text=prodText[self.lang_index], sticky=NSEW)
+        self.views_noteb.add(self.data_sheet, text=prodText[self.GUI_lang_index], sticky=NSEW)
         self.views_noteb.insert("end",self.data_sheet,sticky=NSEW)
 
         data_canvas = Canvas(self.data_sheet, background='#ddf') 
@@ -1213,9 +1229,9 @@ File is saved under name <QueryResults.csv')
         self.data_frame.rowconfigure(0,weight=0)
         self.data_frame.rowconfigure(1,weight=0)
 
-        prodScroll = Scrollbar(self.data_sheet,orient=VERTICAL,command=data_canvas.yview)
-        prodScroll.grid (column=1, row=0, sticky=NS+E)
-        data_canvas.config(yscrollcommand=prodScroll.set)
+        data_scroll = Scrollbar(self.data_sheet,orient=VERTICAL,command=data_canvas.yview)
+        data_scroll.grid(column=0, row=0, sticky=NS+E)
+        data_canvas.config(yscrollcommand=data_scroll.set)
 
     def Display_data_sheet_view(self):
         ''' Produce a view of a product model in the form of a datasheet'''
@@ -1312,10 +1328,10 @@ File is saved under name <QueryResults.csv')
                     elif head != True:                 #back == 'yellow' or back == '#fcc':
                         back = 'white'
                     if field_value in unknownVal:
-                        field_value = unknownVal[self.lang_index]
+                        field_value = unknownVal[self.GUI_lang_index]
                         back = '#fcc'
                     elif field_value in unknownKind:
-                        field_value = unknownKind[self.lang_index]
+                        field_value = unknownKind[self.GUI_lang_index]
                         back = '#fcc'
                     # Display subsequent body values
                     fd = ttk.Label(self.data_frame, text=field_value, width=column_width, background=back, foreground=fore,\
@@ -1328,10 +1344,11 @@ File is saved under name <QueryResults.csv')
         self.act_frame.grid (column=0, row=0,sticky=NSEW) #pack(fill=BOTH, expand=1)  
         self.act_frame.columnconfigure(0,weight=1)
         self.act_frame.rowconfigure(0,weight=0)
-        self.views_noteb.add(self.act_frame, text=activity[self.lang_index], sticky=NSEW)
+        self.act_frame.rowconfigure(1,weight=0)
+        self.views_noteb.add(self.act_frame, text=activity[self.GUI_lang_index], sticky=NSEW)
         self.views_noteb.insert("end",self.act_frame,sticky=NSEW)
-        acts = ['Activity tree', 'Activiteitenboom']
-        actLbl = Label(self.act_frame,text=acts[self.lang_index])
+##        acts = ['Activity tree', 'Activiteitenboom']
+##        actLbl = Label(self.act_frame,text=acts[self.GUI_lang_index])
         headings = ['OccUID', 'OccName' , 'WholeOccName', 'InvolvUID', 'KindOccUID',
                     'OccName','PartName', 'Involved'    , 'Kind'     , 'Role']
         display_cols = headings[7:]
@@ -1344,12 +1361,12 @@ File is saved under name <QueryResults.csv')
         strText  = ['Involved object','Betrokken object']
         kindText = ['Kind'           ,'Soort']
         roleText = ['Role'           ,'Rol']
-        self.act_tree.heading('#0'      ,text=occText[self.lang_index] ,anchor=W)
-        self.act_tree.heading('OccName' ,text=occText[self.lang_index] ,anchor=W)
-        self.act_tree.heading('PartName',text=partText[self.lang_index],anchor=W)
-        self.act_tree.heading('Involved',text=strText[self.lang_index] ,anchor=W)
-        self.act_tree.heading('Kind'    ,text=kindText[self.lang_index],anchor=W)
-        self.act_tree.heading('Role'    ,text=roleText[self.lang_index],anchor=W)
+        self.act_tree.heading('#0'      ,text=occText[self.GUI_lang_index] ,anchor=W)
+        self.act_tree.heading('OccName' ,text=occText[self.GUI_lang_index] ,anchor=W)
+        self.act_tree.heading('PartName',text=partText[self.GUI_lang_index],anchor=W)
+        self.act_tree.heading('Involved',text=strText[self.GUI_lang_index] ,anchor=W)
+        self.act_tree.heading('Kind'    ,text=kindText[self.GUI_lang_index],anchor=W)
+        self.act_tree.heading('Role'    ,text=roleText[self.GUI_lang_index],anchor=W)
         
         self.act_tree.column('#0'       ,minwidth=20,width=20)
         self.act_tree.column('OccName'  ,minwidth=20,width=120)
@@ -1359,7 +1376,7 @@ File is saved under name <QueryResults.csv')
         self.act_tree.column('Role'     ,minwidth=20,width=60)
 
         #actLbl.grid (column=0,row=0,sticky=EW)
-        self.act_tree.grid(column=0,row=0,sticky=NSEW)
+        self.act_tree.grid(column=0,row=1,sticky=NSEW)
 
         self.act_tree.columnconfigure(0,weight=0)
         self.act_tree.columnconfigure(1,weight=1)
@@ -1377,7 +1394,7 @@ File is saved under name <QueryResults.csv')
         self.act_tree.tag_configure('actTag', option=None, background='#dfd')
 
         actScroll = Scrollbar(self.act_frame,orient=VERTICAL,command=self.act_tree.yview)
-        actScroll.grid (column=0,row=0,sticky=NS+E)
+        actScroll.grid (column=0,row=1,sticky=NS+E)
         self.act_tree.config(yscrollcommand=actScroll.set)
 
     
@@ -1457,7 +1474,7 @@ File is saved under name <QueryResults.csv')
         self.doc_frame.grid (column=0, row=0,sticky=NSEW) #pack(fill=BOTH, expand=1)  
         self.doc_frame.columnconfigure(0,weight=1)
         self.doc_frame.rowconfigure(0,weight=0)
-        self.views_noteb.add(self.doc_frame, text=documents[self.lang_index], sticky=NSEW)
+        self.views_noteb.add(self.doc_frame, text=documents[self.GUI_lang_index], sticky=NSEW)
         self.views_noteb.insert("end",self.doc_frame,sticky=NSEW)
         headings = ['info','obj','carrier','directory','infoName','infoKind', 'dirName',\
                     'objName','fileName','fileKind']
@@ -1516,39 +1533,143 @@ File is saved under name <QueryResults.csv')
             self.Define_and_display_individual_detail_view(selected_object)
 
 #------------------------------------------------------------------------
-    def Object_detail_view(self, sel):
+    def Prepare_lh_object_network_view(self):
+        ''' Set the uid of the left hand object in a selected treeview row
+            as the chosen object for display of a new network view etc.
+        '''
+        tree_values = self.Determine_network_tree_values()
+        if len(tree_values) > 0:
+            chosen_object_uid = str(tree_values[0])
+            # Build single product model (list with one element)
+            obj_list = []
+            obj = self.gel_net.uid_dict[chosen_object_uid]
+            obj_list.append(obj)
+            self.gel_net.Build_product_views(obj_list)
+            # Display query results in notebook sheets
+            self.main.views.Notebook_views()
+
+    def Prepare_network_object_detail_view(self, lh_or_rh):
+        ''' Set the uid of the left hand or right hand object
+            in a selected network treeview row
+            as the chosen object for display of details
+        '''
+        tree_values = self.Determine_network_tree_values()
+        if len(tree_values) > 0 and lh_or_rh == 'lh_obj':
+            chosen_object_uid = tree_values[0]
+            self.Determine_category_of_object_view(chosen_object_uid, tree_values)
+        elif len(tree_values) > 4 and lh_or_rh == 'rh_obj':
+            chosen_object_uid = tree_values[4]
+            self.Determine_category_of_object_view(chosen_object_uid, tree_values)
+
+##    def Select_rh_network_object_detail_view(self):
+##        ''' Set the uid of the right hand object (the kind) in a selected treeview row
+##            as the chosen object for display of details
+##        '''
+##        tree_values = self.Determine_network_tree_values()
+##        if len(tree_values) > 4:
+##            chosen_object_uid = tree_values[4]
+##            self.Determine_category_of_object_view(chosen_object_uid, tree_values)
+
+    def Prepare_for_classification(self):
+            #similar to def Prod_detail_view_middle(self, sel):
+        """ Find the selected left classifier object from a user selection
+            in the network that is displayed in the network_tree view.
+            When the classification button was used the taxonomy of the selected kind
+            is displayed and a search for a second classifier in the taxonomy
+            (the subtype hierarchy of the selected kind) is started.
+            The aspects of the individual object are used to create selection criteria for the
+            subtypes in the hierarchy.
+            The taxonomy of the selected kind is displayed for selection of the classifier.
+        """
+        tree_values = self.Determine_network_tree_values()
+        
+        if len(tree_values) > 0:
+            if tree_values[4] != '':
+                kind_uid = str(tree_values[4])
+                individual_object_uid = str(tree_values[0])
+                self.Classification_of_individual_thing(individual_object_uid, kind_uid)
+            else:
+                print('Kind of object is unknown.')
+        else:
+            print("Select an item, then click the classification button for classying the object.")
+                
+    def Classification_of_individual_thing(self, to_be_classified_object_uid, kind_uid):
+        ''' Start a classification process for a to be classified object
+            by a subtype of a current classifying kind.
+            When completed, a classification relation is added to the classified object.
+        '''
+        self.modification = 'classification started'
+        kind = self.gel_net.uid_dict[kind_uid]
+        self.gel_net.modified_object = self.gel_net.uid_dict[to_be_classified_object_uid]
+        print('Present taxonomy of kind: {} that classifies {} for \
+selection of a subtype for classification'.\
+              format(kind.name, self.gel_net.modified_object.name))
+        
+        # Formulate query_spec including conditions from aspects of individual, if any
+        self.query.Formulate_query_spec_for_individual(kind)
+        self.query.Create_query_file()
+        self.query.Interpret_query_spec()
+        
+        obj_list = []
+        obj_list.append(kind)
+        self.gel_net.Build_product_views(obj_list)
+        # Display taxonomy in taxon view
+        self.Define_and_display_taxonomy_of_kinds()
+        # Display possibilities of kind in possibilities view
+        self.Define_and_display_possibilities_of_kind()
+
+        if len(self.gel_net.info_model) > 0:
+            self.Define_and_display_documents()
+
+    def Network_object_detail_view(self, sel):
         """ Find the selected left hand object from a user selection with left button
-            in the network_model that is displayed in the network_tree view."""
+            in the network_model that is displayed in the network_tree view.
+        """
+        tree_values = self.Determine_network_tree_values()
+        #print('Network object detail view:', cur_item, tree_values)
+        if len(tree_values) > 0:
+            if sel.num == 1:
+                chosen_object_uid = tree_values[0]
+            else:
+                chosen_object_uid = tree_values[4]
+            self.Determine_category_of_object_view(chosen_object_uid, tree_values)
+
+    def Determine_network_tree_values(self):
+        ''' Determine the values on a selected focus row in a network treeview
+        '''
+        cur_item = self.network_tree.focus()
+        tree_values = []
+        if cur_item != '':
+            item_dict = self.network_tree.item(cur_item)
+            tree_values = list(item_dict['values'])
+        else:
+            print('No item in focus. Fist select a row, then select a button')
+        return tree_values
+
+    def Determine_category_of_object_view(self, chosen_object_uid, tree_values):
+        ''' Determine kind of chosen object and as a consequence models and views
+        '''
         description_text = ['description', 'beschrijving']
         obj_descr_title  = ['Information about ', 'Informatie over ']
         
-        cur_item = self.network_tree.focus()
-        item_dict = self.network_tree.item(cur_item)
-        values = list(item_dict['values'])
-        #print('Network object_detail_view:', cur_item, values)
-        if len(values) > 0:
-            if sel.num == 1:
-                chosen_object_uid = values[0]
-            else:
-                chosen_object_uid = values[4]
-            if chosen_object_uid != '':
-                selected_object   = self.gel_net.uid_dict[str(chosen_object_uid)]
+        if chosen_object_uid != '':
+            selected_object   = self.gel_net.uid_dict[str(chosen_object_uid)]
 
-                # If info_kind is a description then display the destription in messagebox
-                if values[8] in description_text:
-                    print('Information {} is not presented on a carrier but is as follows:\n   {}'.\
-                          format(values[5], selected_object.description))
-                    messagebox.showinfo(obj_descr_title[self.lang_index] + selected_object.name, \
-                                        selected_object.description)
+            # If info_kind is a description then display the destription in messagebox
+            if len(tree_values) > 8 and tree_values[8] in description_text:
+                print('Information {} is not presented on a carrier but is as follows:\n   {}'.\
+                      format(tree_values[5], selected_object.description))
+                messagebox.showinfo(obj_descr_title[self.GUI_lang_index] + selected_object.name, \
+                                    selected_object.description)
+            else:
+                print('Display object details of: {}'.format(selected_object.name))
+                if selected_object.category in self.gel_net.categories_of_kinds:
+                    self.Define_and_display_kind_detail_view(selected_object)
                 else:
-                    print('Display object details of: {}'.format(selected_object.name))
-                    if selected_object.category in self.gel_net.categories_of_kinds:
-                        self.Define_and_display_kind_detail_view(selected_object)
-                    else:
-                        self.Define_and_display_individual_detail_view(selected_object)
-                
-                if len(self.gel_net.info_model) > 0:
-                    self.Define_and_display_documents()
+                    self.Define_and_display_individual_detail_view(selected_object)
+            
+            if len(self.gel_net.info_model) > 0:
+                self.Define_and_display_documents()
 
 #------------------------------------------------------------------------
     def Kind_detail_view_left(self, sel):
@@ -1566,7 +1687,7 @@ File is saved under name <QueryResults.csv')
         if values[7] in description_text:
             print('Information {} is not presented on a carrier but is as follows:\n   {}'.\
                   format(values[4], selected_object.description))
-            messagebox.showinfo(obj_descr_title[self.lang_index] + selected_object.name, \
+            messagebox.showinfo(obj_descr_title[self.GUI_lang_index] + selected_object.name, \
                                 selected_object.description)
         else:                                       
             print('Display kind details of: {}'.format(selected_object.name))
@@ -1641,6 +1762,9 @@ then click right button')
             print('There is no right hand object to be displayed')
 #------------------------------------------------------------------------
     def Prod_detail_view_left(self, sel):
+        self.Prod_detail_view_left_button()
+        
+    def Prod_detail_view_left_button(self):
         """ Find the selected left hand individual object from a user selection with left button
             in the prod_table that is displayed in the prod_tree view."""
         description_text = ['description', 'beschrijving']
@@ -1657,7 +1781,7 @@ then click right button')
                 if values[7] in description_text:
                     print('Information {} is not presented on a carrier but is as follows:\n   {}'.\
                           format(values[4], selected_object.description))
-                    messagebox.showinfo(obj_descr_title[self.lang_index] + selected_object.name, \
+                    messagebox.showinfo(obj_descr_title[self.GUI_lang_index] + selected_object.name, \
                                         selected_object.description)
                 else:                                       
                     print('Display product details of: {}'.format(selected_object.name))
@@ -1684,34 +1808,29 @@ then click right button')
         #print('Prod_detail_middle:', sel.type, sel.keysym, cur_item, values, type(values[1])) #[1], values[1], values[2:]
         
         if len(values) > 0:
-            if values[1] != '':
-                selected_object   = self.gel_net.uid_dict[str(values[1])]
-                #print('sel.type', sel.type, sel.keysym, sel.char)
-                # Verify sel.type being either 'ButtonPress' for display of taxonomy
+            kind_uid = str(values[1])
+            individual_object_uid = str(values[0])
+            if kind_uid != '':
+                # Verify sel.type being either 'Button-2 Press' for display of taxonomy
                 # or 'KeyPress' with sel.keysym = 'c' (for display for classification by selection of subtype)
+                #print('sel.type', sel.type, sel.keysym, sel.char)
                 if sel.keysym == 'c':
-                    self.modification = 'classification started'
-                    self.gel_net.modified_object = self.gel_net.uid_dict[str(values[0])]
-                    print('Present taxonomy of kind: {} that classifies {} for selection of a subtype'.\
-                          format(selected_object.name, self.gel_net.modified_object.name))
-                    
-                    # Formulate query_spec including conditions from aspects of individual, if any
-                    self.query.Formulate_query_spec_for_individual(selected_object)
-                    self.query.Create_query_file()
-                    self.query.Interpret_query_spec()
+                    # Perform a classification process by display the taxonomy of kind
+                    # and selection of one of its subtypes
+                    self.Classification_of_individual_thing(individual_object_uid, kind_uid)
                 else:
-                    # Mouse ButtonPress: Build views for selected object (kind) and display views
-                    print('Display taxonomy of kind: {}'.format(selected_object.name))
-                obj_list = []
-                obj_list.append(selected_object)
-                self.gel_net.Build_product_views(obj_list)
-                # Display taxonomy in taxon view
-                self.Define_and_display_taxonomy_of_kinds()
-                # Display possibilities of kind in possibilities view
-                self.Define_and_display_possibilities_of_kind()
+                    # Mouse Button-2 Press: Build views for selected kind and display views
+                    print('Display taxonomy and possibilities of kind: {}'.format(selected_object.name))
+                    obj_list = []
+                    obj_list.append(selected_object)
+                    self.gel_net.Build_product_views(obj_list)
+                    # Display taxonomy in taxon view
+                    self.Define_and_display_taxonomy_of_kinds()
+                    # Display possibilities of kind in possibilities view
+                    self.Define_and_display_possibilities_of_kind()
 
-                if len(self.gel_net.info_model) > 0:
-                    self.Define_and_display_documents()
+                    if len(self.gel_net.info_model) > 0:
+                        self.Define_and_display_documents()
             else:
                 print('Kind of object is unknown.')
         else:
@@ -1780,13 +1899,18 @@ then click right button')
         elif self.modification == 'classification started':
             # if sel.type = 'KeyPress' with sel.keysym = 'c' then 
             # Append selected classifier to modified_object, and add classification relation
-            self.gel_net.Add_classification_relation(self.gel_net.modified_object, selected_object)
+            if sel.keysym == 'c':
+                self.gel_net.Add_classification_relation(self.gel_net.modified_object, selected_object)
 
-            # Display modified product view
-            self.modification = 'classification completed'
-            self.Define_and_display_individual_detail_view(self.gel_net.modified_object)
-            print('Classification of {} by classifier {} is added to the network'.\
-                  format(self.gel_net.modified_object.name, selected_object.name))
+                # Display modified product view
+                self.modification = 'classification completed'
+                self.Define_and_display_individual_detail_view(self.gel_net.modified_object)
+                print('Classification of {} by classifier {} is added to the network'.\
+                      format(self.gel_net.modified_object.name, selected_object.name))
+            else:
+                self.modification = 'classification completed'
+                print('Classification of {} by classifier {} is NOT performed'.\
+                      format(self.gel_net.modified_object.name, selected_object.name))
 
 #-------------------------------------------------------------------------        
     def Summ_detail_view(self, sel):
@@ -1926,7 +2050,7 @@ then click right button')
             if info_row[5] in description_text:
                 #print('Information {} is not presented on a carrier but is as follows:\n   {}'.\
                 #      format(info_row[4], info_row[2]))
-                messagebox.showinfo(description_title[self.lang_index] + info_row[6], info_row[2])
+                messagebox.showinfo(description_title[self.GUI_lang_index] + info_row[6], info_row[2])
 
             # Verify whether file name (info_row[7]) is presented on a file
             # And verify whether the file name has a file extension (indicated by a dot (.)) 
@@ -1981,7 +2105,7 @@ if __name__ == "__main__":
     main = Main()
     main.gel_net = Semantic_network()
     views = Display_views(main)
-    views.lang_index = 0
+    views.GUI_lang_index = 0
     views.lang_name = 'English'
     views.categoryInFocus = 'kind'
     
