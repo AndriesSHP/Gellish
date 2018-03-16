@@ -1,15 +1,17 @@
+# -*- coding: utf-8 -*-
+
 # Base ontology and domain dictionaries directories
 dict_dirs = ["../GellishDictionary"]
 
 # Base ontology file
-base_onto_file_name = "Formal language definition base-UTF-8.csv"
+base_onto_file_name = "Formal language definition base-UTF-8-subset.csv"
 
 # Taxonomic Dictionary files
 dict_file_names = [
 ##    "extended language definition-UTF-8.csv",\
-    "units of measures & currencies-UTF-8.csv",\
+    "units of measures & currencies-UTF-8-subset.csv",\
 ##    "units of measures - Special symbols-UTF-8.csv",\
-    "aspects & properties & qualities & laws-UTF-8.csv",\
+    "aspects & properties & qualities & laws-UTF-8-subset.csv",\
 ##    "information & documents & rules & identification & symbols-UTF-8.csv",\
 ##    "qualitative aspects & qualitative information-UTF-8.csv",\
 ##    "activities & events & processes-UTF-8.csv",\
@@ -25,25 +27,23 @@ dict_file_names = [
 ##    "rotating equipment & transport & solids handling-UTF-8.csv",\
 ##    "substances & materials of construction, fluids and solids-UTF-8.csv",\
 ##    "colors - RAL codes and names - multilingual-UTF-8.csv",\
-    "RDF, RDFS, OWL concepts-UTF-8.csv",\
+##    "RDF, RDFS, OWL concepts-UTF-8.csv",\
 ##    "EN 16323-2010 - Multi lingual Glossary of wastewater terms-UTF-8.csv"
-                   ]
+    ]
 
 # Knowledge, Requirements and Product type file paths
 model_dirs  = ["../GellishData"]
-#model_dirs  = ["NL modellen", "Kennis en vereistenmodellen",]
 model_file_names = [
     "Taxonomic Dictionary+Knowledge about Roads-UTF-8.csv",\
+##    "Kennisboek WEGEN - v5-UTF-8.csv"]
     ]
-#model_file_names = ["Kennisboek WEGEN - v5-UTF-8.csv"]
 
 # Product & Processes Models file paths
 prod_dirs  = ["../GellishData"]
-#prod_dirs  = ["NL modellen", "Product en procesmodellen",]
 prod_file_names = [
-    "Semantic model of a road network - UTF-8.csv",\
+##    "Semantic model of a road network - UTF-8.csv",\
+##    "Semantisch model van een Wegennet met Huis - v5.2-UTF-8.csv"
     ]
-#prod_file_names = ["Semantisch model van een WEG - v5.2-UTF-8.csv"]
 
 # Default output path name
 ini_out_path = r"../Data"
@@ -139,7 +139,7 @@ supertypeName = ['supertype','supertype']
 # initialize first line of relRolesTable(bin_rel, superRel, etc.
 initialRelRow = ['5935', '2850', '4729', 'relator', '4824', 'related', \
                  '730000', 'anything', '730000', 'anything']
-# The following lists should be generated from function DetermineSubtypeList(classUID)
+# The following lists should be generated from function Determine_subtype_list(classUID)
 # UIDs that define a taxonomy: subtypes of 1146:
 specialRelUIDs  = ['1146', '1726', '5277', '6022', '5396', '5683']
 # Some UIDs that are classification relations, being subtypes of 1225:

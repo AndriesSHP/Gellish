@@ -5,28 +5,28 @@ from tkinter.ttk import *
     whereby the parts of an occurrence are presented on a next page
 '''
 class Occurrences_diagram():
-    def __init__(self, root, gel_net):
-        self.root = root
+    def __init__(self, user_interface, gel_net):
+        self.root = user_interface.root
         self.gel_net = gel_net
-        self.GUI_lang_index = gel_net.GUI_lang_index
-        self.seq_table = gel_net.seq_table
-        self.involv_table  = gel_net.involv_table
-        #self.parts_of_occ_table = gel_net.parts_of_occ_table
-        self.part_whole_occs = gel_net.part_whole_occs
+        self.GUI_lang_index = user_interface.GUI_lang_index
+        self.seq_table = user_interface.views.seq_table
+        self.involv_table = user_interface.views.involv_table
+        #self.parts_of_occ_table = user_interface.views.parts_of_occ_table
+        self.part_whole_occs = user_interface.views.part_whole_occs
         
         self.drawings = []
-        self.sheets    = []
-        self.leftStrFrame  = []
+        self.sheets = []
+        self.leftStrFrame = []
         self.rightStrFrame = []
-        self.leftStrTree   = []
-        self.rightStrTree  = []
-        self.leftStrScroll  = []
+        self.leftStrTree = []
+        self.rightStrTree = []
+        self.leftStrScroll = []
         self.rightStrScroll = []
         self.draw_x_scroll = []
         self.draw_y_scroll = []
-        self.boxes    = []
-        self.lines    = []
-        self.part     = []
+        self.boxes = []
+        self.lines = []
+        self.part = []
         
     def Define_Notebook_for_drawings(self):
         """ Define a Notebook for drawings and call partRelList function."""
@@ -38,35 +38,38 @@ class Occurrences_diagram():
         heading = ['Activities according to IDEF0','Activiteiten volgens IDEF0']
         occWindow = Toplevel(self.root) # ,width=w,height=h
         occWindow.title(heading[self.GUI_lang_index])
-        self.screen_width  = occWindow.winfo_screenwidth() - 36
+        self.screen_width = occWindow.winfo_screenwidth() - 36
         self.screen_height = occWindow.winfo_screenheight() - 200
-        occWindow.configure(width=self.screen_width,height=self.screen_height)
-        occWindow.minsize(width=800,height=400)
-        occWindow.columnconfigure(0,weight=1)
-        #occWindow.columnconfigure(1,weight=1)
-        occWindow.rowconfigure(0,weight=1)
-        #occWindow.rowconfigure(1,weight=0)
+        occWindow.configure(width=self.screen_width, height=self.screen_height)
+        occWindow.minsize(width=800, height=400)
+        occWindow.columnconfigure(0, weight=1)
+        #occWindow.columnconfigure(1, weight=1)
+        occWindow.rowconfigure(0, weight=1)
+        #occWindow.rowconfigure(1, weight=0)
 
         occFrame = ttk.Frame(occWindow)  # columnspan
-        occFrame.columnconfigure(0,weight=1)
-        occFrame.rowconfigure(0,weight=1)
-        #occFrame.rowconfigure(1,weight=1)
-        occFrame.grid(column=0,row=0,sticky=NSEW) #pack(fill='both',side=TOP) # columnspan=2,
+        occFrame.columnconfigure(0, weight=1)
+        occFrame.rowconfigure(0, weight=1)
+        #occFrame.rowconfigure(1, weight=1)
+        occFrame.grid(column=0,row=0, sticky=NSEW) # columnspan=2,
         
-        self.occ_notebook  = ttk.Notebook(occFrame) #, height=600, width=1200)
-        self.occ_notebook.columnconfigure(0,weight=1)
-        self.occ_notebook.rowconfigure(0,weight=1)
-        #self.occ_notebook.rowconfigure(1,weight=1)
-        self.occ_notebook.grid(column=0,row=0,sticky=NSEW) #pack(fill='both') #  #
+        self.occ_notebook = ttk.Notebook(occFrame) #, height=600, width=1200)
+        self.occ_notebook.columnconfigure(0, weight=1)
+        self.occ_notebook.rowconfigure(0, weight=1)
+        #self.occ_notebook.rowconfigure(1, weight=1)
+        self.occ_notebook.grid(column=0, row=0, sticky=NSEW)
 
     #-----------------------------------------------------------
     def Create_occurrences_diagram(self, top_occs):
-        """ Prepare for the drawing of one or more IDEF0 sheets about one hierarchy of occurrences
+        """ Prepare for the drawing of one or more IDEF0 sheets
+            about one hierarchy of occurrences
             in the product model.
             nrOfOccs: length of chain of sequence occurrences.
-            occ_table:  same columns as exprTable with all relations that deal with occurrences in the product model.
-            seq_table:  previusUID, previusName, nextUID,     nextName
-            involv_table:   occurUID,   occurName,   involvedUID, involvedName, roleUID, roleName of involved object.
+            occ_table: same columns as exprTable with all relations
+                       that deal with occurrences in the product model.
+            seq_table: previusUID, previusName, nextUID, nextName
+            involv_table: occurUID, occurName, involvedUID, involvedName,
+                          roleUID, roleName of involved object.
             part_whole_occs: whole, part, kind_of_part
         """
         test = False
@@ -82,7 +85,7 @@ class Occurrences_diagram():
 ##            # If uid of whole not in the list of part_uids, then append
 ##            if  row2[0] != partRelList and row2[1] not in topNames:
 ##                top_occs.append(row2[0])
-##                topNames.append(row2[1])    # wholeName is a name of a top occurrence
+##                topNames.append(row2[1])  # wholeName is a name of a top occurrence
 
         if len(top_occs) == 0:
             if test: print('*** No top occurrence identified')
@@ -102,7 +105,8 @@ class Occurrences_diagram():
     #--------------------------------------------------------
     def MultipleSheets(self, parentID, occs):
         """ Determine nr of sheets for one drawing and call DrawingOfOneSheet
-            totalNrOfBoxes to be drawn on one drawing may require more than one drawing sheet.
+            totalNrOfBoxes to be drawn on one drawing
+            may require more than one drawing sheet.
         """
         totalNrOfBoxes = len(occs)
         maxBoxesPerSheet = 7
@@ -112,7 +116,8 @@ class Occurrences_diagram():
         intSheet = int(nrOfSheets)
         rest = totalNrOfBoxes - (intSheet-1)*maxBoxesPerSheet
         shText  = str(parentID)
-        #print('nrOfSheets on level,totalNrOfBoxes,rest:',intSheet,totalNrOfBoxes,occs[0].name,rest,shText)
+        #print('nrOfSheets on level, totalNrOfBoxes, rest:',
+        #      intSheet, totalNrOfBoxes, occs[0].name, rest, shText)
         for shNr in range(1,intSheet+1):
             if shNr == intSheet:
                 nrBoxesPerSheet = rest
@@ -146,7 +151,7 @@ class Occurrences_diagram():
                     parts_present = True
                     #nrOfOccs = nrOfOccs + 1     # nr of occurrences on sheet
                     parts.append(part)
-                    #partNames.append(part.name)    # wholeName is a name of a top occurrence
+                    #partNames.append(part.name) # wholeName is a name of a top occurrence
     # Draw part occurrences on sheet(s)
             if parts_present is True:
                 self.MultipleSheets(childID, parts)
@@ -183,7 +188,8 @@ class Occurrences_diagram():
         self.occ_notebook.add(self.drawings[self.sheet_nr], text=sheetName, sticky=NSEW)
         self.occ_notebook.insert("end",self.drawings[self.sheet_nr],sticky=NSEW)
 
-        #self.sheets = Canvas(drawing, width=self.screen_width, height=self.screen_height,background='#ddf')
+        #self.sheets = Canvas(drawing, width=self.screen_width, \
+        #                     height=self.screen_height, background='#ddf')
         self.sheets.append(Canvas(self.drawings[self.sheet_nr], width=self.screen_width-100,\
                                   height=self.screen_height-200, background='#ddf')) # Canvas
         self.sheets[self.sheet_nr].grid(column=0,row=0,columnspan=2,sticky=NSEW)
@@ -193,34 +199,40 @@ class Occurrences_diagram():
         #self.sheets[self.sheet_nr].rowconfigure(1,weight=1)
 
         self.draw_y_scroll.append(ttk.Scrollbar(self.drawings[self.sheet_nr],\
-                                                orient=VERTICAL,command=self.sheets[self.sheet_nr].yview))
+                                                orient=VERTICAL,\
+                                                command=self.sheets[self.sheet_nr].yview))
         self.draw_y_scroll[self.sheet_nr].grid (column=2,row=0,sticky=NS+E)
         self.sheets[self.sheet_nr].config(yscrollcommand=self.draw_y_scroll[self.sheet_nr].set)
         self.draw_x_scroll.append(ttk.Scrollbar(self.drawings[self.sheet_nr],\
-                                                orient=HORIZONTAL,command=self.sheets[self.sheet_nr].xview))
+                                                orient=HORIZONTAL,\
+                                                command=self.sheets[self.sheet_nr].xview))
         self.draw_x_scroll[self.sheet_nr].grid (column=0,row=1,columnspan=2,sticky=S+EW)
         self.sheets[self.sheet_nr].config(xscrollcommand=self.draw_x_scroll[self.sheet_nr].set)
 
     # Stream Frames - left and right
         self.leftStrFrame.append(ttk.Frame(self.drawings[self.sheet_nr]))
-        self.leftStrFrame[self.sheet_nr].columnconfigure(0,weight=1)
-        self.leftStrFrame[self.sheet_nr].rowconfigure(0,weight=0)
-        self.leftStrFrame[self.sheet_nr].rowconfigure(1,weight=1)
-        self.leftStrFrame[self.sheet_nr].grid(column=0,row=2,sticky=NSEW) #pack(fill='both',side=BOTTOM) #  #
+        self.leftStrFrame[self.sheet_nr].columnconfigure(0, weight=1)
+        self.leftStrFrame[self.sheet_nr].rowconfigure(0, weight=0)
+        self.leftStrFrame[self.sheet_nr].rowconfigure(1, weight=1)
+        self.leftStrFrame[self.sheet_nr].grid(column=0, row=2, sticky=NSEW)
 
         self.rightStrFrame.append(ttk.Frame(self.drawings[self.sheet_nr]))
-        self.rightStrFrame[self.sheet_nr].columnconfigure(0,weight=1)
-        self.rightStrFrame[self.sheet_nr].rowconfigure(0,weight=0)
-        self.rightStrFrame[self.sheet_nr].rowconfigure(1,weight=1)
-        self.rightStrFrame[self.sheet_nr].grid(column=1,row=2,sticky=NSEW) #pack(fill='both',side=BOTTOM) #  #
+        self.rightStrFrame[self.sheet_nr].columnconfigure(0, weight=1)
+        self.rightStrFrame[self.sheet_nr].rowconfigure(0, weight=0)
+        self.rightStrFrame[self.sheet_nr].rowconfigure(1, weight=1)
+        self.rightStrFrame[self.sheet_nr].grid(column=1, row=2, sticky=NSEW)
 
-        self.leftStrTree.append(ttk.Treeview(self.leftStrFrame[self.sheet_nr],columns=('strNr','strName','strUID','strKind'),\
-                                        displaycolumns     =('strNr','strName','strUID','strKind'),\
-                                        selectmode='browse',height=5))
+        self.leftStrTree.append(ttk.Treeview(
+            self.leftStrFrame[self.sheet_nr], \
+            columns=('strNr','strName','strUID','strKind'),\
+            displaycolumns =('strNr','strName','strUID','strKind'),\
+            selectmode='browse',height=5))
 
-        self.rightStrTree.append(ttk.Treeview(self.rightStrFrame[self.sheet_nr],columns=('strNr','strName','strUID','strKind'),\
-                                         displaycolumns      =('strNr','strName','strUID','strKind'),
-                                         selectmode='browse',height=5))
+        self.rightStrTree.append(ttk.Treeview(
+            self.rightStrFrame[self.sheet_nr],\
+            columns=('strNr','strName','strUID','strKind'),\
+            displaycolumns=('strNr','strName','strUID','strKind'),
+            selectmode='browse',height=5))
 
         sNrText = ['Number','Nummer']
         strText = ['Stream Name','Stroomnaam']
@@ -279,9 +291,9 @@ class Occurrences_diagram():
         outputUID = '640019'      # output role
         inputUID  = '640016'      # input role
         actorUID  = '5036'        # actor role (supertype of mechanism)
-        subOutputs, subOutputUIDs = self.gel_net.DetermineSubtypeList(outputUID)
-        subInputs,  subInputUIDs  = self.gel_net.DetermineSubtypeList(inputUID)
-        subActors,  subActorUIDs  = self.gel_net.DetermineSubtypeList(actorUID)
+        subOutputs, subOutputUIDs = self.gel_net.Determine_subtype_list(outputUID)
+        subInputs,  subInputUIDs  = self.gel_net.Determine_subtype_list(inputUID)
+        subActors,  subActorUIDs  = self.gel_net.Determine_subtype_list(actorUID)
 
         thick = 2
         centerX  = []            # X-Center of canvas

@@ -2,36 +2,35 @@
 
 import sys
 import pickle
-import tkinter as tk
+#import tkinter as tk
+
 import SystemUsers as SU
-from MainView import Main_view
-from ModelViews import Display_views
-from Expression_list import Expression_list
+from User_interface import User_interface
 from SemanticNetwork import Semantic_Network
-from QueryModule import Query
-from QueryViews import Query_view
+#from Display_views import Display_views
+#from Query import Query
+#from QueryViews import Query_view
 
 #-------------------------------------------------
 class Main():
     def __init__(self):
         self.net_name = "Gellish semantic network"
         self.pickle_file_name = "Gellish_net_db"
-        self.query_spec = []
-        self.extended_query = False
+##        self.query = None
+##        self.query_spec = []
         self.gel_net = None
         self.user = None
-        self.exprs = None
-        self.views = None
-        self.use_GUI = False
-        self.GUI_lang_names = ("English", "Nederlands")
-        self.lang_uid_dict = {"English": '910036', "Nederlands": '910037'}
+##        self.views = None
+##        self.use_GUI = False
+        #self.GUI_lang_names = ("English", "Nederlands")
+        #self.lang_uid_dict = {"English": '910036', "Nederlands": '910037'}
 
-        self.root = None
-        self.GUI = None
+        #self.root = None
+        self.user_interface = None
 
-        graphic = 'y' #input('GUI (y/n):')
-        if graphic == 'y':
-            self.use_GUI = True
+##        graphic = 'y' #input('GUI (y/n):')
+##        if graphic == 'y':
+##            self.use_GUI = True
 
 #-----------------------------------------------------
     def start_up(self, user_db):
@@ -42,47 +41,31 @@ class Main():
             sys.exit(0)
 
     def start_net(self):
-        # Import gel_net semantic network from Pickle or create new network from files
+        ''' Start user interaction and
+            Import gel_net semantic network from Pickle
+            or create new network from files
+        '''
+        # Load the semantic network from pickle, if available
         self.load_net()
         if self.gel_net is None:
-            # Initialize a Semantic Network with a given name
-            self.create_net()
-        else:
-            # Initialized expression list
-            self.exprs = Expression_list(self.gel_net)
-
-    def create_net(self):
-        # Create (c) means create a new network by
-        # initializing a Semantic Network with a given name
-        self.gel_net = Semantic_Network(self.net_name)
-
-        # Set GUI language default = Dutch: GUI_lang_names[1]
-        self.gel_net.Set_GUI_language(self.GUI_lang_names[1])
-
-        # Initialized expression list
-        self.exprs = Expression_list(self.gel_net)
-
-        # Create a base dictionary of kinds of relations from bootstrapping
-        self.gel_net.Create_base_reltype_objects()
-
-        # Build a new network from files that contain a language definition
-        # and store the content of the files in the database
-        self.exprs.Build_new_network() #, self.Gel_db)
-        print("Network '{}' is built.".format(self.net_name))
-
-    def dump_net(self):
-        # Dump semantic network as pickle binary file.
-        self.gel_net.save_pickle_db(self.pickle_file_name)
-        #self.save_pickle_db(self.pickle_file_name)
-        print("Network '{}' is saved in file {}.".format(self.net_name, self.pickle_file_name))
+            # Create a Semantic Network with a given name
+            # from bootstrapping and from files
+            self.gel_net = Semantic_Network(self.net_name)
+            # Build the semantic network
+            self.gel_net.build_network()
+        # Create and open a user interface
+        self.user_interface = User_interface(self.gel_net)
 
     def load_net(self):
         # Load semantic network from pickle binary file.
         self.load_pickle_db(self.pickle_file_name)
         if self.gel_net is None:
-            print("Network '{}' is not loaded. File is not found".format(self.pickle_file_name))
+            print("Network '{}' is not loaded. File is not found".\
+                  format(self.pickle_file_name))
         else:
-            print("Network '{}' is loaded and is composed of the following files:".format(self.pickle_file_name))
+            print("Network '{}' is loaded "
+                  "and is composed of the following files:".\
+                  format(self.pickle_file_name))
             for file in self.gel_net.Gellish_files:
                 print('- {}'.format(file.path_and_name))
 
@@ -90,66 +73,40 @@ class Main():
         try:
             infile = open(fname, "br")
         except FileNotFoundError:
-            print("Input pickle file could not be found: %s" % fname)
+            print("Input pickle file could not be found: {}". \
+                  format(fname))
             return()
         try:
             self.gel_net = pickle.load(infile)
             #self = pickle.load(f)
         except EOFError:
-            print("Input pickle file could not be read: %s" % fname)
+            print("Input pickle file could not be read: {}". \
+                  format(fname))
         else:
             infile.close()
 
-    def read_file(self):
-        ''' Verify file(s) means read one or more files, verify their content
-        # and load them in various tables in an in-:memory: database
-        # and extent the semantic network with its content '''
-        self.exprs.read_verify_and_merge_files()
+##    def start_gui(self):
+##        self.root = tk.Tk()
+##        self.user_interface = User_interface(self)
+##        # Create a query object
+##        self.query = Query(self.gel_net, self)
+##        # Create display views objects and initialize notebook
+##        self.views = Display_views(main)
+##        tk.mainloop()
 
-    def start_gui(self):
-        main.root = tk.Tk()
-        main.GUI = Main_view(self)
-        # Create a query object
-        self.query = Query(self.gel_net, self)
-        main.views = Display_views(self)
-        tk.mainloop()
+##    def read_file(self):
+##        ''' Verify file(s) means read one or more files, verify their content
+##            and extent the semantic network with its content
+##        '''
+##        self.gel_net.read_verify_and_merge_files()
 
-    def verify_presence_of_network(self):
-        # Verify presence of a semantic network, if not present then create them
-        # build a new network from files
-        if self.gel_net is None:
-            self.gel_net.Create_base_reltype_objects()
-            self.exprs.Build_new_network() #, self.Gel_db)
-
-    def search_net(self):
-        self.extended_query = False
-        self.query_the_network()
-
-    def query_net(self):
-        self.extended_query = True
-        self.query_the_network()
-
-    def query_the_network(self):
-        # Query the semantic network
-        if self.gel_net is None:
-            print('First create a semantic network')
-        else:
-            # Enter and Interpret query
-            if self.use_GUI:
-                q_view = Query_view(self)
-                # Specify a query via GUI
-                q_view.Query_window()
-            else:
-                # Specify a query via command line
-                self.query.Specify_query_via_command_line()
-
-                # Interpret and execute query
-                # Search for data about kinds or about individuals and display in various views
-                self.query.Interpret_query_spec()
-
-    def stop_quit(self):
-        # Terminate the program
-        sys.exit()
+##    def verify_presence_of_network(self):
+##        # Verify presence of a semantic network,
+##        #   if not present then create them
+##        # build a new network from files
+##        if self.gel_net is None:
+##            self.gel_net.Create_base_reltype_objects()
+##            self.gel_net.Build_new_network()
 
 #-----------------------------------------------
 if __name__ == "__main__":
@@ -161,27 +118,37 @@ if __name__ == "__main__":
     main = Main()
     main.start_up(user_db)
     main.start_net()
-    #Expression_list(main.gel_net)
 
-    if main.use_GUI:
-        main.start_gui()
-    else:
-        # Select one of the following actions
-        action = input("\nEnter action \n  Create network     (c) \
-        \n  Modify existing db (m) \n  Verify user table  (v) \n  Query existing db  (q) \
-        \n  Dump network db    (d) \n  Load network db    (l) \n  Stop and Exit      (s): ")
-        while action != "s":
-            if action == 'c':
-                main.gel_net = Semantic_Network(main.net_name)
-                main.create_net()
-    ##        if action == 'r': main.read_db()
-    ##        if action == 'm': main.modify_db()
-            if action == 'v': main.read_file()
-            if action == 'q': main.query_net()
-            if action == 'd': main.dump_net()
-            if action == 'l': main.load_net()
-            if action == 's': main.stop_quit()
-
-            action = input("\nEnter action \n  Create network     (c) \n  Read database      (r) \
-            \n  Modify existing db (m) \n  Verify user table  (v) \n  Query existing db  (q) \
-            \n  Dump network db    (d) \n  Load network db    (l) \n  Stop and Exit      (s): ")
+##    if main.use_GUI:
+##        main.start_gui()
+##    else:
+##        # Select one of the following actions
+##        action = input('\nEnter action '
+##                       '\n  Create network     (c) '
+##                       '\n  Modify existing db (m) '
+##                       '\n  Verify user table  (v) '
+##                       '\n  Query existing db  (q) '
+##                       '\n  Dump network db    (d) '
+##                       '\n  Load network db    (l) '
+##                       '\n  Stop and Exit      (s): ')
+##        while action != "s":
+##            if action == 'c':
+##                main.gel_net = Semantic_Network(main.net_name)
+##                main.gel_net.build_network()
+##    ##        if action == 'r': main.read_db()
+##    ##        if action == 'm': main.modify_db()
+##            if action == 'v': main.read_file()
+##            if action == 'q': main.query_net()
+##            if action == 'd': main.dump_net()
+##            if action == 'l': main.load_net()
+##            if action == 's': main.stop_quit()
+##
+##            action = input('\nEnter action '
+##                           '\n  Create network     (c) '
+##                           '\n  Read database      (r) '
+##                           '\n  Modify existing db (m) '
+##                           '\n  Verify user table  (v) '
+##                           '\n  Query existing db  (q) '
+##                           '\n  Dump network db    (d) '
+##                           '\n  Load network db    (l) '
+##                           '\n  Stop and Exit      (s): ')

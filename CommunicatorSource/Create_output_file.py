@@ -74,12 +74,11 @@ def Open_output_file(expressions, subject_name, lang_name, serialization):
     if output_file == '':
         output_file = 'Results.' + serialization
         if lang_name == 'Nederlands':
-            print('\n***De filenaam voor opslaan is blanco of the file selectie is gecancelled.\
-De file is opgeslagen met de naam ' + output_file)
+            print('***De filenaam voor opslaan is blanco of the file selectie is gecancelled. '
+                  'De file is opgeslagen met de naam ' + output_file)
         else:
-            print('\n***File name for saving is blank or file selection is cancelled.\
-File is saved under name ' + output_file)
-
+            print('***File name for saving is blank or file selection is cancelled. '
+                  'The file is saved under name ' + output_file)
     Save_expressions_in_file(expressions, output_file, header1, serialization)
 #---------------------------------------------------------
 def Save_expressions_in_file(expressions, output_file, header1, serialization):
@@ -89,7 +88,7 @@ def Save_expressions_in_file(expressions, output_file, header1, serialization):
     if serialization == 'csv':
         # Save the result_expr expressions in a CSV file, preceeded by three header lines.
         try:
-            f = open(output_file,mode='w',newline='', encoding='utf-8')
+            f = open(output_file, mode='w',newline='', encoding='utf-8')
             fileWriter = csv.writer(f, dialect='excel', delimiter=';') 
 
             # Write header rows and expressions
@@ -109,9 +108,9 @@ def Save_expressions_in_file(expressions, output_file, header1, serialization):
     elif serialization in ['xml', 'n3']:
         g1 = Graph()
 
-        uri = "http://www.formeelnederlands.nl/woordenboek#"
-        gel = Namespace("http://www.formeelnederlands.nl/woordenboek#")
-        g1.bind('gel',"http://www.formeelnederlands.nl/woordenboek#")
+        uri = "http://www.formalenglish.net/dictionary" #"
+        gel = Namespace("http://www.formalenglish.net/dictionary") #")
+        g1.bind('gel',"http://www.formalenglish.net/dictionary") #")
 
         #rdfs = {1146: 'subClassOf'}
 
@@ -146,7 +145,6 @@ def Save_expressions_in_file(expressions, output_file, header1, serialization):
     # Open written file in a viewer
     os.startfile(output_file,'open')
 
-    
 def Convert_numeric_to_integer(numeric_text):
     ''' Convert a numeric string into integer value removing dots(.), commas (,) and spaces ( )
         If string is not numeric, return string and integer = False
@@ -164,6 +162,7 @@ def Convert_numeric_to_integer(numeric_text):
             integer = False
             return numeric_text, integer
     return int_val, integer
+
 
 def Message(GUI_lang_index, mess_text_EN, mess_text_NL):
     if GUI_lang_index == 1:

@@ -3,142 +3,131 @@ from tkinter import *
 from tkinter.ttk import *
 from tkinter import messagebox, filedialog
 from operator import itemgetter
+
 from Bootstrapping import ini_out_path
 from Expr_Table_Def import *
-#from SemanticNetwork import Semantic_Network
-from QueryModule import Query
-from ModelViews import Display_views
+from Query import Query
+from Display_views import Display_views
+from Anything import Anything
 from Create_output_file import Create_gellish_expression, Convert_numeric_to_integer, \
-     Open_output_file, Message
+     Open_output_file
 
 class Query_view():
-    ''' Defines a query window for specification of queries in dictionary and models.'''
-    def __init__(self, main):
-        self.gel_net = main.gel_net
-        self.main = main
-        self.query = main.query
-        self.root = main.root
+    ''' Defines a query window
+        for specification of queries in dictionary and models.
+    '''
+    def __init__(self, gel_net, user_interface):
+        #self.main = main
+        self.gel_net = gel_net
+        self.user_interface = user_interface
+        self.views = user_interface.views
+        self.query = user_interface.query
+        self.unknown_quid = user_interface.unknown_quid
+        self.root = user_interface.root
+        self.GUI_lang_pref_uids = user_interface.GUI_lang_pref_uids
+        self.comm_pref_uids = user_interface.comm_pref_uids
 
-        self.lang_name  = self.gel_net.GUI_lang_name
-        self.lang_uid   = self.gel_net.GUI_lang_uid
-        self.lang_index = self.gel_net.GUI_lang_index
+        self.GUI_lang_name = self.user_interface.GUI_lang_name
+        self.GUI_lang_uid = self.user_interface.GUI_lang_uid
+        self.GUI_lang_index = self.user_interface.GUI_lang_index
 
-        #self.views = Display_views(self.main)
-        self.gel_net.lh_options  = []
-        self.gel_net.rh_options  = []
-        self.gel_net.rel_options = []
-        self.test = False
+        self.lh_options = []
+        self.rh_options = []
+        self.rel_options = []
+        self.unknowns = [] # List of unkown objects that are denoted by an unknown in a query
+        self.names_of_unknowns = []
+        self.unknown_kind = ['unknown kind' ,'onbekende soort']
+        
+        # Set default terms for query in user interface
+        self.lh_terms = ['elektriciteitskabel', '3 aderige kabel', 'YMvK kabel', 'breedte', \
+                         'materiaal','isolatieplaat']
+        self.lh_terms.sort()
+        self.rel_terms = ['is een soort', \
+                          'kan als aspect hebben een', \
+                          'moet als aspect hebben een',\
+                          'heeft per definitie als aspect een', \
+                          'heeft per definitie een schaalwaarde gelijk aan',\
+                          'heeft per definitie een schaalwaarde kleiner dan',\
+                          'heeft per definitie een schaalwaarde groter dan',\
+                          'is per definitie gekwalificeerd als']
+        self.rel_terms.sort()
+        self.rh_terms = self.lh_terms[:]
+        #self.rh_terms.sort() # copy of lh_terms that are already sorted
+        self.uoms = ['m', 'mm', 'bar', 'deg C']
+        self.uoms.sort()
+
         self.reply_lang_names = ("English", "Nederlands",  "American",  "Chinese")
         self.reply_language = ['The reply language is', 'De antwoordtaal is']
         
     def Query_window(self):
-        """Specify a Query with unknowns and possible multiline conditions."""
-        self.test = False
+        """ Specify a Search term or UID
+            or a Query expression with unknowns and possible multiline conditions.
+            Display options for found objects that satisfy the search or query.
+            Display definition and aliases and translations of selected option.
+            Initiate seach for information about selected option
+            by selecting confirmation button.
+        """
 
-    # Define defaults (initial options) for query
-        lhTermListEN  = ['?','Paris', 'Eiffel tower', 'France']
-        relTermListEN = ['?','is related to (a)','is related to', 'is classified as a', 'is located in', 'has as part']
-        rhTermListEN  = ['?','city', 'tower', 'country']
-        uomTermListEN = ['','inch','mi','s', 'degC', 'psi']
-
-        lhTermListNL  = ['?','N51','Groningen','Parijs', 'Eiffeltoren', 'Frankrijk']
-        relTermListNL = ['?','is een soort', 'is gerelateerd aan (een)', 'is gerelateerd aan', \
-                         'is geclassificeerd als een', 'bevindt zich in', 'heeft als deel']
-        rhTermListNL  = ['?','isolatieplaat','weg','dorp','stad','toren','land']
-        uomTermListNL = ['','mm','m', 's','°C','bar']
-
-        if self.lang_name == 'Nederlands' or 'Dutch':
-            lhTermListD  = lhTermListNL
-            relTermListD = relTermListNL
-            rhTermListD  = rhTermListNL
-            uomTermListD = uomTermListNL
-        else:
-            lhTermListD  = lhTermListEN
-            relTermListD = relTermListEN
-            rhTermListD  = rhTermListEN
-            uomTermListD = uomTermListEN
-
-        if self.main.extended_query:
+        if self.user_interface.extended_query:
             query_text = ["Query","Vraag"]
         else:
             query_text = ["Search","Zoek"]
         self.QWindow = Toplevel(self.root)
-        self.QWindow.title(query_text[self.lang_index])
+        self.QWindow.title(query_text[self.GUI_lang_index])
+        self.QWindow.columnconfigure(0, weight=1)
+        self.QWindow.rowconfigure(0, weight=1)
+
+        # Specify query_frame
         self.query_frame = ttk.Frame(self.QWindow)
-        self.query_frame.grid (column=0,row=0,sticky=NSEW)
-        self.query_frame.rowconfigure(35,weight=1)
-        
-        # Set default values in StringVar's
-        self.q_lh_name_str  = StringVar(value=lhTermListD[0])
-        self.q_rel_name_str = StringVar(value=relTermListD[0])
-        self.q_rh_name_str  = StringVar(value=rhTermListD[0])
-        self.q_uom_name_str = StringVar(value=uomTermListD[0])
-        self.q_lh_uid_str   = StringVar(value='')
-        self.q_rel_uid_str  = StringVar(value='')
-        self.q_rh_uid_str   = StringVar(value='')
-        self.q_uom_uid_str  = StringVar(value='')
-        
-        lhCondQStr  = []
-        relCondQStr = []
-        rhCondQStr  = []
-        uomCondQStr = []
-        for i in range(0,3):
-            lhCondQStr.append (StringVar())
-            relCondQStr.append(StringVar())
-            rhCondQStr.append (StringVar())
-            uomCondQStr.append(StringVar())
-        
-        lhTerm  = ["Left hand term"      ,"Linker term"]
-        relTerm = ["Relation type phrase","Relatietype frase"]
-        rhTerm  = ["Right hand term"     ,"Rechter term"]
-        uomTerm = ["Unit of measure"     ,"Meeteenheid"]
+        self.query_frame.grid(column=0, row=0, sticky=NSEW)
 
-    # Query variables widgets definition   
-        lhNameLbl   = ttk.Label(self.query_frame,text=lhTerm [self.lang_index])
-        lhUIDLbl    = ttk.Label(self.query_frame,text='UID:')
-        if self.main.extended_query:
-            relNameLbl  = ttk.Label(self.query_frame,text=relTerm[self.lang_index])
-            rhNameLbl   = ttk.Label(self.query_frame,text=rhTerm [self.lang_index])
-            uomNameLbl  = ttk.Label(self.query_frame,text=uomTerm[self.lang_index])
-        self.q_lh_name_widget  = ttk.Combobox(self.query_frame,textvariable=self.q_lh_name_str ,\
-                                              values=self.gel_net.lh_terms ,width=30)
-        #if self.main.extended_query:
-        self.q_rel_name_widget = ttk.Combobox(self.query_frame,textvariable=self.q_rel_name_str,\
-                                              values=self.gel_net.rel_terms,width=40)
-        self.q_rh_name_widget  = ttk.Combobox(self.query_frame,textvariable=self.q_rh_name_str ,\
-                                              values=self.gel_net.rh_terms ,width=30)
-        self.q_uom_name_widget = ttk.Combobox(self.query_frame,textvariable=self.q_uom_name_str,\
-                                              values=self.gel_net.uoms     ,width=10)
-        self.q_lh_uid_widget   = ttk.Entry(self.query_frame,textvariable=self.q_lh_uid_str ,width=10)
-        #if self.main.extended_query:
-        self.q_rel_uid_widget  = ttk.Entry(self.query_frame,textvariable=self.q_rel_uid_str,width=10)
-        self.q_rh_uid_widget   = ttk.Entry(self.query_frame,textvariable=self.q_rh_uid_str ,width=10)
-        self.q_uom_uid_widget  = ttk.Entry(self.query_frame,textvariable=self.q_uom_uid_str,width=10)
-
-    # Bindings
-        self.q_lh_uid_widget.bind  ("<KeyRelease>",self.Lh_uid_command)
-        self.q_lh_name_widget.bind ("<KeyRelease>",self.LhSearchCmd)
-        if self.main.extended_query:
-            self.q_rel_name_widget.bind("<KeyRelease>",self.RelSearchCmd)
-            self.q_rh_name_widget.bind ("<KeyRelease>",self.RhSearchCmd)
-            self.q_lh_name_widget.bind ("<Double-Button-1>"  ,self.LhSearchCmd)
-            self.q_rel_name_widget.bind("<Double-Button-1>"  ,self.RelSearchCmd)
-            self.q_rh_name_widget.bind ("<Double-Button-1>"  ,self.RhSearchCmd)
-
-        defText = ['Def. of left hand object:','Definitie van linker object:']
-        fullDefQLbl = ttk.Label(self.query_frame,text=defText[self.lang_index])
-        fullDefQStr = StringVar()
-        self.q_full_def_widget = Text(self.query_frame,width=60,height=3,wrap="word")
+        self.query_frame.columnconfigure(0, weight=1)
+        self.query_frame.columnconfigure(1, weight=1)
+        self.query_frame.columnconfigure(2, weight=1)
+        self.query_frame.columnconfigure(3, weight=1)
+        self.query_frame.columnconfigure(4, weight=1)
+        self.query_frame.columnconfigure(5, weight=1)
+        self.query_frame.columnconfigure(6, weight=1)
+        self.query_frame.columnconfigure(7, weight=1)
         
-        defQScroll  = ttk.Scrollbar(self.query_frame,orient=VERTICAL,command=self.q_full_def_widget.yview)
-        self.q_full_def_widget.config(yscrollcommand=defQScroll.set)
-    #
+        self.query_frame.rowconfigure(1, weight=0)
+        self.query_frame.rowconfigure(15, weight=0, minsize=20) # lh_options_tree Treeview
+        self.query_frame.rowconfigure(16, weight=1, minsize=20) # lh_options_tree Treeview
+        self.query_frame.rowconfigure(17, weight=1, minsize=20) # lh_options_tree Treeview
+        self.query_frame.rowconfigure(18, weight=1, minsize=20) # lh_options_tree Treeview
+        self.query_frame.rowconfigure(19, weight=1, minsize=20) # lh_options_tree Treeview
+        self.query_frame.rowconfigure(20, weight=1, minsize=20) # rel_options_tree Treeview
+        self.query_frame.rowconfigure(21, weight=1, minsize=20) # rel_options_tree Treeview
+        self.query_frame.rowconfigure(22, weight=1, minsize=20) # rel_options_tree Treeview
+        self.query_frame.rowconfigure(23, weight=1, minsize=20) # rel_options_tree Treeview
+        self.query_frame.rowconfigure(24, weight=1, minsize=20) # rel_options_tree Treeview
+        self.query_frame.rowconfigure(25, weight=1, minsize=20) # rh_options_tree Treeview
+        self.query_frame.rowconfigure(26, weight=1, minsize=20) # rh_options_tree Treeview
+        self.query_frame.rowconfigure(27, weight=1, minsize=20) # rh_options_tree Treeview
+        self.query_frame.rowconfigure(28, weight=1, minsize=20) # rh_options_tree Treeview
+        self.query_frame.rowconfigure(29, weight=1, minsize=20) # rh_options_tree Treeview
+        #self.query_frame.rowconfigure(30, weight=1, minsize=20) #  
+        #self.query_frame.rowconfigure(31, weight=1, minsize=20) #  
+        #self.query_frame.rowconfigure(32, weight=1, minsize=20) #
+        #self.query_frame.rowconfigure(35, weight=1)
+
+    # Define reply language with language selector
+        lang_text = ['Reply language:', 'Antwoordtaal:']
+        self.reply_lang_label = Label(self.query_frame, \
+                                      text=lang_text[self.GUI_lang_index], width=15)
+        self.rep_lang_default = StringVar(value=self.GUI_lang_name)
+        self.reply_lang_box = ttk.Combobox(self.query_frame, \
+                                           textvariable=self.rep_lang_default,\
+                                           values=self.reply_lang_names, width=15)
+        self.reply_lang_label.grid(column=4, row=1, sticky=W)
+        self.reply_lang_box.grid(column=5, row=1, sticky=W)
+
     # String commonality buttons
         #ImmediateSearchVar = BooleanVar()
-        self.case_sensitive_var    = BooleanVar()
-        self.first_char_match_var  = BooleanVar()
-        #ExactMatchVar      = BooleanVar()
-        #IncludeDescrVar    = BooleanVar()
+        self.case_sensitive_var = BooleanVar()
+        self.first_char_match_var = BooleanVar()
+        #ExactMatchVar = BooleanVar()
+        #IncludeDescrVar = BooleanVar()
 
         #ImmediateSearchVar.set(True)
         self.case_sensitive_var.set(True)
@@ -146,294 +135,408 @@ class Query_view():
         #ExactMatchVar.set(False)
         #IncludeDescrVar.set(False)
 
-        #immText   = ["Immediate Search","Direct zoeken"]
-        caseText  = ["Case Sensitive"  ,"Hoofdletter gevoelig"]
-        firstText = ["First Char Match","Eerste letter klopt"]
-        #exactText = ["Exact Match"     ,"Preciese overeenstemming"]
-        #ImmediateSearch = ttk.Checkbutton(self.query_frame, text=immText  [self.lang_index], \
+        #immText = ["Immediate Search", "Direct zoeken"]
+        caseText = ["Case Sensitive", "Hoofdletter gevoelig"]
+        firstText = ["First Char Match", "Eerste letter klopt"]
+        #exactText = ["Exact Match", "Preciese overeenstemming"]
+        #ImmediateSearch = ttk.Checkbutton(self.query_frame, text=immText[self.GUI_lang_index], \
         #                                  variable = ImmediateSearchVar, onvalue = True)
-        CaseSensitive   = ttk.Checkbutton(self.query_frame, text=caseText [self.lang_index], \
-                                          variable = self.case_sensitive_var,   onvalue = True)
-        FirstCharMatch  = ttk.Checkbutton(self.query_frame, text=firstText[self.lang_index], \
-                                          variable = self.first_char_match_var,  onvalue = True)
-        #ExactMatch      = ttk.Checkbutton(self.query_frame, text=exactText[self.lang_index], \
-        #                                  variable = ExactMatchVar,      onvalue = True)
+        CaseSensitive = ttk.Checkbutton(self.query_frame, text=caseText[self.GUI_lang_index], \
+                                        variable = self.case_sensitive_var, onvalue = True)
+        FirstCharMatch = ttk.Checkbutton(self.query_frame, text=firstText[self.GUI_lang_index], \
+                                         variable = self.first_char_match_var, onvalue = True)
+        #ExactMatch = ttk.Checkbutton(self.query_frame, text=exactText[self.GUI_lang_index], \
+        #                             variable = ExactMatchVar, onvalue = True)
         # Include searching in descriptions
         #IncludeDescr = ttk.Checkbutton(self.query_frame, text="Include Description", \
         #                               variable = IncludeDescrVar, onvalue = True)
+
+    # Define English and Dutch example values (initial options) for query
+        lhTermListEN = ['?','Paris', 'Eiffel tower', 'France']
+        relTermListEN = ['?','is related to (a)','is related to', 'is classified as a', \
+                         'is located in', 'has as part']
+        rhTermListEN = ['?','city', 'tower', 'country']
+        uomTermListEN = ['','inch','mi','s', 'degC', 'psi']
+
+        lhTermListNL = ['?','N51','Groningen','Parijs', 'Eiffeltoren', 'Frankrijk']
+        relTermListNL = ['?','is een soort', 'is gerelateerd aan (een)', 'is gerelateerd aan', \
+                         'is geclassificeerd als een', 'bevindt zich in', 'heeft als deel']
+        rhTermListNL = ['?','isolatieplaat','weg','dorp','stad','toren','land']
+        uomTermListNL = ['','mm','m', 's','°C','bar']
+
+        if self.GUI_lang_name == 'Nederlands' or 'Dutch':
+            lhTermListD = lhTermListNL
+            relTermListD = relTermListNL
+            rhTermListD = rhTermListNL
+            uomTermListD = uomTermListNL
+        else:
+            lhTermListD = lhTermListEN
+            relTermListD = relTermListEN
+            rhTermListD = rhTermListEN
+            uomTermListD = uomTermListEN
+        
+        # Set default values in StringVar's
+        self.q_lh_name_str = StringVar(value=lhTermListD[0])
+        self.q_rel_name_str = StringVar(value=relTermListD[0])
+        self.q_rh_name_str = StringVar(value=rhTermListD[0])
+        self.q_uom_name_str = StringVar(value=uomTermListD[0])
+        self.q_lh_uid_str = StringVar(value='')
+        self.q_rel_uid_str = StringVar(value='')
+        self.q_rh_uid_str = StringVar(value='')
+        self.q_uom_uid_str = StringVar(value='')
+        
+        lhCondQStr = []
+        relCondQStr = []
+        rhCondQStr = []
+        uomCondQStr = []
+        for i in range(0,3):
+            lhCondQStr.append (StringVar())
+            relCondQStr.append(StringVar())
+            rhCondQStr.append (StringVar())
+            uomCondQStr.append(StringVar())
+
+        if self.user_interface.extended_query:
+            lh_term = ["Left hand term", "Linker term"]
+        else: lh_term = ["Search term", "Zoekterm"]
+        rel_term = ["Relation type phrase", "Relatietype frase"]
+        rh_term = ["Right hand term", "Rechter term"]
+        uom_term = ["Unit of measure", "Meeteenheid"]
+
+    # Query variables widgets definition   
+        lhNameLbl = ttk.Label(self.query_frame, text=lh_term[self.GUI_lang_index])
+        lhUIDLbl = ttk.Label(self.query_frame,text='UID:')
+        if self.user_interface.extended_query:
+            relNameLbl = ttk.Label(self.query_frame, text=rel_term[self.GUI_lang_index])
+            rhNameLbl = ttk.Label(self.query_frame, text=rh_term[self.GUI_lang_index])
+            uomNameLbl = ttk.Label(self.query_frame, text=uom_term[self.GUI_lang_index])
+        self.q_lh_name_widget = ttk.Combobox(self.query_frame, \
+                                             textvariable=self.q_lh_name_str,\
+                                             values=self.lh_terms, width=30)
+        #if self.user_interface.extended_query:
+        self.q_rel_name_widget = ttk.Combobox(self.query_frame, \
+                                              textvariable=self.q_rel_name_str,\
+                                              values=self.rel_terms, width=40)
+        self.q_rh_name_widget = ttk.Combobox(self.query_frame, \
+                                             textvariable=self.q_rh_name_str,\
+                                             values=self.rh_terms, width=30)
+        self.q_uom_name_widget = ttk.Combobox(self.query_frame, \
+                                              textvariable=self.q_uom_name_str,\
+                                              values=self.uoms, width=10)
+        self.q_lh_uid_widget = ttk.Entry(self.query_frame, \
+                                         textvariable=self.q_lh_uid_str, width=10)
+        #if self.user_interface.extended_query:
+        self.q_rel_uid_widget = ttk.Entry(self.query_frame, \
+                                          textvariable=self.q_rel_uid_str, width=10)
+        self.q_rh_uid_widget = ttk.Entry(self.query_frame, \
+                                         textvariable=self.q_rh_uid_str, width=10)
+        self.q_uom_uid_widget = ttk.Entry(self.query_frame, \
+                                          textvariable=self.q_uom_uid_str, width=10)
+
+    # Bindings for data entry in search and query fields
+        self.q_lh_uid_widget.bind("<KeyRelease>", self.Lh_uid_command)
+        self.q_lh_name_widget.bind("<KeyRelease>", self.Lh_search_cmd)
+        if self.user_interface.extended_query:
+            self.q_rel_name_widget.bind("<KeyRelease>", self.Rel_search_cmd)
+            self.q_rh_name_widget.bind("<KeyRelease>", self.Rh_search_cmd)
+            #self.q_lh_name_widget.bind("<Button-1>", self.Lh_search_cmd)
+            #self.q_rel_name_widget.bind("<Button-1>", self.Rel_search_cmd)
+            #self.q_rh_name_widget.bind("<Button-1>", self.Rh_search_cmd)
+
+    # Definition display widget
+        def_text = ['Def. of left hand object:', 'Definitie van linker object:']
+        fullDefQLbl = ttk.Label(self.query_frame, text=def_text[self.GUI_lang_index])
+        fullDefQStr = StringVar()
+        self.q_full_def_widget = Text(self.query_frame, width=60, height=3, wrap="word")
+        
+        defQScroll = ttk.Scrollbar(self.query_frame, orient=VERTICAL, \
+                                   command=self.q_full_def_widget.yview)
+        self.q_full_def_widget.config(yscrollcommand=defQScroll.set)
+
+    # Aliases display widget
+        #aliasText = ['Aliases:','Aliases:']
+        #alias_label = ttk.Label(self.query_frame, text=aliasText[self.GUI_lang_index])
+        self.alias_tree = ttk.Treeview(self.query_frame,\
+                                       columns=('Term', 'Alias_type'),\
+                                       displaycolumns=('Alias_type'),\
+                                       selectmode='browse', height=4)
+        term_text = ('     Term', '     Term')
+        alias_text = ('Alias type', 'Aliastype')
+        #lang_text = ('Language', 'Taal')
+        self.alias_tree.heading('#0', text=term_text[self.GUI_lang_index], anchor=W)
+        self.alias_tree.heading('Alias_type', text=alias_text[self.GUI_lang_index], anchor=W)
+        #self.alias_tree.heading('Language', text=lang_text[self.GUI_lang_index], anchor=W)
+        alias_scroll = ttk.Scrollbar(self.query_frame, orient=VERTICAL, \
+                                     command=self.alias_tree.yview)
+        self.alias_tree.config(yscrollcommand=alias_scroll.set)
+
+    # Buttons definition
+        #search = ['Search' ,'Zoek']
+        close  = ['Close'  ,'Sluit']
+        confirm= ['Confirm','Bevestig']
+        #verify = ['Verify model' ,'Verifieer model']
+        #searchBut = ttk.Button(self.query_frame,text=search[self.GUI_lang_index], \
+        #                       command=SearchButCmd)
+        close_button = ttk.Button(self.query_frame,text=close[self.GUI_lang_index], \
+                                  command=self.Close_query)
+        confirm_button = ttk.Button(self.query_frame,text=confirm[self.GUI_lang_index], \
+                                    command=self.Formulate_query_spec)
+        #verifyBut = ttk.Button(self.query_frame,text=verify[self.GUI_lang_index], \
+        #                       command=self.query.Verify_model)
+        
+    # Buttons location in grid
+        #ImmediateSearch.grid(column=0, columnspan=2, row=1, sticky=W)
+        CaseSensitive.grid(column=0, columnspan=2, row=1, sticky=W)
+        FirstCharMatch.grid(column=0, columnspan=2, row=2, sticky=W)
+        #ExactMatch.grid(column=0, columnspan=2, row=3, sticky=W)
+        #IncludeDescr.grid(column=0, row=4, sticky=W)
+
+        #searchBut.grid(column=6, row=2 ,sticky=EW)
+        close_button.grid(column=7, row=1 ,sticky=EW)
+        confirm_button.grid(column=6, row=1, sticky=N+EW)
+        #verifyBut.grid(column=7, row=2 ,sticky=N+EW)
+    
+    # Widgets locations in grid
+        lhNameLbl.grid(column=0, row=3, sticky=W)
+        lhUIDLbl.grid(column=0, row=3, sticky=E)
+        if self.user_interface.extended_query:
+            relNameLbl.grid(column=2, row=3, sticky=EW)
+            rhNameLbl.grid(column=4, row=3, sticky=EW)
+            uomNameLbl.grid(column=6, row=3, sticky=EW)
+        self.q_lh_uid_widget.grid(column=1, row=3, columnspan=1, rowspan=1, sticky=EW)
+        if self.user_interface.extended_query:
+            self.q_rel_uid_widget.grid(column=3, row=3, columnspan=1, rowspan=1, sticky=EW)
+            self.q_rh_uid_widget.grid(column=5, row=3, columnspan=1, rowspan=1, sticky=EW)
+            self.q_uom_uid_widget.grid(column=7, row=3, columnspan=1, rowspan=1, sticky=EW)
+        self.q_lh_name_widget.grid (column=0, row=4, columnspan=2, rowspan=1, sticky=EW)
+        if self.user_interface.extended_query:
+            self.q_rel_name_widget.grid(column=2, row=4, columnspan=2, rowspan=1, sticky=EW)
+            self.q_rh_name_widget.grid(column=4, row=4, columnspan=2, rowspan=1, sticky=EW)
+            self.q_uom_name_widget.grid(column=6, row=4, columnspan=2, rowspan=1, sticky=EW)
+
+        # Definition location in grid
+        fullDefQLbl.grid(column=0, row=5, rowspan=1, sticky=EW)
+        self.q_full_def_widget.grid(column=1, row=5, columnspan=7, rowspan=1, sticky=EW)
+        defQScroll.grid(column=7, row=5, rowspan=1, sticky=NS+E)
+        # Alias location in grid
+        #alias_label.grid(column=0, row=6, rowspan=1, sticky=EW)
+        self.alias_tree.grid(column=0, row=6, columnspan=6, rowspan=1, sticky=EW)
+        alias_scroll.grid(column=5, row=6, rowspan=1, sticky=NS+E)
         
     # Conditions widgets definition
-        if self.main.extended_query:
-            condit  = ["Conditions:"         ,"Voorwaarden:"]
-            condLbl   = ttk.Label(self.query_frame,text=condit[self.lang_index])
+        if self.user_interface.extended_query:
+            condit = ["Conditions:", "Voorwaarden:"]
+            condLbl = ttk.Label(self.query_frame, text=condit[self.GUI_lang_index])
             for i in range(0,3):
-                self.query.lhCondVal.append (ttk.Combobox(self.query_frame,textvariable=lhCondQStr[i], \
-                                                          values=self.gel_net.lh_terms ,width=30))
-                self.query.relCondVal.append(ttk.Combobox(self.query_frame,textvariable=relCondQStr[i],\
-                                                          values=self.gel_net.rel_terms,width=40))
-                self.query.rhCondVal.append (ttk.Combobox(self.query_frame,textvariable=rhCondQStr[i], \
-                                                          values=self.gel_net.rh_terms ,width=30))
-                self.query.uomCondVal.append(ttk.Combobox(self.query_frame,textvariable=uomCondQStr[i],\
-                                                          values=self.gel_net.uoms     ,width=10))
+                self.query.lhCondVal.append(ttk.Combobox(self.query_frame,\
+                                                         textvariable=lhCondQStr[i], \
+                                                         values=self.lh_terms,\
+                                                         width=30))
+                self.query.relCondVal.append(ttk.Combobox(self.query_frame,\
+                                                          textvariable=relCondQStr[i],\
+                                                          values=self.rel_terms, \
+                                                          width=40))
+                self.query.rhCondVal.append(ttk.Combobox(self.query_frame,\
+                                                         textvariable=rhCondQStr[i], \
+                                                         values=self.rh_terms,\
+                                                         width=30))
+                self.query.uomCondVal.append(ttk.Combobox(self.query_frame,\
+                                                          textvariable=uomCondQStr[i],\
+                                                          values=self.uoms, \
+                                                          width=10))
+    # Conditions widgets location
+        if self.user_interface.extended_query:
+            condLbl.grid  (column=0, row=8, columnspan=1, sticky=W)
+            for i in range(0,3):
+                rowNr = 12 + i
+                self.query.lhCondVal[i].grid(column=0, row=rowNr, \
+                                             columnspan=2, rowspan=1, sticky=EW)
+                self.query.relCondVal[i].grid(column=2, row=rowNr, \
+                                              columnspan=2, rowspan=1, sticky=EW)
+                self.query.rhCondVal[i].grid(column=4, row=rowNr, \
+                                             columnspan=2, rowspan=1, sticky=EW)
+                self.query.uomCondVal[i].grid(column=6, row=rowNr, \
+                                              columnspan=2, rowspan=1, sticky=EW)
         
-    # Options for selection Widgets definition
-        selectTerm = ["Select one of each of the following options:","Kies één van de volgende opties:"]
-        optLbl     = ttk.Label(self.query_frame,text=selectTerm[self.lang_index])
+    # Options for selection widgets definition
+        select_term = ["Select one of the following options:", \
+                       "Kies één van de volgende opties:"]
+        opt_label = ttk.Label(self.query_frame, text=select_term[self.GUI_lang_index])
+    # Option label widget location
+        opt_label.grid(column=0, row=15, columnspan=3, rowspan=1, sticky=EW)
 
     # lh Options frame in query_frame for lh options Treeview
         lh_rowspan = 20
-        if self.main.extended_query:
+        if self.user_interface.extended_query:
             lh_rowspan = 5
-        lhOptFrame  = ttk.Frame(self.query_frame,borderwidth=3,relief='ridge')
-        lhOptFrame.grid (column=0, row=15,columnspan=8,rowspan=lh_rowspan,sticky=NSEW)
-        lhOptFrame.columnconfigure(0,minsize=10,weight=1)
-        lhOptFrame.rowconfigure   (0,minsize=10,weight=1)
+        lh_opt_frame = ttk.Frame(self.query_frame, borderwidth=3, relief='ridge')
+        lh_opt_frame.grid(column=0, row=16, columnspan=8, rowspan=lh_rowspan, sticky=NSEW)
+        lh_opt_frame.columnconfigure(0, minsize=10, weight=1)
+        lh_opt_frame.rowconfigure(0, minsize=10, weight=1)
 
-        leftCol = ['Left UID'    ,'Linker UID']
-        relaCol = ['Relation UID','Relatie UID']
-        righCol = ['Right UID'   ,'Rechter UID']
-        nameCol = ['Name'        ,'Naam']
-        kindCol = ['Kind'        ,'Soort']
-        commCol = ['Community'   ,'Taalgemeenschap']
-        langCol = ['Language'    ,'Taal']
-        self.lh_options_tree = ttk.Treeview(lhOptFrame,columns=('UID','Name','Kind','Comm','Lang'),\
-                                 displaycolumns=('UID','Name','Kind','Comm','Lang'),\
-                                 selectmode='browse', height=3)
-        self.lh_options_tree.heading('#0'     ,anchor=W)
-        self.lh_options_tree.heading('UID'    ,text=leftCol[self.lang_index] ,anchor=W)
-        self.lh_options_tree.heading('Name'   ,text=nameCol[self.lang_index] ,anchor=W)
-        self.lh_options_tree.heading('Kind'   ,text=kindCol[self.lang_index] ,anchor=W)
-        self.lh_options_tree.heading('Comm'   ,text=commCol[self.lang_index] ,anchor=W)
-        self.lh_options_tree.heading('Lang'   ,text=langCol[self.lang_index] ,anchor=W)
+        uid_text = ('UID', 'UID')
+        left_uid_text = ['Left UID', 'Linker UID']
+        if self.user_interface.extended_query:
+            uid_col = left_uid_text
+        else:
+            uid_col = uid_text
+        nameCol = ['Name', 'Naam']
+        kindCol = ['Kind', 'Soort']
+        commCol = ['Community', 'Taalgemeenschap']
+        langCol = ['Language', 'Taal']
+        relaCol = ['Relation UID', 'Relatie UID']
+        righCol = ['Right UID', 'Rechter UID']
+        
+        self.lh_options_tree = ttk.Treeview(lh_opt_frame,\
+                                            columns=('UID','Name','Kind','Comm','Lang'),\
+                                            displaycolumns=('UID','Name','Kind','Comm','Lang'),\
+                                            selectmode='browse', height=3)
+        #self.lh_options_tree.heading('#0', anchor=W)
+        self.lh_options_tree.heading('#0', text=uid_col[self.GUI_lang_index], anchor=W)
+        self.lh_options_tree.heading('Name', text=nameCol[self.GUI_lang_index], anchor=W)
+        self.lh_options_tree.heading('Kind', text=kindCol[self.GUI_lang_index], anchor=W)
+        self.lh_options_tree.heading('Comm', text=commCol[self.GUI_lang_index], anchor=W)
+        self.lh_options_tree.heading('Lang', text=langCol[self.GUI_lang_index], anchor=W)
 
-        self.lh_options_tree.column ('#0'     ,width=10)
-        self.lh_options_tree.column ('UID'    ,minwidth=40  ,width=80)
-        self.lh_options_tree.column ('Name'   ,minwidth=100 ,width=200)
-        self.lh_options_tree.column ('Kind'   ,minwidth=100 ,width=200)
-        self.lh_options_tree.column ('Comm'   ,minwidth=80  ,width=160)
-        self.lh_options_tree.column ('Lang'   ,minwidth=80  ,width=160)
+        self.lh_options_tree.column ('#0', width=10)
+        self.lh_options_tree.column ('UID', minwidth=40, width=80)
+        self.lh_options_tree.column ('Name', minwidth=100, width=200)
+        self.lh_options_tree.column ('Kind', minwidth=100, width=200)
+        self.lh_options_tree.column ('Comm', minwidth=80, width=160)
+        self.lh_options_tree.column ('Lang', minwidth=80, width=160)
 
         self.lh_options_tree.grid(column=0, row=0, columnspan=1, rowspan=1, sticky=NSEW)
 
-        self.lh_options_tree.columnconfigure(0,weight=0)
-        self.lh_options_tree.columnconfigure(1,weight=1)
-        self.lh_options_tree.columnconfigure(2,weight=1)
-        self.lh_options_tree.columnconfigure(3,weight=1)
-        self.lh_options_tree.columnconfigure(4,weight=1)
-        self.lh_options_tree.columnconfigure(5,weight=1)
-        self.lh_options_tree.rowconfigure(0,weight=1)
+        self.lh_options_tree.columnconfigure(0, weight=0)
+        self.lh_options_tree.columnconfigure(1, weight=1)
+        self.lh_options_tree.columnconfigure(2, weight=1)
+        self.lh_options_tree.columnconfigure(3, weight=1)
+        self.lh_options_tree.columnconfigure(4, weight=1)
+        self.lh_options_tree.columnconfigure(5, weight=1)
+        self.lh_options_tree.rowconfigure(0, weight=1)
 
-        lhOptScroll = ttk.Scrollbar(lhOptFrame,orient=VERTICAL,command=self.lh_options_tree.yview)
-        lhOptScroll.grid (column=0,row=0,sticky=NS+E)
+        lhOptScroll = ttk.Scrollbar(lh_opt_frame, orient=VERTICAL, \
+                                    command=self.lh_options_tree.yview)
+        lhOptScroll.grid (column=0, row=0, sticky=NS+E)
         self.lh_options_tree.config(yscrollcommand=lhOptScroll.set)
 
         self.lh_options_tree.bind(sequence='<Button-1>', func=self.Set_selected_q_lh_term)
-    # = = = = = = = = =
-        if self.main.extended_query:
-        # rel Options frame in query_frame for rel options Treeview
-            relOptFrame = ttk.Frame(self.query_frame,borderwidth=3,relief='ridge')
-            relOptFrame.grid (column=0, row=20,columnspan=8,rowspan=5,sticky=NSEW)
-            relOptFrame.columnconfigure(0,minsize=10,weight=1)
-            relOptFrame.rowconfigure   (0,minsize=10,weight=1)
-            
-            #relOptVal = ttk.Combobox(self.query_frame,textvariable=relSelect, values=relOptionList,width=40, postcommand=UpdateRelNames)
-            self.rel_options_tree = ttk.Treeview(relOptFrame,columns=('UID','Name','Kind','Comm','Lang'),\
-                                    displaycolumns='#all', selectmode='browse', height=3)
-            self.rel_options_tree.heading('#0'     ,anchor=W)
-            self.rel_options_tree.heading('UID'    ,text=relaCol[self.lang_index] ,anchor=W)
-            self.rel_options_tree.heading('Name'   ,text=nameCol[self.lang_index] ,anchor=W)
-            self.rel_options_tree.heading('Kind'   ,text=kindCol[self.lang_index] ,anchor=W)
-            self.rel_options_tree.heading('Comm'   ,text=commCol[self.lang_index] ,anchor=W)
-            self.rel_options_tree.heading('Lang'   ,text=langCol[self.lang_index] ,anchor=W)
 
-            self.rel_options_tree.column ('#0'     ,width=10)
-            self.rel_options_tree.column ('UID'    ,minwidth=40  ,width=80)
-            self.rel_options_tree.column ('Name'   ,minwidth=100 ,width=200)
-            self.rel_options_tree.column ('Kind'   ,minwidth=100 ,width=200)
-            self.rel_options_tree.column ('Comm'   ,minwidth=80  ,width=160)
-            self.rel_options_tree.column ('Lang'   ,minwidth=80  ,width=160)
+        if self.user_interface.extended_query:
+        # rel Options frame in query_frame for rel options Treeview
+            rel_opt_frame = ttk.Frame(self.query_frame, borderwidth=3, relief='ridge')
+            rel_opt_frame.grid(column=0, row=21, columnspan=8, rowspan=5, sticky=NSEW)
+            rel_opt_frame.columnconfigure(0, minsize=10, weight=1)
+            rel_opt_frame.rowconfigure(0, minsize=10, weight=1)
+
+            self.rel_options_tree = ttk.Treeview(rel_opt_frame,\
+                                                 columns=('UID','Name','Kind','Comm','Lang'),\
+                                                 displaycolumns='#all', selectmode='browse', \
+                                                 height=3)
+            self.rel_options_tree.heading('#0', anchor=W)
+            self.rel_options_tree.heading('UID',  text=relaCol[self.GUI_lang_index], anchor=W)
+            self.rel_options_tree.heading('Name', text=nameCol[self.GUI_lang_index], anchor=W)
+            self.rel_options_tree.heading('Kind', text=kindCol[self.GUI_lang_index], anchor=W)
+            self.rel_options_tree.heading('Comm', text=commCol[self.GUI_lang_index], anchor=W)
+            self.rel_options_tree.heading('Lang', text=langCol[self.GUI_lang_index], anchor=W)
+
+            self.rel_options_tree.column ('#0', width=10)
+            self.rel_options_tree.column ('UID',  minwidth=40 , width=80)
+            self.rel_options_tree.column ('Name', minwidth=100, width=200)
+            self.rel_options_tree.column ('Kind', minwidth=100, width=200)
+            self.rel_options_tree.column ('Comm', minwidth=80 , width=160)
+            self.rel_options_tree.column ('Lang', minwidth=80 , width=160)
 
             #relOptLbl.grid (column=0, row=0,sticky=EW)
             self.rel_options_tree.grid(column=0, row=0, columnspan=1, rowspan=1, sticky=NSEW)
 
-            self.rel_options_tree.columnconfigure(0,weight=0)
-            self.rel_options_tree.columnconfigure(1,weight=1)
-            self.rel_options_tree.columnconfigure(2,weight=1)
-            self.rel_options_tree.columnconfigure(3,weight=1)
-            self.rel_options_tree.columnconfigure(4,weight=1)
-            self.rel_options_tree.columnconfigure(5,weight=1)
-            self.rel_options_tree.rowconfigure(0,weight=1)
+            self.rel_options_tree.columnconfigure(0, weight=0)
+            self.rel_options_tree.columnconfigure(1, weight=1)
+            self.rel_options_tree.columnconfigure(2, weight=1)
+            self.rel_options_tree.columnconfigure(3, weight=1)
+            self.rel_options_tree.columnconfigure(4, weight=1)
+            self.rel_options_tree.columnconfigure(5, weight=1)
+            self.rel_options_tree.rowconfigure(0, weight=1)
 
-            relOptScroll = ttk.Scrollbar(relOptFrame,orient=VERTICAL,command=self.rel_options_tree.yview)
-            relOptScroll.grid (column=0,row=0,sticky=NS+E)
+            relOptScroll = ttk.Scrollbar(rel_opt_frame,orient=VERTICAL,\
+                                         command=self.rel_options_tree.yview)
+            relOptScroll.grid (column=0, row=0, sticky=NS+E)
             self.rel_options_tree.config(yscrollcommand=relOptScroll.set)
 
             self.rel_options_tree.bind(sequence='<Button-1>', func=self.Set_selected_q_rel_term)
-        # = = = = = = = = =
+
         # rh Options frame in query_frame for rh options Treeview
-            rhOptFrame  = ttk.Frame(self.query_frame,borderwidth=3,relief='ridge')
-            rhOptFrame.grid (column=0, row=25,columnspan=8,rowspan=5,sticky=NSEW)
-            rhOptFrame.columnconfigure(0,minsize=10,weight=1)
-            rhOptFrame.rowconfigure   (0,minsize=10,weight=1)
+            rh_opt_frame = ttk.Frame(self.query_frame, borderwidth=3, relief='ridge')
+            rh_opt_frame.grid (column=0, row=26, columnspan=8, rowspan=5, sticky=NSEW)
+            rh_opt_frame.columnconfigure(0, minsize=10, weight=1)
+            rh_opt_frame.rowconfigure(0, minsize=10, weight=1)
             
-            #rhOptVal  = ttk.Combobox(self.query_frame,textvariable=rhSelect,  values=rhOptionList, width=40, postcommand=UpdateRhNames)
-            self.rh_options_tree = ttk.Treeview(rhOptFrame,columns=('UID','Name','Kind','Comm','Lang'),\
-                                    displaycolumns='#all', selectmode='browse', height=3)
-            self.rh_options_tree.heading('#0'     ,anchor=W)
-            self.rh_options_tree.heading('UID'    ,text=righCol[self.lang_index] ,anchor=W)
-            self.rh_options_tree.heading('Name'   ,text=nameCol[self.lang_index] ,anchor=W)
-            self.rh_options_tree.heading('Kind'   ,text=kindCol[self.lang_index] ,anchor=W)
-            self.rh_options_tree.heading('Comm'   ,text=commCol[self.lang_index] ,anchor=W)
-            self.rh_options_tree.heading('Lang'   ,text=langCol[self.lang_index] ,anchor=W)
+            #rhOptVal = ttk.Combobox(self.query_frame,textvariable=rhSelect,\
+            #                        values=rhOptionList, width=40, postcommand=UpdateRhNames)
+            self.rh_options_tree = ttk.Treeview(rh_opt_frame,\
+                                                columns=('UID','Name','Kind','Comm','Lang'),\
+                                                displaycolumns='#all', selectmode='browse', \
+                                                height=3)
+            self.rh_options_tree.heading('#0', anchor=W)
+            self.rh_options_tree.heading('UID',  text=righCol[self.GUI_lang_index], anchor=W)
+            self.rh_options_tree.heading('Name', text=nameCol[self.GUI_lang_index], anchor=W)
+            self.rh_options_tree.heading('Kind', text=kindCol[self.GUI_lang_index], anchor=W)
+            self.rh_options_tree.heading('Comm', text=commCol[self.GUI_lang_index], anchor=W)
+            self.rh_options_tree.heading('Lang', text=langCol[self.GUI_lang_index], anchor=W)
 
             self.rh_options_tree.column ('#0'     ,width=10)
-            self.rh_options_tree.column ('UID'    ,minwidth=40  ,width=80)
-            self.rh_options_tree.column ('Name'   ,minwidth=100 ,width=200)
-            self.rh_options_tree.column ('Kind'   ,minwidth=100 ,width=200)
-            self.rh_options_tree.column ('Comm'   ,minwidth=80 ,width=160)
-            self.rh_options_tree.column ('Lang'   ,minwidth=80 ,width=160)
+            self.rh_options_tree.column ('UID'    ,minwidth=40 , width=80)
+            self.rh_options_tree.column ('Name'   ,minwidth=100, width=200)
+            self.rh_options_tree.column ('Kind'   ,minwidth=100, width=200)
+            self.rh_options_tree.column ('Comm'   ,minwidth=80 , width=160)
+            self.rh_options_tree.column ('Lang'   ,minwidth=80 , width=160)
 
             #rhOptLbl.grid (column=0, row=0,sticky=EW)
             self.rh_options_tree.grid(column=0, row=0, columnspan=1, rowspan=1, sticky=NSEW)
 
-            self.rh_options_tree.columnconfigure(0,weight=0)
-            self.rh_options_tree.columnconfigure(1,weight=1)
-            self.rh_options_tree.columnconfigure(2,weight=1)
-            self.rh_options_tree.columnconfigure(3,weight=1)
-            self.rh_options_tree.columnconfigure(4,weight=1)
-            self.rh_options_tree.columnconfigure(5,weight=1)
-            self.rh_options_tree.rowconfigure(0,weight=1)
+            self.rh_options_tree.columnconfigure(0, weight=0)
+            self.rh_options_tree.columnconfigure(1, weight=1)
+            self.rh_options_tree.columnconfigure(2, weight=1)
+            self.rh_options_tree.columnconfigure(3, weight=1)
+            self.rh_options_tree.columnconfigure(4, weight=1)
+            self.rh_options_tree.columnconfigure(5, weight=1)
+            self.rh_options_tree.rowconfigure(0, weight=1)
 
-            rhOptScroll = ttk.Scrollbar(rhOptFrame,orient=VERTICAL,command=self.rh_options_tree.yview)
-            rhOptScroll.grid (column=0,row=0,sticky=NS+E)
+            rhOptScroll = ttk.Scrollbar(rh_opt_frame,orient=VERTICAL,\
+                                        command=self.rh_options_tree.yview)
+            rhOptScroll.grid (column=0, row=0, sticky=NS+E)
             self.rh_options_tree.config(yscrollcommand=rhOptScroll.set)
 
-            self.rh_options_tree.bind(sequence='<Button-1>', func=self.Set_selected_q_rh_term)
-    # = = = = = = = = = = = = =
-    # Buttons definition
-        search = ['Search' ,'Zoek']
-        close  = ['Close'  ,'Sluit']
-        confirm= ['Confirm','Bevestig']
-        verify = ['Verify model' ,'Verifieer model']
-        #searchBut  = ttk.Button(self.query_frame,text=search[self.lang_index],  command=SearchButCmd)     # then Execute search
-        closeBut   = ttk.Button(self.query_frame,text=close[self.lang_index],   command=self.Close_query)
-        confirmBut = ttk.Button(self.query_frame,text=confirm[self.lang_index], command=self.Formulate_query_spec)
-        #verifyBut  = ttk.Button(self.query_frame,text=verify[self.lang_index],  command=self.query.Verify_model)
-        
-    # Buttons location in grid
-        #ImmediateSearch.grid(column=0, columnspan=2,row=1,sticky=W)
-        CaseSensitive.grid  (column=0, columnspan=2,row=1,sticky=W)
-        FirstCharMatch.grid (column=0, columnspan=2,row=2,sticky=W)
-        #ExactMatch.grid     (column=0, columnspan=2,row=3,sticky=W)
-        #IncludeDescr.grid   (column=0,row=4,sticky=W)
-    
-    # Widget locations in grid
-        lhNameLbl.grid  (column=0,row=3,sticky=W)
-        lhUIDLbl.grid   (column=0,row=3,sticky=E)
-        if self.main.extended_query:
-            relNameLbl.grid (column=2,row=3,sticky=EW)
-            rhNameLbl.grid  (column=4,row=3,sticky=EW)
-            uomNameLbl.grid (column=6,row=3,sticky=EW)
-        self.q_lh_name_widget.grid (column=0,row=4,columnspan=2, rowspan=1,sticky=EW)
-        if self.main.extended_query:
-            self.q_rel_name_widget.grid(column=2,row=4,columnspan=2, rowspan=1,sticky=EW)
-            self.q_rh_name_widget.grid (column=4,row=4,columnspan=2, rowspan=1,sticky=EW)
-            self.q_uom_name_widget.grid(column=6,row=4,columnspan=2, rowspan=1,sticky=EW)
-        self.q_lh_uid_widget.grid  (column=1,row=3,columnspan=1, rowspan=1,sticky=EW)
-        #self.q_rel_uid_widget.grid (column=2,row=5,columnspan=1, rowspan=1,sticky=EW)
-        #self.q_rh_uid_widget.grid  (column=4,row=5,columnspan=1, rowspan=1,sticky=EW)
-        #self.q_uom_uid_widget.grid (column=6,row=5,columnspan=1, rowspan=1,sticky=EW)
-        fullDefQLbl.grid(column=0,row=5,rowspan=1,sticky=EW)
-        self.q_full_def_widget.grid(column=1,row=5,columnspan=7,rowspan=1,sticky=EW)
-        defQScroll.grid (column=7,row=5,rowspan=1,sticky=NS+E)
-
-    # Conditions widgets location
-        if self.main.extended_query:
-            condLbl.grid  (column=0, row=7, columnspan=1, sticky=W)
-            for i in range(0,3):
-                rowNr = 11 + i
-                self.query.lhCondVal[i].grid (column=0, row=rowNr, columnspan=2, rowspan=1, sticky=EW)
-                self.query.relCondVal[i].grid(column=2, row=rowNr, columnspan=2, rowspan=1, sticky=EW)
-                self.query.rhCondVal[i].grid (column=4, row=rowNr, columnspan=2, rowspan=1, sticky=EW)
-                self.query.uomCondVal[i].grid(column=6, row=rowNr, columnspan=2, rowspan=1, sticky=EW)
-
-    # Option Widgets location
-        optLbl.grid    (column=0, row=14, columnspan=3, rowspan=1, sticky=EW)
-        #lhOptLbl.grid  (column=0, row=15, columnspan=1, rowspan=1, sticky=EW)
-        #relOptLbl.grid (column=0, row=17, columnspan=1, rowspan=1, sticky=EW)
-        #rhOptLbl.grid  (column=0, row=19, columnspan=1, rowspan=1, sticky=EW)
-        
-##        MessagesQLbl.grid (column=0, row=30, columnspan=3, rowspan=1, sticky=EW)
-##        self.query.MessagesQ.grid (column=0, row=31, columnspan=9, rowspan=1, sticky=NSEW)
-##        MessQScroll.grid  (column=9, row=31, sticky=NS+E)
-        
-        #searchBut.grid (column=8, row=3 ,sticky=EW)
-        closeBut.grid  (column=8, row=5 ,sticky=EW)
-        confirmBut.grid(column=8, row=15,sticky=N+EW)
-        #verifyBut.grid (column=8, row=16 ,sticky=N+EW)
-
-        self.QWindow.columnconfigure(0,weight=1)
-        self.QWindow.rowconfigure(0,weight=1)
-        
-        self.query_frame.columnconfigure(0,weight=1)
-        self.query_frame.columnconfigure(1,weight=1)
-        self.query_frame.columnconfigure(2,weight=1)
-        self.query_frame.columnconfigure(3,weight=1)
-        self.query_frame.columnconfigure(4,weight=1)
-        self.query_frame.columnconfigure(5,weight=1)
-        self.query_frame.columnconfigure(6,weight=1)
-        self.query_frame.columnconfigure(7,weight=1)
-        self.query_frame.rowconfigure(1,weight=0)
-        #self.query_frame.rowconfigure(11,weight=0)
-        self.query_frame.rowconfigure(15,weight=1,minsize=25)     # self.lh_options_tree Treeview
-        self.query_frame.rowconfigure(16,weight=1,minsize=25)     # lhlOptTree Treeview
-        self.query_frame.rowconfigure(17,weight=1,minsize=25)     #  Treeview
-        self.query_frame.rowconfigure(18,weight=1,minsize=25)     #  Treeview
-        self.query_frame.rowconfigure(19,weight=1,minsize=25)     #  Treeview
-        self.query_frame.rowconfigure(20,weight=1,minsize=25)     # self.rel_options_tree Treeview
-        self.query_frame.rowconfigure(21,weight=1,minsize=25)     #  Treeview
-        self.query_frame.rowconfigure(22,weight=1,minsize=25)     #  Treeview
-        self.query_frame.rowconfigure(23,weight=1,minsize=25)     # self.rel_options_tree Treeview
-        self.query_frame.rowconfigure(24,weight=1,minsize=25)     # self.rel_options_tree Treeview
-        self.query_frame.rowconfigure(25,weight=1,minsize=25)     # self.rh_options_tree Treeview
-        self.query_frame.rowconfigure(26,weight=1,minsize=25)     # self.rh_options_tree Treeview
-        self.query_frame.rowconfigure(27,weight=1,minsize=25)     #  Treeview
-        self.query_frame.rowconfigure(28,weight=1,minsize=25)     #  Treeview
-        self.query_frame.rowconfigure(29,weight=1,minsize=25)     #  Treeview
-        self.query_frame.rowconfigure(30,weight=1,minsize=25)     #  
-        self.query_frame.rowconfigure(31,weight=1,minsize=25)     #  
-        self.query_frame.rowconfigure(32,weight=1,minsize=20)
-
-    # Define reply language with language selector
-        lang_text = ['Reply language:', 'Antwoordtaal:']
-        self.reply_lang_label = Label(self.query_frame, text=lang_text[self.lang_index], width=15)
-        self.rep_lang_default = StringVar(value=self.gel_net.GUI_lang_name)
-        self.reply_lang_box   = ttk.Combobox(self.query_frame, textvariable=self.rep_lang_default,\
-                                         values=self.reply_lang_names, width=10)
-        self.reply_lang_label.grid(column=5, row=1, sticky=W)
-        self.reply_lang_box.grid  (column=6, row=1, sticky=W)
+            self.rh_options_tree.bind(sequence='<Button-1>', \
+                                      func=self.Set_selected_q_rh_term)
 
         # Binding GUI language choice
-        self.reply_lang_box.bind  ("<<ComboboxSelected>>",self.Determine_reply_language)
+        self.reply_lang_box.bind("<<ComboboxSelected>>",self.Determine_reply_language)
 
         # Set the reply language initially identical to the GUI language
-        self.gel_net.Set_reply_language(self.gel_net.GUI_lang_name)
-        print('{} {}'.format(self.reply_language[self.lang_index], self.gel_net.reply_lang_name))
+        self.user_interface.Set_reply_language(self.GUI_lang_name)
+        self.views.Display_message(
+                'The reply language is {}'.format(self.user_interface.reply_lang_name),\
+                'De antwoordtaal is {}'.format(self.user_interface.reply_lang_name))
 
     def Determine_reply_language(self, event):
-        reply_lang_name  = self.reply_lang_box.get()
-        self.gel_net.Set_reply_language(reply_lang_name)
-        print('{} {}'.format(self.reply_language[self.lang_index], self.gel_net.reply_lang_name))
+        ''' Get the user specified reply language and report it '''
+        
+        reply_lang_name = self.reply_lang_box.get()
+        self.user_interface.Set_reply_language(reply_lang_name)
+        self.views.Display_message(
+                'The reply language is {}'.format(self.user_interface.reply_lang_name),\
+                'De antwoordtaal is {}'.format(self.user_interface.reply_lang_name))
 
     def Lh_uid_command(self, event):
-        """Search for UID in semantic network
-        Search in vocabulary for left hand uid.
-    == OptionsTable: optionNr,whetherKnown,langUIDres,commUIDres,resultString,resultUID,isCalledUID,kindKnown,kind
-    """
+        """ Search for UID in semantic network
+            Search in vocabulary for left hand uid.
+            == OptionsTable: optionNr,whetherKnown,langUIDres,commUIDres,
+                             result_string,resultUID,is_called_uid,kindKnown,kind
+        """
         #print('Lh uid entry:',event.char)
 
         # Delete previous options
-        self.gel_net.lh_options[:]  = []
+        self.lh_options[:] = []
         x = self.lh_options_tree.get_children()
         for item in x: self.lh_options_tree.delete(item)
         
@@ -448,21 +551,21 @@ class Query_view():
             lh = self.gel_net.uid_dict[lh_uid]
             
             #print("  Found lh: ", lh_uid, lh.name)
-            # => lh_options: optionNr, whetherKnown, langUIDres, commUIDres, resultString,\
-            #                resultUID, isCalledUID, kindKnown, kind
+            # => lh_options: optionNr, whetherKnown, langUIDres, commUIDres, result_string,\
+            #                resultUID, is_called_uid, kindKnown, kind
             if len(lh.names_in_contexts) > 0:
                 #print('Lang_prefs:', self.gel_net.reply_lang_pref_uids)
                 #print('Names in contexts:', lh.names_in_contexts)
                 # Build option with preferred name from names_in_contexts
                 # Determine the full definition of the obj in the preferred language
                 lang_name, comm_name, preferred_name, full_def = \
-                           self.gel_net.Determine_name_in_language_and_community(lh)
+                           self.user_interface.Determine_name_in_context(lh)
                 option = [1, 'known'] + [lang_name, comm_name, preferred_name] \
                          + [lh.uid, '5117', 'known', lh.kind.name]
                 #print('Lh_option', option)
-                self.gel_net.lh_options.append(option)
-                opt = [option[5],option[4],option[8],comm_name,lang_name]
-                self.lh_options_tree.insert('',index='end',values=opt)
+                self.lh_options.append(option)
+                opt = [option[5], option[4], option[8], comm_name, lang_name]
+                self.lh_options_tree.insert('', index='end', values=opt)
 
                 # Display lh_object uid
                 self.query.q_lh_uid = lh_uid
@@ -475,20 +578,24 @@ class Query_view():
         except KeyError:
             pass
 
-    def LhSearchCmd(self, event):
+    def Lh_search_cmd(self, event):
         """ Search or Query in semantic network
-        An entry in QueryWindow can be just a name (lhString (for search on UID see Lh_uid_command)
-        or a full question with possible condition expressions:
-        (lhString,relString,rhString optionally followed by one or more conditions):
+            An entry in QueryWindow can be just a name (lhString
+            (for search on UID see Lh_uid_command)
+            or a full question with possible condition expressions:
+            (lhString,relString,rhString optionally followed by one or more conditions):
        
-        lhCommonality = case sensitivity: 'cs/ci'; (partially/front end) identical 'i/pi/fi'
-        lhCommonality = input('Lh-commonality (default: csfi-case sensitive, front-end identical): ')
+            lhCommonality = case sensitivity: 'cs/ci';
+                                  (partially/front end) identical 'i/pi/fi'
+            lhCommonality = input('Lh-commonality
+                                  (default: csfi-case sensitive, front-end identical): ')
 
-        Search in vocabulary for left hand term as part of building a question.
+            Search in vocabulary for left hand term as part of building a question.
 
-    == OptionsTable: optionNr,whetherKnown,langUIDres,commUIDres,resultString,resultUID,isCalledUID,kindKnown,kind
-    """
-        self.test = False
+            == OptionsTable: optionNr,whetherKnown,langUIDres,commUIDres,
+                             result_string,resultUID,is_called_uid,kindKnown,kind
+        """
+
         #print('Lh name entry:',event.char)
         #if event.keysym not in ['Shift_L', 'Shift_R']:
                                     
@@ -505,7 +612,7 @@ class Query_view():
         string_commonality = cs + fe
 
         self.query.q_lh_uid = 0
-        self.gel_net.lh_options[:]  = []
+        self.lh_options[:]  = []
         
         # Remove possible earlier options
         x = self.lh_options_tree.get_children()
@@ -513,22 +620,25 @@ class Query_view():
         
         # Determine lh_options for lh term in query
         lhString = self.q_lh_name_widget.get()
-        self.found_lh_uid, self.gel_net.lh_options = self.gel_net.SolveUnknown(lhString, string_commonality)
-        #print("  Found lh: ", lhString, self.gel_net.unknown_quid, self.gel_net.lh_options[0:3])
+        self.found_lh_uid, self.lh_options = \
+                           self.Solve_unknown(lhString, string_commonality)
+        #print("  Found lh: ", lhString, self.unknown_quid, \
+        #      self.lh_options[0:3])
 
-        # => lh_options: optionNr, whetherKnown, langUIDres, commUIDres, resultString,\
-        #                resultUID, isCalledUID, kindKnown, kind
-        # Sort the list of options alphabetically by name, determine lang_names and display options
-        if len(self.gel_net.lh_options) > 0:
-            if len(self.gel_net.lh_options) > 1:
-                # sort by name
-                self.gel_net.lh_options.sort(key=itemgetter(4))
+        # => lh_options: optionNr, whetherKnown, langUIDres, commUIDres, result_string,\
+        #                resultUID, is_called_uid, kindKnown, kind
+        # Sort the list of options alphabetically by name,
+        # and determine lang_names and display options
+        if len(self.lh_options) > 0:
+            if len(self.lh_options) > 1:
+                # Sort options by name
+                self.lh_options.sort(key=itemgetter(4))
             # Find lang_name and comm_name from uids for option display
-            for option in self.gel_net.lh_options:
+            for option in self.lh_options:
                 if option[2] == '':
                     lang_name = 'unknown'
                 else:
-                    if self.lang_index == 1:
+                    if self.GUI_lang_index == 1:
                         lang_name = self.gel_net.lang_dict_NL[option[2]]
                     else:
                         lang_name = self.gel_net.lang_dict_EN[option[2]]
@@ -538,11 +648,11 @@ class Query_view():
                     comm_name = self.gel_net.community_dict[option[3]]
 
                 # Display option in lh_options_tree
-                opt = [option[5],option[4],option[8],comm_name,lang_name]
+                opt = [option[5], option[4], option[8], comm_name, lang_name]
                 self.lh_options_tree.insert('',index='end',values=opt)
 
             # Display lh_object uid
-            self.query.q_lh_uid = self.gel_net.lh_options[0][5]
+            self.query.q_lh_uid = self.lh_options[0][5]
             self.q_lh_uid_str.set(str(self.query.q_lh_uid))
             
         # Delete earlier definition text. Then replace by new definition text
@@ -551,45 +661,47 @@ class Query_view():
         int_q_lh_uid, integer = Convert_numeric_to_integer(self.query.q_lh_uid)
         if integer is False or int_q_lh_uid >= 100:
             # If lh_object is known then determine and display full definition
-            self.query.q_lh_category = self.gel_net.lh_options[0][8]
+            self.query.q_lh_category = self.lh_options[0][8]
             obj = self.gel_net.uid_dict[self.query.q_lh_uid]
             # Determine the full definition of the obj in the preferred language
             lang_name, comm_name, preferred_name, full_def = \
-                       self.gel_net.Determine_name_in_language_and_community(obj)
+                       self.user_interface.Determine_name_in_context(obj)
         # Display full definition
         self.q_full_def_widget.insert('1.0',full_def)
             
 #----------------------------------------------------------------------
-    def RelSearchCmd(self, event):
-        """Search or Query in Ontology and Model
-         Entry in QueryWindow is a question with possible condition expressions (lhString,relString,rhString):
+    def Rel_search_cmd(self, event):
+        """ Search or Query in Ontology and Model
+            Entry in QueryWindow is a question with possible condition expressions
+            (lhString,relString,rhString):
        
-           lhCommonality = 'csfi'
-           lhCommonality = input('Lh-commonality (default: csfi-case sensitive, front-end identical): ')
+            lhCommonality = 'csfi'
+            lhCommonality = input('Lh-commonality
+                                  (default: csfi-case sensitive, front-end identical): ')
 
-         Search in vocabulary for left hand, relation type and right hand terms 
-         and build a question
+            Search in vocabulary for left hand, relation type and right hand terms 
+            and build a question
 
-        == Options: optionNr,whetherKnown,langUIDres,commUIDres,resultString,resultUID,isCalledUID,kindKnown,kind
+            == Options: optionNr,whetherKnown,langUIDres,commUIDres,
+                        result_string,resultUID,is_called_uid,kindKnown,kind
         """
-        self.test = False
 
-        if self.test: print('Rel Entry:',event.char)
+        #print('Rel Entry:',event.char)
         if event.keysym not in ['Shift_L', 'Shift_R']:
 
             front_end = self.first_char_match_var.get()
             case_sens = self.case_sensitive_var.get()
 
             # Delete previous list of rel_options in tree
-            self.gel_net.rel_options[:] = []
+            self.rel_options[:] = []
             x = self.rel_options_tree.get_children()
             for item in x: self.rel_options_tree.delete(item)
             
             # Get relation type name (relString) from user interface
-            relString    = self.q_rel_name_widget.get()
+            relString = self.q_rel_name_widget.get()
             #if event != '': relString = relString # + event.char
             if relString == 'any':
-                if self.lang_index == 1:
+                if self.GUI_lang_index == 1:
                     relString = 'binaire relatie'
                 else:
                     relString = 'binary relation'
@@ -597,21 +709,23 @@ class Query_view():
             if relString == '':
                 relString = 'binary relation'
             string_commonality = 'csfi'
-            self.foundRel, self.gel_net.rel_options = self.gel_net.SolveUnknown(relString, string_commonality)
-            #print('  OptRel:',self.gel_net.rel_options)
+            self.foundRel, self.rel_options = \
+                           self.Solve_unknown(relString, string_commonality)
+            #print('  OptRel:',self.rel_options)
             
-            # == rel_opions: optionNr,whetherKnown,langUIDres,commUIDres,resultString,resultUID,isCalledUID,kindKnown,kind 
+            # == rel_opions: optionNr,whetherKnown,langUIDres,commUIDres,
+            #                result_string,resultUID,is_called_uid,kindKnown,kind 
             # If rel_options are available, then sort the list and display in rel_options tree
-            if len(self.gel_net.rel_options) > 0:
-                self.query.q_rel_uid = self.gel_net.rel_options[0][5]
+            if len(self.rel_options) > 0:
+                self.query.q_rel_uid = self.rel_options[0][5]
                 int_q_rel_uid, integer = Convert_numeric_to_integer(self.query.q_rel_uid)
-                if integer is False or self.query.q_rel_uid > 100:
+                if integer is False or int_q_rel_uid > 100:
                     obj = self.gel_net.uid_dict[self.query.q_rel_uid]
                     self.q_rel_uid_str.set(str(self.query.q_rel_uid))
-                if len(self.gel_net.rel_options) > 1:
+                if len(self.rel_options) > 1:
                     # Sort the list of options alphabetically by name
-                    self.gel_net.rel_options.sort(key=itemgetter(4))
-                for option in self.gel_net.rel_options:
+                    self.rel_options.sort(key=itemgetter(4))
+                for option in self.rel_options:
                     if option[2] == 0:
                         lang_name = 'unknown'
                     else:
@@ -620,20 +734,22 @@ class Query_view():
                         comm_name = 'unknown'
                     else:
                         comm_name = self.gel_net.community_dict[option[3]]
-                    opt = [option[5],option[4],option[8],comm_name,lang_name]
-                    self.rel_options_tree.insert('',index='end',values=opt)        
+                    opt = [option[5], option[4], option[8], comm_name, lang_name]
+                    self.rel_options_tree.insert('', index='end', values=opt)        
 #------------------------------------------------------------------
-    def RhSearchCmd(self, event):
+    def Rh_search_cmd(self, event):
         """ Search or Query in Ontology and Model
             An entry in QueryWindow (lhString,relString,rhString)
             is a question with possible condition expressions:
        
-            rhCommonality = input('Rh-commonality (default: csfi-case sensitive, front-end identical): ')
+            rhCommonality = input('Rh-commonality
+                                  (default: csfi-case sensitive, front-end identical): ')
 
             Search for string in vocabulary for candidates for right hand term 
             and build a question
 
-        == Options: optionNr,whetherKnown,langUIDres,commUIDres,resultString,resultUID,isCalledUID,kindKnown,kind
+            == Options: optionNr,whetherKnown,langUIDres,commUIDres,
+                        result_string,resultUID,is_called_uid,kindKnown,kind
         """
         #print('Rh Entry:',event.char)
         if event.keysym not in ['Shift_L', 'Shift_R']:
@@ -651,26 +767,29 @@ class Query_view():
             string_commonality = cs + fe
 
             # Delete previous items in the rh_options in tree
-            self.gel_net.rh_options[:]  = []
+            self.rh_options[:]  = []
             x = self.rh_options_tree.get_children()
             for item in x: self.rh_options_tree.delete(item)
 
             # Get the rh_string and search for options in the dictionary
             rhString = self.q_rh_name_widget.get()
-            self.foundRh, self.gel_net.rh_options = self.gel_net.SolveUnknown(rhString, string_commonality)
-            #print('  OptRh:',self.gel_net.rh_options);
+            self.foundRh, self.rh_options = \
+                          self.Solve_unknown(rhString, string_commonality)
+            #print('  OptRh:',self.rh_options);
 
-            # == rh_options: optionNr,whetherKnown,langUIDres,commUIDres,resultString,resultUID,isCalledUID,kindKnown,kind
-            # If rh_options are available, sort the list and display them in the rh_options tree
-            if len(self.gel_net.rh_options) > 0:
-                self.query.q_rh_uid = self.gel_net.rh_options[0][5]
+            # == rh_options: optionNr,whetherKnown,langUIDres,commUIDres,
+            #                result_string,resultUID,is_called_uid,kindKnown,kind
+            # If rh_options are available,
+            # then sort the list and display them in the rh_options tree
+            if len(self.rh_options) > 0:
+                self.query.q_rh_uid = self.rh_options[0][5]
                 #obj = self.gel_net.uid_dict[self.query.q_rh_uid]
                 self.q_rh_uid_str.set(str(self.query.q_rh_uid))            
-                self.query.q_rh_category = self.gel_net.rh_options[0][8]
-                if len(self.gel_net.rh_options) > 1:
+                self.query.q_rh_category = self.rh_options[0][8]
+                if len(self.rh_options) > 1:
                     # Sort the list of options alphabetically by name
-                    self.gel_net.rh_options.sort(key=itemgetter(4))   # sort by name
-                for option in self.gel_net.rh_options:
+                    self.rh_options.sort(key=itemgetter(4))
+                for option in self.rh_options:
                     if option[2] == 0:
                         lang_name = 'unknown'
                     else:
@@ -680,17 +799,208 @@ class Query_view():
                     else:
                         comm_name = self.gel_net.community_dict[option[3]]
                     opt = [option[5],option[4],option[8],comm_name,lang_name]
-                    self.rh_options_tree.insert('',index='end',values=opt)
-#----------------------------------------------------
-    def Set_selected_q_lh_term(self, ind):
-        """ Put the lhObject that is selected from lhOptions
-            in the query (self.q_lh_name_str and self.q_lh_uid_str) and display its textual definition.
-            Then determine the kinds of relations that relate to that lh_object or its subtypes
+                    self.rh_options_tree.insert('', index='end', values=opt)
+
+    def Solve_unknown(self, search_string, string_commonality):
+        """ Determine the available options (UIDs and names) in the dictionary
+            that match the search_string.
+            Collect options in lh, rel and rh optionsTables for display and selection.
+
+            - search_string = the string to be found in Gel_dict
+              with corresponding lang_uid and comm_uid.
+            - string_commonality is one of:
+              cipi, cspi, cii, csi, cifi, csfi
+              (case (in)sensitive partial/front end identical
+
+            Returnparameters:
+            == options (Lh, Rel or Rh):
+               optionNr, whetherKnown, langUIDres, commUIDres, result_string,
+               resultUID, isCalled, objectTypeKnown, kind (of resultUID).
+               OptionTables have basically the same table structure
+                 as the namingTable, but is extended with extra columns.
+
+            == Gel_dict columns: [lang_uid, comm_uid, term], [UID, naming_uid, part_def]
+         
+            Process: Determine whether search_string equals 'what' etc. or whether it occurs one or more times in vocabulary Gel_dict.
+            Collect options in OptionTables, for selecting a preferred option.
         """
-        item  = self.lh_options_tree.selection()
-        ind   = self.lh_options_tree.index(item)
-        self.query.lhSel = self.gel_net.lh_options[ind]
-        self.query.q_lh_uid  = self.query.lhSel[5]    # Determine UID and Name of selected option
+        # Initialize indicator whether the search string is an unknown (UID 1-99) or not.
+        whetherKnown = 'unknown'
+        objectTypeKnown = 'unknown'
+        option = []
+        options = []
+        unknown_terms = ['', '?', 'any', 'what', 'which', 'who', 'where', \
+                         'wat', 'welke', 'wie', 'waar']
+        found_uid = ''
+        is_called_uid = '5117'
+
+        # If search string denotes an unknown from the list unknown_terms
+        # then add unknown to the list of options
+        if search_string in unknown_terms:
+            if search_string == '':
+                result_string = 'blank';
+                return found_uid, options
+            else:
+                result_string = search_string
+            if result_string not in self.names_of_unknowns:
+                # Create an object for the (list of) unknown(s)
+                self.unknown_quid += 1
+                unknown = Anything(str(self.unknown_quid), result_string)
+                self.unknowns.append(unknown)
+                self.names_of_unknowns.append(result_string)
+                optionNr = 1
+                option.append(optionNr) 
+                option.append(whetherKnown)
+                option.append(self.GUI_lang_pref_uids[1])
+                option.append(self.comm_pref_uids[0])
+                option.append(result_string)
+                option.append(str(self.unknown_quid))
+                option.append(is_called_uid)
+                option.append(objectTypeKnown)
+                option.append(self.unknown_kind[self.GUI_lang_index])
+
+                options.append(option)
+                found_uid = str(self.unknown_quid)
+            else:
+                # Search in earlier collected list of unknowns
+                # for object with name search_string
+                for unknown in self.unknowns:
+                    if unknown.name == search_string:
+                        found_uid = unknown.uid
+                        continue
+            if found_uid == '':
+                Message(self.GUI_lang_index,
+                    'No uid found.',\
+                    'Er is geen uid gevonden.')
+            return found_uid, options
+        
+        # Search for full search_string in GellishDict
+        candidates = self.gel_net.Query_network_dict(search_string, string_commonality)
+
+        # Collect found option in 'options' list for display and selection
+        if len(candidates) > 0:
+            #print ("nr of candidates:",len(candidates), self.GUI_lang_pref_uids)
+            optionNr = 0
+            for candidate in candidates:
+                # Only add the candidate if uid of language
+                # corresponds with uid from GUI_lang_pref_uids
+                # because the query is in the GUI_language
+                if candidate[0][0] not in self.GUI_lang_pref_uids:
+                    continue
+                whetherKnown = 'known'
+                option = []
+                optionNr = optionNr + 1
+                option.append(optionNr)
+                option.append(whetherKnown)
+                # Add candidate fields to option (in column (2,3,4),(5,6,7)
+                for part in candidate:
+                    for field in part:
+                        option.append(field)
+                #print ("option:",len(candidates), option)
+
+                #== option: optionNr, whetherKnown, langUID, commUID, result_string, \
+                #           resultUID, objectTypeKnown, kind_name (of resultUID).
+
+                # If result_uid is a known uid (being alphanumeric or >= 100) then
+                # then find the object and its supertype or classifier
+                # and add the object to the list of options
+                
+                result_uid, integer = Convert_numeric_to_integer(option[5])
+                if integer is False or result_uid >= 100:
+                    # UID is of a known object (alpha or in range above unknowns (1-100))
+                    # then identify the object.
+                    obj = self.gel_net.uid_dict[str(result_uid)]
+                    
+                    # Find and append the name of the kind
+                    # (the supertype or classifier of the option)
+                    if len(obj.supertypes) > 0:
+                        pref_kind_name = obj.supertypes[0].name
+                        # Find the first name in the preferred language
+                        # of the first supertype in the GUI_language
+                        if len(obj.supertypes[0].names_in_contexts) > 0:
+                            lang_name, comm_name_supertype, pref_kind_name, descr_of_super = \
+                                self.user_interface.Determine_name_in_context(obj.supertypes[0])
+                    elif len(obj.classifiers) > 0:
+                        pref_kind_name = obj.classifiers[0].name
+                        # Find the first name in the preferred language
+                        # of the first classifier in the GUI_language
+                        if len(obj.classifiers[0].names_in_contexts) > 0:
+                            lang_name, comm_name_supertype, pref_kind_name, descr_of_super = \
+                                self.user_interface.Determine_name_in_context(obj.classifiers[0])
+##                        for name_in_context in obj.classifiers[0].names_in_contexts:
+##                            if name_in_context[0] == self.GUI_lang_uid:
+##                                pref_kind_name = name_in_context[2]
+##                                continue
+                    else:
+                        pref_kind_name = obj.category
+                    option.append(pref_kind_name)
+                    
+##                    # Determine the direct supertype(s), if any    
+##                    supers = obj.supertypes
+##                    option.append(obj.name) #names_in_contexts[0][2])
+                else:
+                    #option.append('unknown')       # objectType
+                    option.append(self.unknown_kind[self.GUI_lang_index])
+
+                # Add the option to the list of options 
+                options.append(option)
+                found_uid = option[5]
+                
+        # If not found in vocabulary, return with name of search_string
+        # (being the unknown) and next UID.
+        else:   # nrOfFounds == 0:
+            if search_string not in self.names_of_unknowns:
+                # Create an object for the (list of) unknown(s)
+                self.unknown_quid += 1
+                unknown = Anything(str(self.unknown_quid), search_string)
+                self.unknowns.append(unknown)
+                whetherKnown = 'unknown'
+                self.names_of_unknowns.append(search_string)
+                optionNr = 1
+                option.append(optionNr)
+                option.append(whetherKnown)
+                option.append(self.GUI_lang_pref_uids[1])
+                option.append(self.comm_pref_uids[0])
+                option.append(search_string)
+                option.append(str(self.unknown_quid))
+                option.append(is_called_uid)
+                option.append(objectTypeKnown)
+                option.append(self.unknown_kind[self.GUI_lang_index])
+
+                options.append(option)
+                    
+                Message(self.GUI_lang_index,
+                    'String <{}> not found in the dictionary. UID = {}. '.\
+                    format(search_string,self.unknown_quid),\
+                    'Term <{}> is niet gevonden in het woordenboek. UID = {}. '.\
+                    format(search_string, self.unknown_quid))
+                found_uid = self.unknown_quid
+            else:
+                # Search in unknowns for object with name search_string
+                for obj in self.unknowns:
+                    if obj.name == search_string:
+                        found_uid = obj.uid
+                        break
+            if found_uid == '':
+                Message(self.GUI_lang_index,
+                    'The found UID is blank, which is incorrect.',\
+                    'De gevonden UID is blanco, hetgeen niet correct is.')
+                 
+        return found_uid, options
+
+    def Set_selected_q_lh_term(self, ind):
+        """ Put the lh_object that is selected from lh_options
+            in the query (q_lh_name_str and q_lh_uid_str)
+            and display its textual definition.
+            Then determine the kinds of relations
+            that relate to that lh_object or its subtypes.
+            And determine the synonyms and translations.
+        """
+        item = self.lh_options_tree.selection()
+        ind = self.lh_options_tree.index(item)
+        self.query.lhSel = self.lh_options[ind]
+        # Determine UID and Name of selected option
+        self.query.q_lh_uid = self.query.lhSel[5]
         self.query.q_lh_name = self.query.lhSel[4]
         self.q_lh_uid_str.set(str(self.query.q_lh_uid))
         self.q_lh_name_str.set(self.query.q_lh_name)
@@ -699,19 +1009,22 @@ class Query_view():
         full_def = ''
         # Determine the selected object via its uid
         int_q_lh_uid, integer = Convert_numeric_to_integer(self.query.q_lh_uid)
-        if integer is False or int_q_lh_uid >= 100:                 # if not unknown
+        # If not unknown
+        if integer is False or int_q_lh_uid >= 100:
             self.query.q_lh_category = self.query.lhSel[8]
             obj = self.gel_net.uid_dict[self.query.q_lh_uid]
             
             # Determine the full definition of the selected object in the preferred language
             lang_name, comm_name, preferred_name, full_def = \
-                       self.gel_net.Determine_name_in_language_and_community(obj)
-            #print('FullDef:',self.query.q_lh_uid, self.query.q_lh_name,self.query.q_lh_category,full_def)
+                       self.user_interface.Determine_name_in_context(obj)
+            #print('FullDef:',self.query.q_lh_uid, self.query.q_lh_name,\
+            #      self.query.q_lh_category,full_def)
         # Display full definition
-        self.q_full_def_widget.insert('1.0',full_def)
+        self.q_full_def_widget.insert('1.0', full_def)
 
-        # If the lh_object is known, then determine the kinds of relations that relate to that lh_object
-        is_called_uid = '5117'
+        # If the lh_object is known,
+        # then determine the kinds of relations that relate to that lh_object
+        #is_called_uid = '5117'
         if integer is False or int_q_lh_uid >= 100:
             rel_options = []
             #opt_nr = 0
@@ -721,32 +1034,22 @@ class Query_view():
             sub_types.append(lh_object)
             for lh_obj_sub in sub_types:
                 # Determine rel types and store results in self.lh_obj_relation_types
-                self.gel_net.Determine_rel_types_for_lh_object(lh_obj_sub)
+                self.Determine_rel_types_for_lh_object(lh_obj_sub)
                 
                 # Create option list for each found kind of relation
-                for rel_type in self.gel_net.lh_obj_relation_types:
+                for rel_type in self.lh_obj_relation_types:
                     if len(rel_type.base_phrases_in_contexts) > 0:
                         for phrase_in_context in rel_type.base_phrases_in_contexts:
                             # If language of phrase is as requested
-                            if phrase_in_context[0] == self.lang_uid:
+                            if phrase_in_context[0] == self.GUI_lang_uid:
                                 rel_option = phrase_in_context[2]
-        ##                        opt_nr += + 1
-        ##                        #rel_option: optionNr, whetherKnown, lang_uid, comm_uid, resultString,\
-        ##                        #            resultUID, is_called_uid, kindKnown, kind
-        ##                        rel_option = [opt_nr, 'known', lang_uid, comm_uid, phrase_in_context[2], \
-        ##                                      lh_object.uid, is_called_uid, '', '']
                                 if rel_option not in rel_options:
                                     rel_options.append(rel_option)
                                     #print('Rel type option:', rel_option)
                     elif len(rel_type.inverse_phrases_in_contexts) > 0:
                         for phrase_in_context in rel_type.inverse_phrases_in_contexts:
-                            if phrase_in_context[0] == self.lang_uid:
+                            if phrase_in_context[0] == self.GUI_lang_uid:
                                 rel_option = phrase_in_context[2]
-        ##                        opt_nr += + 1
-        ##                        #rel_option: optionNr, whetherKnown, lang_uid, comm_uid, resultString,\
-        ##                        #            resultUID, is_called_uid, kindKnown, kind
-        ##                        rel_option = [opt_nr, 'known', lang_uid, comm_uid, phrase_in_context[2], \
-        ##                                      lh_object.uid, is_called_uid, '', '']
                                 if rel_option not in rel_options:
                                     rel_options.append(rel_option)
                                     print('Rel type option:', rel_option)
@@ -754,15 +1057,78 @@ class Query_view():
             self.gel_net.rel_terms = rel_options
             self.q_rel_name_widget.config(values=self.gel_net.rel_terms)
 
-    #--------------------------------------------------------------------------------
+            # Delete previous aliases
+            x = self.alias_tree.get_children()
+            for item in x: self.alias_tree.delete(item)
+            
+            # Determine synonyms and translations of lh_object in various languages        
+            languages, alias_table = self.Determine_aliases(lh_object)
+            for language in languages:
+                self.alias_tree.insert('', index='end',\
+                                       values=language,\
+                                       iid=language,\
+                                       text=language, open=True)
+            for alias_row in alias_table:
+                self.alias_tree.insert(alias_row[0], index='end',\
+                                       values=alias_row[1:],\
+                                       #iid=alias_row[1],\
+                                       text=alias_row[1], open=True)
+
+    def Determine_rel_types_for_lh_object(self, lh_object):
+        ''' With given selected lh_object determine which kinds of relations are known
+            and store results in self.lh_obj_relation_types
+        '''
+        self.lh_obj_relation_types = []
+        for lh_obj_rel in lh_object.relations:
+                expr = lh_obj_rel.expression
+                rel_type = self.gel_net.uid_dict[expr[rel_type_uid_col]]
+                if rel_type == None:
+                    Message(self.GUI_lang_index,
+                        'The kind of relation {} is not found.'.format(rel_type_uid),\
+                        'De soort relatie {} is niet gevonden.'.format(rel_type_uid))
+                else:
+                    if rel_type not in self.lh_obj_relation_types:
+                        self.lh_obj_relation_types.append(rel_type)
+                        
+                        # Determine_subtypes of the relation type
+                        sub_rel_types, sub_rel_type_uids = self.gel_net.Determine_subtypes(rel_type)
+                        for sub_rel_type in sub_rel_types:
+                            if sub_rel_type not in self.lh_obj_relation_types:
+                                self.lh_obj_relation_types.append(sub_rel_type)
+
+    def Determine_aliases(self, obj):
+        ''' Collect the names and translation that are known for obj
+            in the alias_table for display in alias_tree treeview.
+            name_in_context = (lang_uid, comm_uid, name, naming_uid, description)
+            alias_row = (language, term, alias_type)
+        '''
+        alias_table = []
+        languages = []
+        for name_in_context in obj.names_in_contexts:
+            alias_type = self.gel_net.uid_dict[name_in_context[3]]
+            # Determine preferred name of alias_type
+            lang_name, comm_name, alias_name, full_def = \
+                       self.user_interface.Determine_name_in_context(\
+                           alias_type, base_or_inverse = 'base')
+
+            language = self.gel_net.lang_uid_dict[name_in_context[0]]
+            if language not in languages:
+                languages.append(language)
+
+            alias_row = (language, name_in_context[2], alias_name)
+            if alias_row not in alias_table:
+                alias_table.append(alias_row)
+        return languages, alias_table
+
     def Set_selected_q_rel_term(self, ind):
         """ Put the selected relObject name and uid from relOptions
             in query (self.q_rel_name_str and self.q_rel_uid_str).
-            Then determine the rh_objects that are related to the lh_object by such a relation or its subtypes
+            Then determine the rh_objects
+            that are related to the lh_object by such a relation or its subtypes
         """
         item   = self.rel_options_tree.selection()
         ind    = self.rel_options_tree.index(item)
-        self.query.relSel = self.gel_net.rel_options[ind]
+        self.query.relSel = self.rel_options[ind]
         # Determine UID and Name of selected option
         self.query.q_rel_uid  = self.query.relSel[5]
         self.query.q_rel_name = self.query.relSel[4]
@@ -771,7 +1137,8 @@ class Query_view():
         if self.query.q_rel_name in self.gel_net.total_base_phrases:
             self.query.q_phrase_type_uid = '6066'
 
-        # Determine the rh_objects in the query that are related by selected rel_object type or its subtypes
+        # Determine the rh_objects in the query
+        # that are related by selected rel_object type or its subtypes
         # to the lh_object or its subtypes in the query
         int_q_lh_uid, integer = Convert_numeric_to_integer(self.query.q_lh_uid)
         if integer is False or int_q_lh_uid >= 100:
@@ -793,7 +1160,8 @@ class Query_view():
                     for rel_sub in q_rel_sub_types:
                         # Check if the relation types correspond
                         if expr[rel_type_uid_col] == rel_sub.uid:
-                            # If the base relation corresponds the collect the rh name, if not yet present
+                            # If the base relation corresponds the collect the rh name,
+                            # if not yet present
                             if expr[lh_uid_col] == lh_sub.uid:
                                 if expr[rh_name_col] not in rh_options:
                                     rh_options.append(expr[rh_name_col])
@@ -801,7 +1169,7 @@ class Query_view():
                             elif expr[rh_uid_col] == lh_sub.uid:
                                 if expr[lh_name_col] not in rh_options:
                                     rh_options.append(expr[lh_name_col])
-                            print('expr[lh_name_col], expr[rh_name_col]', expr[lh_name_col], expr[rh_name_col])
+                            #print('lh_name, rh_name', expr[lh_name_col], expr[rh_name_col])
             rh_options.sort()
             self.gel_net.rh_terms = rh_options
             self.q_rh_name_widget.config(values=self.gel_net.rh_terms)
@@ -812,8 +1180,9 @@ class Query_view():
         
         item  = self.rh_options_tree.selection()
         ind   = self.rh_options_tree.index(item)
-        self.query.rhSel = self.gel_net.rh_options[ind]
-        self.query.q_rh_uid  = self.query.rhSel[5]    # Determine UID and Name of selected option
+        self.query.rhSel = self.rh_options[ind]
+        # Determine UID and Name of selected option
+        self.query.q_rh_uid  = self.query.rhSel[5]
         self.query.q_rh_name = self.query.rhSel[4]
         self.q_rh_uid_str.set(str(self.query.q_rh_uid))
         self.q_rh_name_str.set(self.query.q_rh_name)
@@ -823,25 +1192,27 @@ class Query_view():
            Store resulting query expressions in candids table with the same table definition.
         """
         # Make query_spec empty
-        self.main.query_spec[:]    = []
-        self.gel_net.ex_candids[:] = []
+        self.query.query_spec[:] = []
+        self.query.ex_candids[:] = []
         
-        # LH: Get selected option (textString) from the presented list of options (lh_options_tree) in QueryWindow
+        # LH: Get selected option (textString) from the presented list of options
+        # (lh_options_tree) in QueryWindow
         lhUIDInit = self.q_lh_uid_widget.get()
         if lhUIDInit == '':
             #print('Warning: Left hand option not yet selected. Please try again.')
-            Message(self.lang_index, 'Warning: Left hand option is not yet selected. Please try again.',
-                    'Waarschuwing: Linker optie is nog niet geselecteerd. Probeer nogmaals.')
+            self.user_interface.Message(
+                'Warning: Left hand option is not yet selected. Please try again.',
+                'Waarschuwing: Linker optie is nog niet geselecteerd. Probeer nogmaals.')
             return
-        item  = self.lh_options_tree.selection()
-        ind   = self.lh_options_tree.index(item)
-        # => lh_options: optionNr, whetherKnown, langUIDres, commUIDres, resultString,\
-        #                resultUID, isCalledUID, kindKnown, kind
-        self.query.lhSel = self.gel_net.lh_options[ind]
+        item = self.lh_options_tree.selection()
+        ind = self.lh_options_tree.index(item)
+        # => lh_options: optionNr, whetherKnown, langUIDres, commUIDres, result_string,\
+        #                resultUID, is_called_uid, kindKnown, kind
+        self.query.lhSel = self.lh_options[ind]
         #print('Selected option:',item, ind, self.query.lhSel)
 
         # Determine UID and Name of selected lh option and formulate query expression (query_expr)
-        self.query.q_lh_uid  = self.query.lhSel[5]
+        self.query.q_lh_uid = self.query.lhSel[5]
         self.query.q_lh_name = self.query.lhSel[4]
         self.q_lh_uid_str.set(str(self.query.q_lh_uid))
         self.q_lh_name_str.set(self.query.q_lh_name)
@@ -854,11 +1225,11 @@ class Query_view():
         int_q_lh_uid, integer = Convert_numeric_to_integer(self.query.q_lh_uid)
         if integer is False or int_q_lh_uid >= 100:
             self.query.q_lh_obj = self.gel_net.uid_dict[self.query.q_lh_uid]
-            self.query.q_lh_category = self.gel_net.lh_options[0][8]
+            self.query.q_lh_category = self.lh_options[0][8]
 
             # Determine the full definition of the selected object in the preferred language
             lang_name, comm_name, preferred_name, full_def = \
-                       self.gel_net.Determine_name_in_language_and_community(self.query.q_lh_obj)
+                       self.user_interface.Determine_name_in_context(self.query.q_lh_obj)
             #print('Full def:', self.query.q_lh_uid, lhString, self.query.q_lh_category, full_def)
             # Display full definition
             self.q_full_def_widget.insert('1.0',full_def)
@@ -869,12 +1240,12 @@ class Query_view():
         relUIDInit = self.q_rel_uid_widget.get()
         if relUIDInit != '':
             # There is a kind of relation specified. Identify its uid and name
-            item   = self.rel_options_tree.selection()
-            ind    = self.rel_options_tree.index(item)
-            print('rel_ind', ind, self.gel_net.rel_options)
-            self.query.relSel = self.gel_net.rel_options[ind]
+            item = self.rel_options_tree.selection()
+            ind = self.rel_options_tree.index(item)
+            print('rel_ind', ind, self.rel_options)
+            self.query.relSel = self.rel_options[ind]
             
-            self.query.q_rel_uid  = self.query.relSel[5]
+            self.query.q_rel_uid = self.query.relSel[5]
             self.query.q_rel_name = self.query.relSel[4]
             self.q_rel_uid_str.set(str(self.query.q_rel_uid))
             self.q_rel_name_str.set(self.query.q_rel_name)
@@ -896,7 +1267,6 @@ class Query_view():
                 self.query.rolePlayerQTypeRH = self.query.q_rel_obj.role_player_type_rh
                 # 6068 = binary relation between an individual thing and any (kind or individual)
                 if self.query.rolePlayersQTypes == 'individualsOrMixed':  # is related to (a)
-                    #print('self.query.rolePlayers-IndividualsOrMixed:',self.query.rolePlayersQTypes,self.query.q_rel_name,self.gel_net.total_base_phrases)
                     if self.query.q_rel_name in self.gel_net.total_base_phrases:
                         self.query.rolePlayersQTypes = 'individualAndMixed'
                         self.query.rolePlayerQTypeLH = 'individual'
@@ -918,11 +1288,11 @@ class Query_view():
                 # 7071 = binary relation between a kind and any (kind or individual)
                 elif self.query.rolePlayersQTypes == 'kindsOrMixed':  # can be related to (a)
                     if self.query.q_rel_name in self.gel_net.total_base_phrases:
-                        self.query.rolePlayersQTypes = 'kindsAndMixed'  # can be related to (a)
+                        self.query.rolePlayersQTypes = 'kindsAndMixed' # can be related to (a)
                         self.query.rolePlayerQTypeLH = 'kind'
                         self.query.rolePlayerQTypeRH = 'mixed'
                     else:
-                        self.query.rolePlayersQTypes = 'mixedAndKind'  # is or can be related to a
+                        self.query.rolePlayersQTypes = 'mixedAndKind' # is or can be related to a
                         self.query.rolePlayerQTypeLH = 'mixed'
                         self.query.rolePlayerQTypeRH = 'kind'
                 else:
@@ -935,11 +1305,11 @@ class Query_view():
                 #self.query.MessagesQ.insert('end','\nRight hand option not (yet) selected.')
             else:
                 # There is a rh name specified. Determine its name and uid and identity
-                item  = self.rh_options_tree.selection()
-                ind   = self.rh_options_tree.index(item)
-                self.query.rhSel = self.gel_net.rh_options[ind]
+                item = self.rh_options_tree.selection()
+                ind = self.rh_options_tree.index(item)
+                self.query.rhSel = self.rh_options[ind]
                 
-                self.query.q_rh_uid  = self.query.rhSel[5]
+                self.query.q_rh_uid = self.query.rhSel[5]
                 self.query.q_rh_name = self.query.rhSel[4]
                 self.q_rh_uid_str.set(str(self.query.q_rh_uid))
                 self.q_rh_name_str.set(self.query.q_rh_name)
@@ -950,22 +1320,24 @@ class Query_view():
                     
                 # Report final query
                 queryText = ['Query ','Vraag   ']
-                self.main.views.log_messages.insert('end','\n\n{}: {} ({}) {} ({}) {} ({})'.format\
-                                        (queryText[self.lang_index], \
-                                         self.query.q_lh_name , self.query.q_lh_uid,\
-                                         self.query.q_rel_name, self.query.q_rel_uid,\
-                                         self.query.q_rh_name , self.query.q_rh_uid))
-                self.query.query_expr = [self.query.q_lh_uid , self.query.q_lh_name, \
+                self.views.log_messages.insert('end','\n\n{}: {} ({}) {} ({}) {} ({})'.\
+                    format(queryText[self.GUI_lang_index], \
+                           self.query.q_lh_name, self.query.q_lh_uid,\
+                           self.query.q_rel_name, self.query.q_rel_uid,\
+                           self.query.q_rh_name, self.query.q_rh_uid))
+                self.query.query_expr = [self.query.q_lh_uid, self.query.q_lh_name, \
                                          self.query.q_rel_uid, self.query.q_rel_name,\
-                                         self.query.q_rh_uid , self.query.q_rh_name, self.query.q_phrase_type_uid]
+                                         self.query.q_rh_uid, self.query.q_rh_name, \
+                                         self.query.q_phrase_type_uid]
 ##        else:
 ##            # Option for relation type is blank
-##            Message(self.lang_index, 'Relation type option is not (yet) selected.',\
-##                    'Optie voor soort relatie is (noch) niet geselecteerd.')
+##            self.user_interface.Message(
+##              'Relation type option is not (yet) selected.',\
+##              'Optie voor soort relatie is (noch) niet geselecteerd.')
                 
         # Append query expression as first line in query_spec
         # query_expr = lh_uid, lh_name, rel_uid, rel_name, rh_uid_rh_name, phrase_type_uid
-        self.main.query_spec.append(self.query.query_expr)
+        self.query.query_spec.append(self.query.query_expr)
 
         # Formulate coditions as are specified in the GUI 
         self.query.Formulate_conditions_from_gui()
@@ -973,17 +1345,21 @@ class Query_view():
         # Prepare query for execution and execute query
         self.query.Interpret_query_spec()
         # Display query results in notebook sheets
-        self.main.views.Notebook_views()
+        self.views.Display_notebook_views()
 
     def Close_query(self):
         self.QWindow.destroy()
-        return
+        
 #------------------------------------------------------
-    
+class User_interface():
+    def __init__(self):
+        self.root = Tk()
+        
 if __name__ == "__main__":
-    root = Tk()
+    
     main = Main()
+    user_interface = User_interface()
     gel_net = Semantic_network()
-    GUI = Query_views(main)
+    main_view = Query_views(gel_net, user_interface)
     
     root.mainloop()
