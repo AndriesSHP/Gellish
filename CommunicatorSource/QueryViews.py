@@ -869,7 +869,7 @@ class Query_view():
                         found_uid = unknown.uid
                         continue
             if found_uid == '':
-                Message(self.GUI_lang_index,
+                self.user_interface.Message(
                     'No uid found.',\
                     'Er is geen uid gevonden.')
             return found_uid, options
@@ -969,9 +969,9 @@ class Query_view():
 
                 options.append(option)
                     
-                Message(self.GUI_lang_index,
+                self.user_interface.Message(
                     'String <{}> not found in the dictionary. UID = {}. '.\
-                    format(search_string,self.unknown_quid),\
+                    format(search_string, self.unknown_quid),\
                     'Term <{}> is niet gevonden in het woordenboek. UID = {}. '.\
                     format(search_string, self.unknown_quid))
                 found_uid = self.unknown_quid
@@ -982,7 +982,7 @@ class Query_view():
                         found_uid = obj.uid
                         break
             if found_uid == '':
-                Message(self.GUI_lang_index,
+                self.user_interface.Message(
                     'The found UID is blank, which is incorrect.',\
                     'De gevonden UID is blanco, hetgeen niet correct is.')
                  
@@ -1083,7 +1083,7 @@ class Query_view():
                 expr = lh_obj_rel.expression
                 rel_type = self.gel_net.uid_dict[expr[rel_type_uid_col]]
                 if rel_type == None:
-                    Message(self.GUI_lang_index,
+                    self.user_interface.Message(
                         'The kind of relation {} is not found.'.format(rel_type_uid),\
                         'De soort relatie {} is niet gevonden.'.format(rel_type_uid))
                 else:
