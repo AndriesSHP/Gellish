@@ -13,9 +13,15 @@ from Occurrences_diagrams import Occurrences_diagram
 
 
 class Display_views():
+<<<<<<< HEAD
     ''' Various models about object(s)
         are created resulting from a query on a semantic network
         and the are presented in various treeviews in a notebook.
+=======
+    ''' Create various models about object(s)
+        that result from a query on a semantic network
+        and present them in a notebook.
+>>>>>>> de140ad914cb9eba39a5ad70d677f80881178058
     '''
     def __init__(self, gel_net, user_interface):
         #self.main = main
@@ -58,7 +64,11 @@ class Display_views():
         self.summ_column_names   = ['','','',''] #self.gel_net.summ_column_names
         self.summ_uom_names      = ['','','',''] #self.gel_net.summ_uom_names
         self.possib_aspect_uids  = ['','','','','']
+<<<<<<< HEAD
         self.possib_column_names = ['','','','','',''] #self.gel_net.possib_column_names
+=======
+        self.possib_column_names = ['','','','',''] #self.gel_net.possib_column_names
+>>>>>>> de140ad914cb9eba39a5ad70d677f80881178058
         self.possib_uom_names    = ['','','','',''] #self.gel_net.possib_uom_names
         self.indiv_aspect_uids  = ['','','','','']
         self.indiv_column_names = ['','','','',''] #self.gel_net.indiv_column_names
@@ -149,6 +159,7 @@ class Display_views():
             self.Build_single_product_view(obj)
         
     def Build_single_product_view(self, obj):
+<<<<<<< HEAD
         ''' Create various model views for a single object,
             being either an individual thing or a kind.
             This includes a network_model,
@@ -156,6 +167,13 @@ class Display_views():
             taxon_model (taxonomy view), summ_model (multi-product view),
             possibilities_model and indiv_model.
         '''
+=======
+        ''' Create product model views
+            including network_model,
+            kind_model, prod_model, expr_table (with Gellish expressions),
+            taxon_model (taxonomy view), summ_model (multi-product view),
+            possibilities_model and indiv_model'''
+>>>>>>> de140ad914cb9eba39a5ad70d677f80881178058
 
         # Verify whether object is excluded from list of candidates
         if obj in self.user_interface.query.ex_candids:
@@ -255,10 +273,14 @@ class Display_views():
 ##            self.possibility_row[0:5] = obj.uid, obj_name, '', supertype_name, comm_name
 ##                   # comm_name of obj name (not of supertype name)
             # Add object_in_focus to possibilities_model with comm_name of obj (not of supertype)
+<<<<<<< HEAD
             # Second (extended) obj_name enables duplicate branches in display tree
             possib_row = [obj.uid, obj_name, obj_name, '', supertype_name, comm_name]
             if possib_row not in self.possibilities_model:
                 self.possibilities_model.append(possib_row)
+=======
+            self.possibilities_model.append([obj.uid, obj_name, '', supertype_name, comm_name])
+>>>>>>> de140ad914cb9eba39a5ad70d677f80881178058
 
             # Find kinds of aspects for kind in focus
             nr_of_aspects = self.Find_kinds_of_aspects(obj, role)
@@ -1333,18 +1355,31 @@ class Display_views():
                 else:
                     value_name = ''
 
+<<<<<<< HEAD
                 # If the item is not a subtype (subtype_level == 0)
                 # then create a row in the possibilities_model
                 #   for any decomp_level
                 if self.subtype_level == 0:
                     # Create and insert header for possible characteristics of part
+=======
+                # If not a subtype (subtype_level == 0)
+                # then create a row in the possibilities_model
+                #   for any decomp_level
+                if self.subtype_level == 0:
+                    # Create header for possible characteristics of part
+>>>>>>> de140ad914cb9eba39a5ad70d677f80881178058
                     # (only preceding the first aspect)
                     if nr_of_aspects == 1:
                         self.poss_asp_of_obj_text = possible_aspect_text[self.GUI_lang_index] + obj_name
                         self.possibility_row[0] = obj.uid
+<<<<<<< HEAD
                         self.possibility_row[1] = obj_name
                         self.possibility_row[2] = self.poss_asp_of_obj_text
                         self.possibility_row[3] = obj_name # parent
+=======
+                        self.possibility_row[1] = self.poss_asp_of_obj_text
+                        self.possibility_row[2] = obj_name
+>>>>>>> de140ad914cb9eba39a5ad70d677f80881178058
                         self.possibilities_model.append(self.possibility_row[:])
                     
                     if len(self.possibilities_model) < self.max_nr_of_rows:
@@ -1354,6 +1389,7 @@ class Display_views():
                         else:
                             community_name = self.unknown[self.GUI_lang_index]
                         self.possibility_row[0] = obj.uid
+<<<<<<< HEAD
                         self.possibility_row[1] = aspect_name
                         self.possibility_row[2] = aspect_name + of_text[self.GUI_lang_index] \
                                                   + obj_name + ')'
@@ -1363,6 +1399,16 @@ class Display_views():
                         self.possibility_row[5] = community_name # of obj
                         self.possibility_row[6] = value_name
                         self.possibility_row[7] = uom_name
+=======
+                        self.possibility_row[1] = aspect_name + of_text[self.GUI_lang_index] \
+                                                  + obj_name + ')'
+                        self.possibility_row[2] = self.poss_asp_of_obj_text
+                        #print('Aspect:', object_name, asp.uid, aspect_name, value_name)
+                        self.possibility_row[3] = asp_supertype_name
+                        self.possibility_row[4] = community_name # of obj
+                        self.possibility_row[5] = value_name
+                        self.possibility_row[6] = uom_name
+>>>>>>> de140ad914cb9eba39a5ad70d677f80881178058
                         if self.possibility_row not in self.possibilities_model:
                             self.possibilities_model.append(self.possibility_row[:])
                         else:
@@ -1636,7 +1682,10 @@ class Display_views():
         partHead = ['Part of part','Deel van deel']
         par3Head = ['Further part','Verder deel']
         kindHead = ['Kind','Soort']
+<<<<<<< HEAD
         of_text = [' (of ', ' (van ']
+=======
+>>>>>>> de140ad914cb9eba39a5ad70d677f80881178058
         
         role = ''
         self.part_head_req = True
@@ -1708,11 +1757,17 @@ class Display_views():
                 # Create row about possible aspect of kind in possibilities_model
                 self.possibility_row[0] = part.uid
                 self.possibility_row[1] = part_name
+<<<<<<< HEAD
                 self.possibility_row[2] = part_name + of_text[self.GUI_lang_index] \
                                           + obj_name + ')'
                 self.possibility_row[3] = obj_name  # parent
                 self.possibility_row[4] = part_kind_name
                 self.possibility_row[5] = community_name # of part
+=======
+                self.possibility_row[2] = obj_name
+                self.possibility_row[3] = part_kind_name
+                self.possibility_row[4] = community_name # of part
+>>>>>>> de140ad914cb9eba39a5ad70d677f80881178058
                 # Add possibility for part to possibilities_model
 ##                if part not in self.possib_objects:
 ##                    self.possib_objects.append(part)
@@ -2613,6 +2668,7 @@ class Display_views():
         # Display self.possibilities_model rows in self.possib_tree
         parents = []
         for possib_line in self.possibilities_model:
+<<<<<<< HEAD
             # If item parent is blank (has no defined parent, thus item is a top item)
             # or the parent appeared already,
             # then display the row in the tree
@@ -2623,6 +2679,15 @@ class Display_views():
                                         tags='sumTag', iid=possib_line[2], \
                                         text=possib_line[1], open=True)
                 parents.append(possib_line[2])
+=======
+            if possib_line[2] == '' or possib_line[2] in parents:
+                #print('Possib_line', possib_line)
+                # Possib_line[2] is the whole
+                self.possib_tree.insert(possib_line[2], index='end', values=possib_line,\
+                                        tags='sumTag' , iid=possib_line[1],\
+                                        text=possib_line[1], open=True)
+                parents.append(possib_line[1])
+>>>>>>> de140ad914cb9eba39a5ad70d677f80881178058
 
     def Define_possibilities_sheet(self):
         ''' Define a possibilities_sheet for display of possibilities_model
@@ -2643,18 +2708,28 @@ class Display_views():
         possib_head  = ['Possible aspects per object of a particular kind',\
                         'Mogelijke aspecten per object van een bepaalde soort']
         possib_label = Label(self.possib_frame,text=possib_head[self.GUI_lang_index])
+<<<<<<< HEAD
         headings = ['UID','Name','Ext_name','Parent','Kind','Community',\
                     'Aspect1','Aspect2','Aspect3','Aspect4','Aspect5',\
                     'Aspect6','Aspect7','Aspect8','Aspect9','Aspect10']
         nr_of_cols = len(self.possib_column_names)
         display_cols = headings[4:nr_of_cols]
+=======
+        headings = ['UID','Name','Parent','Kind','Community','Aspect1','Aspect2','Aspect3',\
+                    'Aspect4','Aspect5','Aspect6','Aspect7','Aspect8','Aspect9','Aspect10']
+        nr_of_cols = len(self.possib_column_names)
+        display_cols = headings[3:nr_of_cols]
+>>>>>>> de140ad914cb9eba39a5ad70d677f80881178058
         
         self.possib_tree = Treeview(self.possib_frame, columns=(headings[0:nr_of_cols]),\
                                     displaycolumns=display_cols, selectmode='browse', height=30)
 
         self.possib_tree.heading('UID'      ,text='UID', anchor=W)
         self.possib_tree.heading('Name'     ,text=self.name_head[self.GUI_lang_index], anchor=W)
+<<<<<<< HEAD
         self.possib_tree.heading('Ext_name' ,text=self.name_head[self.GUI_lang_index], anchor=W)
+=======
+>>>>>>> de140ad914cb9eba39a5ad70d677f80881178058
         self.possib_tree.heading('Parent'   ,text=self.parent_head[self.GUI_lang_index], anchor=W)
         self.possib_tree.heading('Kind'     ,text=self.kind_head[self.GUI_lang_index], anchor=W)
         self.possib_tree.heading('Community',text=self.comm_head[self.GUI_lang_index], anchor=W)
@@ -2663,7 +2738,11 @@ class Display_views():
         self.possib_tree.column ('Kind'     ,minwidth=20 , width=50)
         self.possib_tree.column ('Community',minwidth=20 , width=50)
         asp = 0
+<<<<<<< HEAD
         for column in self.possib_column_names[6:]:
+=======
+        for column in self.possib_column_names[5:]:
+>>>>>>> de140ad914cb9eba39a5ad70d677f80881178058
             asp += 1
             Asp_name = 'Aspect' + str(asp)
             self.possib_tree.heading(Asp_name, text=self.possib_column_names[asp +4], anchor=W)
