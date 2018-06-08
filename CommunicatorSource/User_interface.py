@@ -131,7 +131,7 @@ class User_interface():
         self.menubar.add_command(label=manual[self.GUI_lang_index],
                                  command=self.user_manual)
 
-    # Main Frame
+        # Main Frame
         self.main_frame = Frame(self.root)
         self.main_frame.grid(column=0, row=0, sticky=NSEW)
         self.main_frame.columnconfigure(0,weight=0)
