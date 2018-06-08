@@ -16,7 +16,7 @@ class User_interface():
         The options start queries that are executed
         and the resulting models are displayed in model views.
     '''
-    
+
     def __init__(self, gel_net):
         #self.main = main
         self.gel_net = gel_net
@@ -37,7 +37,7 @@ class User_interface():
         self.root.columnconfigure(0, weight=1)
         self.root.rowconfigure(0, weight=1)
         self.root.option_add('*tearOff', False)
-        
+
         self.extended_query = False
         self.obj_without_name_in_context = []
 
@@ -63,7 +63,7 @@ class User_interface():
         #self.ex_candids = []
         self.unknown = ['unknown', 'onbekend']
         self.unknown_quid = 0   # start UID for unknowns in queries
-        
+
         # Create display views object and initialize notebook
         self.views = Display_views(gel_net, self)
 
@@ -100,7 +100,7 @@ class User_interface():
     def Main_window(self):
         """ Define a MainWindow with select options.
         """
-        
+
         # Menu bar
         self.menubar = Menu(self.root, bg='#fbf')
         self.root['menu'] = self.menubar
@@ -166,7 +166,7 @@ class User_interface():
 
     def Determine_GUI_language(self, event):
         ''' Determine which user interface language is spacified by the user. '''
-        
+
         GUI_lang_name  = self.lang_box.get()
         self.Set_GUI_language(GUI_lang_name)
 
@@ -182,7 +182,7 @@ class User_interface():
 
     def user_manual(self):
         ''' Open the user manual wiki. '''
-        
+
         url = 'http://wiki.gellish.net/'
         # Open URL in a new tab, if a browser window is already open.
         webbrowser.open_new_tab(url)
@@ -227,7 +227,7 @@ class User_interface():
         else:
             # Create a query object
             self.query = Query(self.gel_net, self)
-            
+
             # Enter and Interpret a query
 ##            if self.use_GUI:
             q_view = Query_view(self.gel_net, self)
@@ -305,7 +305,7 @@ class User_interface():
                         break
                 if obj_name:
                     break
-                
+
             # Search for partial definition in specialization relation in pref_languages
             # thus in a name_in_context[3] where 'is called' (5117) is used
             if obj_name:
@@ -329,7 +329,7 @@ class User_interface():
                                break
                        if part_def:
                            break
-            else:    
+            else:
                 # No name is available in the preferred language,
                 # then use the first available name and its definition
                 obj_name = names_in_contexts[0][2]
@@ -370,7 +370,7 @@ class User_interface():
             full_def = super_name + ' ' + part_def
         else:
             full_def = part_def
-        
+
         return lang_name, comm_name, obj_name, full_def
 
     def stop_quit(self):
