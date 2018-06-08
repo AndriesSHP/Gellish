@@ -145,8 +145,10 @@ class User_interface():
                                 text=lang_text[self.GUI_lang_index], width=10)
         # Set default language: GUI_lang_names[0] = English, [1] = Nederlands
         self.lang_default = StringVar(value=self.GUI_lang_names[0])
-        self.lang_box = Combobox(self.main_frame, textvariable=self.lang_default,
-                                 values=self.GUI_lang_names, width=10)
+        self.lang_box = Combobox(self.main_frame,
+                                 textvariable=self.lang_default,
+                                 values=self.GUI_lang_names,
+                                 width=10)
         self.lang_label.grid(column=0, row=0, sticky=NW)
         self.lang_box.grid(column=1, row=0, sticky=NW)
 
