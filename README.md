@@ -18,4 +18,19 @@ For testing tools and applications the following data is available as CSV (semic
 
 The Application software allows to select creation of a new database or querying an existing database. On 'n' (new) the program will (1) first import the 'base_ontology' file, containing the core language definition (subset), in order to enable formulation and interpretation of expressions in the formal language. This enables (2) importing the second and third files (and similar taxonomic dictionary files), because it enables verifying and interpreting the kinds of relations and build the taxonomy and object models. Then (3) product and process models, knowledge models and requirements models can be imported, verified and interpreted. The fourth file is an example of a product model (being a model of a simplified road network).
 
-The Application software starts with the Communicator.py module.
+
+## Installation
+
+Make sure you have the Python-Tkinter libraries installed.
+
+On Mac OSX using Mac Ports::
+
+    sudo port install py36-tkinter
+
+If you want to use a virtualenv, make sure to also include system site packages:
+
+    mkvirtualenv --system-site-packages --python=/opt/local/bin/python3.6 env
+
+The Application software starts with the Communicator.py module:
+
+    python3.6 CommunicatorSource/Communicator.py
