@@ -13,66 +13,52 @@ from Occurrences_diagrams import Occurrences_diagram
 
 
 class Display_views():
-<<<<<<< HEAD
     ''' Various models about object(s)
         are created resulting from a query on a semantic network
         and the are presented in various treeviews in a notebook.
-=======
-    ''' Create various models about object(s)
-        that result from a query on a semantic network
-        and present them in a notebook.
->>>>>>> de140ad914cb9eba39a5ad70d677f80881178058
     '''
     def __init__(self, gel_net, user_interface):
-        #self.main = main
-        self.gel_net = gel_net #main.gel_net
+        self.gel_net = gel_net
         self.user_interface = user_interface
         self.root = user_interface.root
-        #self.query = user_interface.query
         self.GUI_lang_index = user_interface.GUI_lang_index
         self.uid_dict = gel_net.uid_dict
 
         self.network_model = []
         self.rels_in_network_model = []
-        #self.network_model = self.gel_net.network_model
-        self.kind_model = [] #self.gel_net.kind_model
-        self.prod_model = [] #self.gel_net.prod_model
-        self.expr_table = [] #self.gel_net.expr_table
-        self.summ_model = [] #self.gel_net.summ_model
+        self.kind_model = []
+        self.prod_model = []
+        self.expr_table = []
+        self.summ_model = []
         self.summ_objects = []
-        self.taxon_model = [] #self.gel_net.taxon_model
-        #self.taxon_objects = []
-        self.possibilities_model = [] #self.gel_net.possibilities_model
-        self.indiv_model = [] #self.gel_net.indiv_model
+        self.taxon_model = []
+        self.possibilities_model = []
+        self.indiv_model = []
         self.indiv_objects = []
         self.info_model = []
         self.all_subtypes = []
-        self.occ_model = [] #self.gel_net.occ_model
-        self.involv_table = [] #self.gel_net.involv_table
+        self.occ_model = []
+        self.involv_table = []
         self.seq_table = []
-        self.part_whole_occs = [] #self.gel_net.part_whole_occs
+        self.part_whole_occs = []
         
-        self.taxon_row    = ['','','','','','','','','','','','','','']
-        self.summary_row  = ['','','','','','','','','','','','','','']
-        self.possibility_row   = ['','','','','','','','','','','','','','','']
-        self.indiv_row    = ['','','','','','','','','','','','','','','']
-        self.occ_row      = ['','','','','','','','','','','','','','']
-        self.taxon_aspect_uids   = ['','','','']
-        self.taxon_column_names  = ['','','',''] #self.gel_net.taxon_column_names
-        self.taxon_uom_names     = ['','','',''] #self.gel_net.taxon_uom_names
-        self.summ_aspect_uids    = ['','','','']
-        self.summ_column_names   = ['','','',''] #self.gel_net.summ_column_names
-        self.summ_uom_names      = ['','','',''] #self.gel_net.summ_uom_names
-        self.possib_aspect_uids  = ['','','','','']
-<<<<<<< HEAD
-        self.possib_column_names = ['','','','','',''] #self.gel_net.possib_column_names
-=======
-        self.possib_column_names = ['','','','',''] #self.gel_net.possib_column_names
->>>>>>> de140ad914cb9eba39a5ad70d677f80881178058
-        self.possib_uom_names    = ['','','','',''] #self.gel_net.possib_uom_names
-        self.indiv_aspect_uids  = ['','','','','']
-        self.indiv_column_names = ['','','','',''] #self.gel_net.indiv_column_names
-        self.indiv_uom_names    = ['','','','',''] #self.gel_net.indiv_uom_names
+        self.taxon_row = ['','','','','','','','','','','','','','']
+        self.summary_row = ['','','','','','','','','','','','','','']
+        self.possibility_row = ['','','','','','','','','','','','','','','']
+        self.indiv_row = ['','','','','','','','','','','','','','','']
+        self.occ_row = ['','','','','','','','','','','','','','']
+        self.taxon_aspect_uids = ['','','','']
+        self.taxon_column_names = ['','','','']
+        self.taxon_uom_names = ['','','','']
+        self.summ_aspect_uids = ['','','','']
+        self.summ_column_names = ['','','','']
+        self.summ_uom_names = ['','','','']
+        self.possib_aspect_uids = ['','','','','']
+        self.possib_column_names = ['','','','','','']
+        self.possib_uom_names = ['','','','','']
+        self.indiv_aspect_uids = ['','','','','']
+        self.indiv_column_names = ['','','','','']
+        self.indiv_uom_names = ['','','','','']
 
         self.subs_head = ['Subtypes', 'Subtypen']
         self.comp_head = ['Part hierarchy', 'Compositie']
@@ -89,7 +75,7 @@ class Display_views():
         self.unknown = ['unknown', 'onbekend']
         self.unknown_kind = ['unknown kind' ,'onbekende soort']
 
-        self.occ_aspects  = ['','','','','','','','','','','']
+        self.occ_aspects = ['','','','','','','','','','','']
         self.occ_kinds = ['','','','','','','','','','','']
         self.occ_uoms = ['','','','','','','','','','','']
 
@@ -159,7 +145,6 @@ class Display_views():
             self.Build_single_product_view(obj)
         
     def Build_single_product_view(self, obj):
-<<<<<<< HEAD
         ''' Create various model views for a single object,
             being either an individual thing or a kind.
             This includes a network_model,
@@ -167,13 +152,6 @@ class Display_views():
             taxon_model (taxonomy view), summ_model (multi-product view),
             possibilities_model and indiv_model.
         '''
-=======
-        ''' Create product model views
-            including network_model,
-            kind_model, prod_model, expr_table (with Gellish expressions),
-            taxon_model (taxonomy view), summ_model (multi-product view),
-            possibilities_model and indiv_model'''
->>>>>>> de140ad914cb9eba39a5ad70d677f80881178058
 
         # Verify whether object is excluded from list of candidates
         if obj in self.user_interface.query.ex_candids:
@@ -273,14 +251,10 @@ class Display_views():
 ##            self.possibility_row[0:5] = obj.uid, obj_name, '', supertype_name, comm_name
 ##                   # comm_name of obj name (not of supertype name)
             # Add object_in_focus to possibilities_model with comm_name of obj (not of supertype)
-<<<<<<< HEAD
             # Second (extended) obj_name enables duplicate branches in display tree
             possib_row = [obj.uid, obj_name, obj_name, '', supertype_name, comm_name]
             if possib_row not in self.possibilities_model:
                 self.possibilities_model.append(possib_row)
-=======
-            self.possibilities_model.append([obj.uid, obj_name, '', supertype_name, comm_name])
->>>>>>> de140ad914cb9eba39a5ad70d677f80881178058
 
             # Find kinds of aspects for kind in focus
             nr_of_aspects = self.Find_kinds_of_aspects(obj, role)
@@ -1189,8 +1163,16 @@ class Display_views():
         possible_aspect_text = ['possible characteristic of a ', 'mogelijk kenmerk van een ']
         of_text = [' (of ', ' (van ']
 
-        # Search for expressions that are (subtypes of)
-        # the <can have as aspect a> kind of relation
+        # Collect all relations in expr_table
+        # and include line in network_model view
+        for rel_obj in obj.relations:
+                expr = rel_obj.expression
+                if len(self.expr_table) < self.max_nr_of_rows and expr not in self.expr_table:
+                    self.expr_table.append(expr)
+                    self.Add_line_to_network_model(rel_obj, expr)
+
+        # Search for expressions that are <can have as aspect a> kind of relation
+        # or subtypes of that kind of relation
         # with the obj.uid (or its supertypes) at left or at right.
 
         # Initialize number of kinds of aspects that are possessed by this kind of object
@@ -1202,14 +1184,13 @@ class Display_views():
         uom_name = ''
         equality = ''
         status = ''
-        obj_name = obj.name
 
-        # Collect all relations in expr_table
-        for rel_obj in obj.relations:
-                expr = rel_obj.expression
-                if len(self.expr_table) < self.max_nr_of_rows and expr not in self.expr_table:
-                    self.expr_table.append(expr)
-                    self.Add_line_to_network_model(rel_obj, expr)
+        # Determine preferred obj name
+        if len(obj.names_in_contexts) > 0:
+            lang_name, comm_name, obj_name, descr = \
+                       self.user_interface.Determine_name_in_context(obj)
+        else:
+            obj_name = obj.name
     
         # Collect list of obj and its supertypes in the complete hierarchy
         # for searching inherited aspects
@@ -1241,8 +1222,7 @@ class Display_views():
                     continue
                 
                 # There is a kind of aspect found
-                nr_of_aspects += 1    
-                #self.line_nr  += 1
+                nr_of_aspects += 1
                 status = expr[status_col]     
                 equality = '='
                 value_uid = ''
@@ -1261,7 +1241,8 @@ class Display_views():
                     # or other criterion, constraints or value for intrinsic aspect, if any.
                     for rel_obj2 in role.relations:
                         expr2 = rel_obj2.expression
-                        # Find collection of qualitative aspects for intrinsic aspect (=role), if any.
+                        # Find collection of qualitative aspects for intrinsic aspect (=role),
+                        # if any.
                         if role_uid == expr2[lh_uid_col] \
                            and expr2[rel_type_uid_col] in self.gel_net.qualOptionsUIDs:
                             value_uid  = expr2[rh_uid_col]   # collection of allowed values
@@ -1290,7 +1271,8 @@ class Display_views():
                             value_presence = True
                             break
 
-                        # Find conceptual quantification (1791) for intrinsic aspect (=role), if any.
+                        # Find conceptual quantification (1791) for intrinsic aspect (=role),
+                        # if any.
                         elif role_uid == expr2[lh_uid_col] \
                              and expr2[rel_type_uid_col] in self.gel_net.concQuantUIDs:
                             value_uid  = expr2[rh_uid_col]   # value (on a scale)
@@ -1325,14 +1307,16 @@ class Display_views():
                             value_presence = True
                             break
 
-                # Determine preferred names for aspect, aspect_supertype, obj, and value
+                # Determine preferred names for aspect, aspect_supertype, and value
+                # Preferred aspect name
                 asp = self.uid_dict[aspect_uid]
                 if len(asp.names_in_contexts) > 0:
                     lang_name, comm_name, aspect_name, descr = \
                                self.user_interface.Determine_name_in_context(asp)
                 else:
                     aspect_name = asp.name
-                # Supertype name
+                    
+                # Preferred supertype name
                 if len(asp.supertypes) > 0:
                     if len(asp.supertypes[0].names_in_contexts) > 0:
                         lang_name, comm_name, asp_supertype_name, descr = \
@@ -1341,13 +1325,8 @@ class Display_views():
                         asp_supertype_name = asp.supertypes[0].name
                 else:
                     asp_supertype_name = self.unknown[self.GUI_lang_index]
-                # Obj name
-                if len(obj.names_in_contexts) > 0:
-                    lang_name, comm_name, object_name, descr = \
-                               self.user_interface.Determine_name_in_context(obj)
-                else:
-                    object_name = obj.name
-                # Value name
+
+                # Preferred value name
                 if value_uid != '':
                     value = self.uid_dict[value_uid]
                     lang_name, comm_name, value_name, descr = \
@@ -1355,31 +1334,18 @@ class Display_views():
                 else:
                     value_name = ''
 
-<<<<<<< HEAD
                 # If the item is not a subtype (subtype_level == 0)
                 # then create a row in the possibilities_model
                 #   for any decomp_level
                 if self.subtype_level == 0:
                     # Create and insert header for possible characteristics of part
-=======
-                # If not a subtype (subtype_level == 0)
-                # then create a row in the possibilities_model
-                #   for any decomp_level
-                if self.subtype_level == 0:
-                    # Create header for possible characteristics of part
->>>>>>> de140ad914cb9eba39a5ad70d677f80881178058
                     # (only preceding the first aspect)
                     if nr_of_aspects == 1:
                         self.poss_asp_of_obj_text = possible_aspect_text[self.GUI_lang_index] + obj_name
                         self.possibility_row[0] = obj.uid
-<<<<<<< HEAD
                         self.possibility_row[1] = obj_name
                         self.possibility_row[2] = self.poss_asp_of_obj_text
                         self.possibility_row[3] = obj_name # parent
-=======
-                        self.possibility_row[1] = self.poss_asp_of_obj_text
-                        self.possibility_row[2] = obj_name
->>>>>>> de140ad914cb9eba39a5ad70d677f80881178058
                         self.possibilities_model.append(self.possibility_row[:])
                     
                     if len(self.possibilities_model) < self.max_nr_of_rows:
@@ -1389,26 +1355,15 @@ class Display_views():
                         else:
                             community_name = self.unknown[self.GUI_lang_index]
                         self.possibility_row[0] = obj.uid
-<<<<<<< HEAD
                         self.possibility_row[1] = aspect_name
                         self.possibility_row[2] = aspect_name + of_text[self.GUI_lang_index] \
                                                   + obj_name + ')'
                         self.possibility_row[3] = self.poss_asp_of_obj_text
-                        #print('Aspect:', object_name, asp.uid, aspect_name, value_name)
+                        #print('Aspect:', obj_name, asp.uid, aspect_name, value_name)
                         self.possibility_row[4] = asp_supertype_name
                         self.possibility_row[5] = community_name # of obj
                         self.possibility_row[6] = value_name
                         self.possibility_row[7] = uom_name
-=======
-                        self.possibility_row[1] = aspect_name + of_text[self.GUI_lang_index] \
-                                                  + obj_name + ')'
-                        self.possibility_row[2] = self.poss_asp_of_obj_text
-                        #print('Aspect:', object_name, asp.uid, aspect_name, value_name)
-                        self.possibility_row[3] = asp_supertype_name
-                        self.possibility_row[4] = community_name # of obj
-                        self.possibility_row[5] = value_name
-                        self.possibility_row[6] = uom_name
->>>>>>> de140ad914cb9eba39a5ad70d677f80881178058
                         if self.possibility_row not in self.possibilities_model:
                             self.possibilities_model.append(self.possibility_row[:])
                         else:
@@ -1682,10 +1637,7 @@ class Display_views():
         partHead = ['Part of part','Deel van deel']
         par3Head = ['Further part','Verder deel']
         kindHead = ['Kind','Soort']
-<<<<<<< HEAD
         of_text = [' (of ', ' (van ']
-=======
->>>>>>> de140ad914cb9eba39a5ad70d677f80881178058
         
         role = ''
         self.part_head_req = True
@@ -1757,17 +1709,11 @@ class Display_views():
                 # Create row about possible aspect of kind in possibilities_model
                 self.possibility_row[0] = part.uid
                 self.possibility_row[1] = part_name
-<<<<<<< HEAD
                 self.possibility_row[2] = part_name + of_text[self.GUI_lang_index] \
                                           + obj_name + ')'
                 self.possibility_row[3] = obj_name  # parent
                 self.possibility_row[4] = part_kind_name
                 self.possibility_row[5] = community_name # of part
-=======
-                self.possibility_row[2] = obj_name
-                self.possibility_row[3] = part_kind_name
-                self.possibility_row[4] = community_name # of part
->>>>>>> de140ad914cb9eba39a5ad70d677f80881178058
                 # Add possibility for part to possibilities_model
 ##                if part not in self.possib_objects:
 ##                    self.possib_objects.append(part)
@@ -2333,7 +2279,7 @@ class Display_views():
 
         # Display expressions from self.expr_table in Treeview:
         for query_line in self.expr_table:
-            self.expr_tree.insert('', index='end', values=query_line, tags='valTag')
+            self.expr_tree.insert('', index='end', values=query_line, tags='val_tag')
 
     def Define_log_sheet(self):
         ''' Define a frame for errors and warnings'''
@@ -2434,9 +2380,9 @@ class Display_views():
         self.network_tree.column ('Value', minwidth=20, width=50)
         self.network_tree.column ('Unit' , minwidth=8, width=10)
         
-        self.network_tree.tag_configure('colTag', option=None, background='#afa')
-        self.network_tree.tag_configure('uomTag', option=None, background='#ccf')
-        self.network_tree.tag_configure('sumTag', option=None, background='#cfc')
+        self.network_tree.tag_configure('rel_tag', option=None, background='#afa')
+        self.network_tree.tag_configure('uom_tag', option=None, background='#ccf')
+        self.network_tree.tag_configure('sum_tag', option=None, background='#cfc')
 
         # Locate buttons in grid
 ##        network_lbl.grid(column=0, row=0, sticky=W)
@@ -2457,28 +2403,31 @@ class Display_views():
 
     def Display_network_view(self):
         # Display header row with units of measure
-        #self.network_tree.insert('', index='end', values=self.taxon_uom_names, tags='uomTag')
+        #self.network_tree.insert('', index='end', values=self.taxon_uom_names, tags='uom_tag')
         
         # Display self.network_model rows in self.network_tree
         parents = []
         for network_line in self.network_model:
             # Verify whether network_line[7], being the parent (typically intermediate),
             # is blank or is in the list of parents
+            openness = False
             if network_line[7] == '' or network_line[7] in parents:
                 # Skip duplicate line
                 if self.network_tree.exists(network_line[6]):
                     continue
                 else:
-                    color_tag = 'sumTag'
+                    if network_line[7] == '':
+                        openness = True
+                    color_tag = 'sum_tag'
                     term = network_line[6].partition(' ')
                     if term[0] in ['has', 'heeft', 'classifies', 'classificeert', \
                                    'is', 'can', 'kan', 'shall', 'moet']:
-                        color_tag = 'colTag'
+                        rel_tag = 'rel_tag'
                     self.network_tree.insert(network_line[7], index='end', \
                                              values=network_line[5:],\
-                                             tags=color_tag,\
+                                             tags=rel_tag,\
                                              iid=network_line[6], \
-                                             text=network_line[6], open=True)
+                                             text=network_line[6], open=openness)
                     parents.append(network_line[6])
 
     def Define_and_display_taxonomy_of_kinds(self):
@@ -2518,27 +2467,27 @@ class Display_views():
         self.taxon_tree = Treeview(self.taxon_frame,columns=(headings[0:nr_of_cols]),\
                                   displaycolumns=display_cols, selectmode='browse', height=30)
 
-        self.taxon_tree.heading('#0'        ,text='Object'   , anchor=W)
-        self.taxon_tree.heading('UID'       ,text='UID'      , anchor=W)
-        self.taxon_tree.heading('Name'      ,text='Name'     , anchor=W)
-        self.taxon_tree.heading('Kind'      ,text='Kind'     , anchor=W)
-        self.taxon_tree.heading('Community' ,text='Community', anchor=W)
+        self.taxon_tree.heading('#0'    , text='Object', anchor=W)
+        self.taxon_tree.heading('UID'   , text='UID', anchor=W)
+        self.taxon_tree.heading('Name'  , text='Name', anchor=W)
+        self.taxon_tree.heading('Kind'  , text='Kind', anchor=W)
+        self.taxon_tree.heading('Community', text='Community', anchor=W)
         
-        self.taxon_tree.column ('#0'        ,minwidth=100    , width=200)
-        self.taxon_tree.column ('Community' ,minwidth=20     , width=50)
+        self.taxon_tree.column ('#0'    , minwidth=100, width=200)
+        self.taxon_tree.column ('Community' , minwidth=20, width=50)
         asp = 0
         for column in self.taxon_column_names[4:]:
             asp += 1
             Asp_name = 'Aspect' + str(asp)
-            self.taxon_tree.heading(Asp_name   ,text=self.taxon_column_names[asp +3]  ,anchor=W)
-            self.taxon_tree.column (Asp_name   ,minwidth=20 ,width=50)
+            self.taxon_tree.heading(Asp_name, text=self.taxon_column_names[asp +3] ,anchor=W)
+            self.taxon_tree.column (Asp_name, minwidth=20 ,width=50)
 
 ##        self.taxon_tree.columnconfigure(0,weight=1)
 ##        self.taxon_tree.rowconfigure   (0,weight=1)
         
-        self.taxon_tree.tag_configure('colTag', option=None, background='#afa')
-        self.taxon_tree.tag_configure('uomTag', option=None, background='#ccf')
-        self.taxon_tree.tag_configure('sumTag', option=None, background='#cfc')
+        self.taxon_tree.tag_configure('rel_tag', option=None, background='#afa')
+        self.taxon_tree.tag_configure('uom_tag', option=None, background='#ccf')
+        self.taxon_tree.tag_configure('sum_tag', option=None, background='#cfc')
 
         taxon_scroll = Scrollbar(self.taxon_frame, orient=VERTICAL, command=self.taxon_tree.yview)
         taxon_lbl.grid       (column=0, row=0,sticky=EW)
@@ -2551,7 +2500,7 @@ class Display_views():
 
     def Display_taxonomy_view(self):
         # Display header row with units of measure
-        self.taxon_tree.insert('', index='end', values=self.taxon_uom_names, tags='uomTag')
+        self.taxon_tree.insert('', index='end', values=self.taxon_uom_names, tags='uom_tag')
         # Display self.taxon_model rows in self.taxon_tree
         parents = []
         for taxon_line in self.taxon_model:
@@ -2563,12 +2512,12 @@ class Display_views():
                 if self.taxon_tree.exists(taxon_line[1]):
                     continue
                 else:
-                    color_tag = 'sumTag'
+                    color_tag = 'sum_tag'
                     term = taxon_line[1].partition(' ')
                     if term[0] in ['has', 'heeft', 'classifies', 'classificeert']:
-                        color_tag = 'colTag'
+                        rel_tag = 'rel_tag'
                     self.taxon_tree.insert(taxon_line[2],index='end',values=taxon_line,\
-                                           tags=color_tag,\
+                                           tags=rel_tag,\
                                            iid=taxon_line[1],text=taxon_line[1], open=True)
                     parents.append(taxon_line[1])
 
@@ -2598,40 +2547,42 @@ class Display_views():
         self.summ_tree = Treeview(self.summ_frame,columns=(headings[0:nr_of_cols]),\
                                   displaycolumns=display_cols, selectmode='browse', height=30)
 
-        self.summ_tree.heading('#0'        ,text='Object'   , anchor=W)     
-        self.summ_tree.heading('UID'       ,text='UID'      , anchor=W)
-        self.summ_tree.heading('Name'      ,text=self.name_head[self.GUI_lang_index], anchor=W)
-        self.summ_tree.heading('Kind'      ,text=self.kind_head[self.GUI_lang_index], anchor=W)
-        self.summ_tree.heading('Community' ,text=self.comm_head[self.GUI_lang_index], anchor=W)
+        self.summ_tree.heading('#0'       , text='Object', anchor=W)     
+        self.summ_tree.heading('UID'      , text='UID'   , anchor=W)
+        self.summ_tree.heading('Name'     , text=self.name_head[self.GUI_lang_index], anchor=W)
+        self.summ_tree.heading('Kind'     , text=self.kind_head[self.GUI_lang_index], anchor=W)
+        self.summ_tree.heading('Community', text=self.comm_head[self.GUI_lang_index], anchor=W)
         
-        self.summ_tree.column ('#0'        ,minwidth=100    , width=200)
-        self.summ_tree.column ('Community' ,minwidth=20     , width=50)
+        self.summ_tree.column ('#0'       , minwidth=100, width=200)
+        self.summ_tree.column ('Community', minwidth=20 , width=50)
         asp = 0
         for column in self.summ_column_names[4:]:
             asp += 1
             Asp_name = 'Aspect' + str(asp)
-            self.summ_tree.heading(Asp_name   ,text=self.summ_column_names[asp +3]  ,anchor=W)
-            self.summ_tree.column (Asp_name   ,minwidth=20 ,width=50)
+            self.summ_tree.heading(Asp_name, text=self.summ_column_names[asp +3], anchor=W)
+            self.summ_tree.column (Asp_name, minwidth=20, width=50)
 
         self.summ_tree.columnconfigure(0,weight=1)
         self.summ_tree.rowconfigure   (0,weight=1)
         
-        self.summ_tree.tag_configure('colTag', option=None, background='#9f9')
-        self.summ_tree.tag_configure('uomTag', option=None, background='#ccf')
-        self.summ_tree.tag_configure('sumTag', option=None, background='#cfc')
+        #self.summ_tree.tag_configure('col_tag', option=None, background='#9f9')
+        self.summ_tree.tag_configure('uom_tag', option=None, background='#ccf')
+        self.summ_tree.tag_configure('sum_tag', option=None, background='#cfc')
 
         summScroll = Scrollbar(self.summ_frame, orient=VERTICAL, command=self.summ_tree.yview)
-        summ_lbl.grid      (column=0, row=0,sticky=EW)
-        self.summ_tree.grid(column=0, row=1,sticky=NSEW)
-        summScroll.grid    (column=0, row=1,sticky=NS+E)
+        summ_lbl.grid      (column=0, row=0, sticky=EW)
+        self.summ_tree.grid(column=0, row=1, sticky=NSEW)
+        summScroll.grid    (column=0, row=1, sticky=NS+E)
         self.summ_tree.config(yscrollcommand=summScroll.set)
 
         self.summ_tree.bind(sequence='<Double-1>', func=self.Summ_detail_view)
 
     def Display_summary_view(self):
-        # Display header row with units of measure
-        self.summ_tree.insert('', index='end', values=self.summ_uom_names, tags='uomTag')
-        # Display self.summ_model rows in self.summ_tree
+        ''' Display a summary view that provides a list of items and their aspects.
+        '''
+        # Display the header row with units of measure in summ_tree treeview
+        self.summ_tree.insert('', index='end', values=self.summ_uom_names, tags='uom_tag')
+        # Display the various summ_model rows in summ_tree treeview
         parents = []
         for summ_line in self.summ_model:
             if summ_line[2] == '' or summ_line[2] in parents:
@@ -2640,7 +2591,7 @@ class Display_views():
                 else:
                     # Summ_line[2] is the supertype
                     self.summ_tree.insert(summ_line[2],index='end',values=summ_line,\
-                                          tags='sumTag',iid=summ_line[1],\
+                                          tags='sum_tag',iid=summ_line[1],\
                                           text=summ_line[1], open=True)
                     parents.append(summ_line[1])
 
@@ -2664,11 +2615,10 @@ class Display_views():
 
         # Display possibilities_sheet
         # Display header row with units of measure
-        self.possib_tree.insert('', index='end', values=self.possib_uom_names, tags='uomTag')
+        self.possib_tree.insert('', index='end', values=self.possib_uom_names, tags='uom_tag')
         # Display self.possibilities_model rows in self.possib_tree
         parents = []
         for possib_line in self.possibilities_model:
-<<<<<<< HEAD
             # If item parent is blank (has no defined parent, thus item is a top item)
             # or the parent appeared already,
             # then display the row in the tree
@@ -2676,18 +2626,9 @@ class Display_views():
                 #print('Possib_line', possib_line)
                 # Possib_line[3] is the whole
                 self.possib_tree.insert(possib_line[3], index='end', values=possib_line, \
-                                        tags='sumTag', iid=possib_line[2], \
+                                        tags='sum_tag', iid=possib_line[2], \
                                         text=possib_line[1], open=True)
                 parents.append(possib_line[2])
-=======
-            if possib_line[2] == '' or possib_line[2] in parents:
-                #print('Possib_line', possib_line)
-                # Possib_line[2] is the whole
-                self.possib_tree.insert(possib_line[2], index='end', values=possib_line,\
-                                        tags='sumTag' , iid=possib_line[1],\
-                                        text=possib_line[1], open=True)
-                parents.append(possib_line[1])
->>>>>>> de140ad914cb9eba39a5ad70d677f80881178058
 
     def Define_possibilities_sheet(self):
         ''' Define a possibilities_sheet for display of possibilities_model
@@ -2708,28 +2649,18 @@ class Display_views():
         possib_head  = ['Possible aspects per object of a particular kind',\
                         'Mogelijke aspecten per object van een bepaalde soort']
         possib_label = Label(self.possib_frame,text=possib_head[self.GUI_lang_index])
-<<<<<<< HEAD
         headings = ['UID','Name','Ext_name','Parent','Kind','Community',\
                     'Aspect1','Aspect2','Aspect3','Aspect4','Aspect5',\
                     'Aspect6','Aspect7','Aspect8','Aspect9','Aspect10']
         nr_of_cols = len(self.possib_column_names)
         display_cols = headings[4:nr_of_cols]
-=======
-        headings = ['UID','Name','Parent','Kind','Community','Aspect1','Aspect2','Aspect3',\
-                    'Aspect4','Aspect5','Aspect6','Aspect7','Aspect8','Aspect9','Aspect10']
-        nr_of_cols = len(self.possib_column_names)
-        display_cols = headings[3:nr_of_cols]
->>>>>>> de140ad914cb9eba39a5ad70d677f80881178058
         
         self.possib_tree = Treeview(self.possib_frame, columns=(headings[0:nr_of_cols]),\
                                     displaycolumns=display_cols, selectmode='browse', height=30)
 
         self.possib_tree.heading('UID'      ,text='UID', anchor=W)
         self.possib_tree.heading('Name'     ,text=self.name_head[self.GUI_lang_index], anchor=W)
-<<<<<<< HEAD
         self.possib_tree.heading('Ext_name' ,text=self.name_head[self.GUI_lang_index], anchor=W)
-=======
->>>>>>> de140ad914cb9eba39a5ad70d677f80881178058
         self.possib_tree.heading('Parent'   ,text=self.parent_head[self.GUI_lang_index], anchor=W)
         self.possib_tree.heading('Kind'     ,text=self.kind_head[self.GUI_lang_index], anchor=W)
         self.possib_tree.heading('Community',text=self.comm_head[self.GUI_lang_index], anchor=W)
@@ -2738,11 +2669,7 @@ class Display_views():
         self.possib_tree.column ('Kind'     ,minwidth=20 , width=50)
         self.possib_tree.column ('Community',minwidth=20 , width=50)
         asp = 0
-<<<<<<< HEAD
         for column in self.possib_column_names[6:]:
-=======
-        for column in self.possib_column_names[5:]:
->>>>>>> de140ad914cb9eba39a5ad70d677f80881178058
             asp += 1
             Asp_name = 'Aspect' + str(asp)
             self.possib_tree.heading(Asp_name, text=self.possib_column_names[asp +4], anchor=W)
@@ -2753,8 +2680,8 @@ class Display_views():
         self.possib_tree.rowconfigure   (0,weight=1)
         self.possib_tree.rowconfigure   (1,weight=1)
         
-        self.possib_tree.tag_configure('uomTag', option=None, background='#ccf')
-        self.possib_tree.tag_configure('sumTag', option=None, background='#cfc')
+        self.possib_tree.tag_configure('uom_tag', option=None, background='#ccf')
+        self.possib_tree.tag_configure('sum_tag', option=None, background='#cfc')
 
         possib_Scroll = Scrollbar(self.possib_frame, orient=VERTICAL, \
                                   command=self.possib_tree.yview)
@@ -2824,8 +2751,8 @@ class Display_views():
         self.indiv_tree.rowconfigure   (0,weight=1)
         self.indiv_tree.rowconfigure   (1,weight=1)
         
-        self.indiv_tree.tag_configure('uomTag', option=None, background='#ccf')
-        self.indiv_tree.tag_configure('sumTag', option=None, background='#cfc')
+        self.indiv_tree.tag_configure('uom_tag', option=None, background='#ccf')
+        self.indiv_tree.tag_configure('sum_tag', option=None, background='#cfc')
 
         indiv_Scroll = Scrollbar(self.indiv_frame, orient=VERTICAL, command=self.indiv_tree.yview)
         indiv_Lbl.grid      (column=0, row=0,sticky=EW)
@@ -2840,14 +2767,14 @@ class Display_views():
             in composition sheet view
         '''
         # Display header row with units of measure
-        self.indiv_tree.insert('', index='end', values=self.indiv_uom_names, tags='uomTag')
+        self.indiv_tree.insert('', index='end', values=self.indiv_uom_names, tags='uom_tag')
         # Display self.indiv_model rows in self.indiv_tree
         indiv_parents = []
         for indiv_line in self.indiv_model:
             # Indiv_line[2] is the whole
             if indiv_line[2] == '' or indiv_line[2] in indiv_parents:
                 self.indiv_tree.insert(indiv_line[2], index='end', \
-                                       values=indiv_line,tags='sumTag',iid=indiv_line[1],\
+                                       values=indiv_line,tags='sum_tag',iid=indiv_line[1],\
                                        text=indiv_line[1], open=True)
                 indiv_parents.append(indiv_line[1])
 
@@ -2981,7 +2908,7 @@ class Display_views():
         
         self.expr_tree.config(yscrollcommand=exprScrollV.set)
         self.expr_tree.config(xscrollcommand=exprScrollH.set)
-        self.expr_tree.tag_configure('valTag'  ,background='#cfc')
+        self.expr_tree.tag_configure('val_tag'  ,background='#cfc')
         
         self.expr_tree.columnconfigure(0,weight=1)
 
@@ -3126,11 +3053,11 @@ class Display_views():
         kind_scroll.grid (column=0,row=1,sticky=NS+E)
         self.kind_tree.config(yscrollcommand=kind_scroll.set)
 
-        self.kind_tree.tag_configure('focusTag' ,background='#9f9') # hell green
-        self.kind_tree.tag_configure('headTag'  ,background='#bfb')
-        self.kind_tree.tag_configure('valTag'   ,background='#dfd') # light green
-        self.kind_tree.tag_configure('available',background='yellow')
-        self.kind_tree.tag_configure('missing'  ,background='#fcc') # red
+        self.kind_tree.tag_configure('focus_tag', background='#9f9') # hell green
+        self.kind_tree.tag_configure('head_tag', background='#bfb')
+        self.kind_tree.tag_configure('val_tag', background='#dfd') # light green
+        self.kind_tree.tag_configure('available', background='yellow')
+        self.kind_tree.tag_configure('missing', background='#fcc') # red
 
         self.kind_tree.bind(sequence='<Double-1>', func=self.Kind_detail_view_left)
         self.kind_tree.bind(sequence='<Button-2>', func=self.Kind_detail_view_middle)
@@ -3139,7 +3066,7 @@ class Display_views():
     def Display_kind_model_view(self):
         ''' Kind_model Model view of a kind: Display prod_model in self.kind_tree:
             self.kind_tree.insert('',index=0,iid='UIDInFocus',values=[nameInFocus,kindDat],
-            tags='focusTag',open=True)
+            tags='focus_tag',open=True)
         '''
         unknownVal   = ['unknown value','onbekende waarde']
         unknownKind  = ['unknown kind' ,'onbekende soort']
@@ -3161,20 +3088,20 @@ class Display_views():
                 head_line.append(kindLine[9])
                 nameInFocus = head_line[4]
                 level0Part = self.kind_tree.insert('', index='end', values=head_line,\
-                                                   tags='focusTag', open=True)
+                                                   tags='focus_tag', open=True)
                 previusPart = level0Part
             # In kind_treeview line_type 2 to 3 (indicated in kindLine[3])
             # are not displayed.
             elif kindLine[3] > 3:
 
-                # Set value_tags at 'valTag' or 'headTag' for each field
-                value_tags = 11*['valTag']
-                # If the line is a header line, then set value_tag to 'headTag'
-                if kindLine[4] in self.comp_head    or kindLine[4] in self.occ_head or \
-                   kindLine[4] in self.info_head   or kindLine[8] in self.aspect_head or \
+                # Set value_tags at 'val_tag' or 'head_tag' for each field
+                value_tags = 11*['val_tag']
+                # If the line is a header line, then set value_tag to 'head_tag'
+                if kindLine[4] in self.comp_head or kindLine[4] in self.occ_head or \
+                   kindLine[4] in self.info_head or kindLine[8] in self.aspect_head or \
                    kindLine[5] in self.part_occ_head or kindLine[4] in self.subs_head:
                     head = True
-                    value_tags = 11*['headTag']
+                    value_tags = 11*['head_tag']
                 # If the line is a value line (thus not a header line)
                 # and there is a name of a part
                 # then remember the part as a previous part 
@@ -3279,11 +3206,11 @@ class Display_views():
         prod_scroll.grid (column=5,row=1,sticky=NS+E)
         self.prod_tree.config(yscrollcommand=prod_scroll.set)
 
-        self.prod_tree.tag_configure('focusTag' ,background='#9f9') # hell green
-        self.prod_tree.tag_configure('headTag'  ,background='#bfb')
-        self.prod_tree.tag_configure('valTag'   ,background='#dfd') # light green
-        self.prod_tree.tag_configure('available',background='yellow')
-        self.prod_tree.tag_configure('missing'  ,background='#fcc') # red
+        self.prod_tree.tag_configure('focus_tag', background='#9f9') # hell green
+        self.prod_tree.tag_configure('head_tag', background='#bfb')
+        self.prod_tree.tag_configure('val_tag', background='#dfd') # light green
+        self.prod_tree.tag_configure('available', background='yellow')
+        self.prod_tree.tag_configure('missing', background='#fcc') # red
 
         self.prod_tree.bind(sequence='<Double-1>', func=self.Prod_detail_view_left)
         self.prod_tree.bind(sequence='<Button-2>', func=self.Prod_detail_view_middle)
@@ -3293,7 +3220,7 @@ class Display_views():
     def Display_product_model_view(self):
         ''' Product Model view: Display prod_model in self.prod_tree:
             self.prod_tree.insert('',index=0,iid='UIDInFocus',values=[nameInFocus,kindDat],
-            tags='focusTag',open=True)
+            tags='focus_tag',open=True)
         '''
         unknownVal   = ['unknown value','onbekende waarde']
         unknownKind  = ['unknown kind' ,'onbekende soort']
@@ -3321,7 +3248,7 @@ class Display_views():
                 nameInFocus = head_line[4]
                 #print('Head_line:',head_line)
                 level0Part = self.prod_tree.insert('', index='end', values=head_line,
-                                                   text=nameInFocus, tags='focusTag', open=True)
+                                                   text=nameInFocus, tags='focus_tag', open=True)
                 previusPart = level0Part
             # If line_type (prod_line[3]) == 4
             # then prepare header line from prod_line for level 0 object
@@ -3330,20 +3257,20 @@ class Display_views():
                 #nameInFocus = prod_line[5]
                 prod_name = prod_line[4]
                 level0Part = self.prod_tree.insert('', index='end', values=prod_line,\
-                                                   text=prod_name, tags='focusTag',open=True)
+                                                   text=prod_name, tags='focus_tag',open=True)
                 previusPart = level0Part
                 
             # In prod_tree view line_type 2 to 3 (indicated in prod_line[3]) are not displayed.
             elif prod_line[3] > 4:
-                # Set value_tags at 'valTag' or 'headTag' for each field
-                value_tags = 11*['valTag']
+                # Set value_tags at 'val_tag' or 'head_tag' for each field
+                value_tags = 11*['val_tag']
                     
-                # If the line is a header line, then set value_tag to 'headTag'
-                if prod_line[4] in self.comp_head    or prod_line[4] in self.occ_head or \
-                   prod_line[4] in self.info_head   or prod_line[8] in self.aspect_head or \
+                # If the line is a header line, then set value_tag to 'head_tag'
+                if prod_line[4] in self.comp_head or prod_line[4] in self.occ_head or \
+                   prod_line[4] in self.info_head or prod_line[8] in self.aspect_head or \
                    prod_line[5] in self.part_occ_head or prod_line[4] in self.subs_head:
                     head = True
-                    value_tags = 11*['headTag']
+                    value_tags = 11*['head_tag']
                     prod_name = prod_line[4]
                     # Determine whether roles may appear in prod_line[4]
                     # in lines following the header line
@@ -3610,7 +3537,7 @@ class Display_views():
         self.act_tree.rowconfigure(0,weight=0)
         self.act_tree.rowconfigure(1,weight=1)
 
-        self.act_tree.tag_configure('uomTag', option=None, background='#ccf')
+        self.act_tree.tag_configure('uom_tag', option=None, background='#ccf')
         self.act_tree.tag_configure('actTag', option=None, background='#dfd')
 
         actScroll = Scrollbar(self.act_frame,orient=VERTICAL,command=self.act_tree.yview)
@@ -3623,7 +3550,7 @@ class Display_views():
             Followed by a display of IDEF0 diagram(s)
         '''
         
-        self.act_tree.tag_configure('headTag', option=None, background='#dfd')
+        self.act_tree.tag_configure('head_tag', option=None, background='#dfd')
         if len(self.occ_model) > 0:
             self.top_occurrences = []
             for occ_line in self.occ_model:
@@ -4336,7 +4263,7 @@ class Display_views():
 
         # Expressions view: Display expressions from self.expr_table in Treeview:
         for expr_line in self.expr_table:
-            self.expr_tree.insert('', index='end', values=expr_line, tags='valTag')
+            self.expr_tree.insert('', index='end', values=expr_line, tags='val_tag')
 
     def Define_and_display_individual_detail_view(self, selected_obj):
         """ Create a detail view of a product from a user selection
@@ -4368,7 +4295,7 @@ class Display_views():
 
         # Expressions view: Display expressions from self.expr_table in Treeview:
         for expr_line in self.expr_table:
-            self.expr_tree.insert('', index='end', values=expr_line, tags='valTag')
+            self.expr_tree.insert('', index='end', values=expr_line, tags='val_tag')
 
     def Doc_detail_view(self, sel):
         """ Find the selected object from a user selection
