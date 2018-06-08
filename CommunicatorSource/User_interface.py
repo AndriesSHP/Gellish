@@ -134,10 +134,10 @@ class User_interface():
         # Main Frame
         self.main_frame = Frame(self.root)
         self.main_frame.grid(column=0, row=0, sticky=NSEW)
-        self.main_frame.columnconfigure(0,weight=0)
-        self.main_frame.columnconfigure(1,weight=1)
-        self.main_frame.rowconfigure(0,weight=0)
-        self.main_frame.rowconfigure(1,weight=1)
+        self.main_frame.columnconfigure(0, weight=0)
+        self.main_frame.columnconfigure(1, weight=1)
+        self.main_frame.rowconfigure(0, weight=0)
+        self.main_frame.rowconfigure(1, weight=1)
 
         # Define header row with language selector
         lang_text = ['Language:', 'Taal:']
@@ -151,7 +151,7 @@ class User_interface():
         self.lang_box.grid(column=1, row=0, sticky=NW)
 
         # Binding GUI language choice
-        self.lang_box.bind  ("<<ComboboxSelected>>",self.Determine_GUI_language)
+        self.lang_box.bind("<<ComboboxSelected>>", self.Determine_GUI_language)
 
     def Determine_GUI_language(self, event):
         ''' Determine which user interface language is spacified by the user. '''
