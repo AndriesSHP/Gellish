@@ -1,9 +1,7 @@
-import os
 import webbrowser
 from tkinter import *
 from tkinter.ttk import *
 
-from SemanticNetwork import Semantic_Network
 from Query import Query
 from QueryViews import Query_view
 from Display_views import Display_views
