@@ -102,6 +102,7 @@ class User_interface():
         self.menubar = Menu(self.root, bg='#fbf')
         self.root['menu'] = self.menubar
 
+        main_menu = ['Main Menu', 'Hoofdmenu']
         login = ['Login/Register', 'Login/Registreer']
         verify = ['Read file', 'Lees file']
         search = ['Search', 'Zoek']
@@ -111,14 +112,19 @@ class User_interface():
         save_as = ['Save net', 'Opslaan']
         manual = ['User manual', 'Handleiding']
 
-        self.menubar.add_command(label=login[self.GUI_lang_index],
-                                 command=self.login_reg)
-        self.menubar.add_command(label=verify[self.GUI_lang_index],
-                                 command=self.read_file)
-        self.menubar.add_command(label=search[self.GUI_lang_index],
-                                 command=self.search_net)
-        self.menubar.add_command(label=query[self.GUI_lang_index],
-                                 command=self.query_net)
+        self.MainMenu = Menu(self.menubar)
+        self.menubar.add_cascade(menu=self.MainMenu,
+                                 label=main_menu[self.GUI_lang_index])
+        self.MainMenu.add_command(label=login[self.GUI_lang_index],
+                                  command=self.login_reg)
+        self.MainMenu.add_command(label=verify[self.GUI_lang_index],
+                                  command=self.read_file)
+        self.MainMenu.add_command(label=search[self.GUI_lang_index],
+                                  command=self.search_net)
+        self.MainMenu.add_command(label=query[self.GUI_lang_index],
+                                  command=self.query_net)
+        self.MainMenu.add_command(label=manual[self.GUI_lang_index],
+                                  command=self.user_manual)
 
         self.DBMenu = Menu(self.menubar)
         self.menubar.add_cascade(menu=self.DBMenu,
@@ -127,9 +133,6 @@ class User_interface():
                                 command=self.gel_net.reset_and_build_network)
         self.DBMenu.add_command(label=save_as[self.GUI_lang_index],
                                 command=self.dump_net)
-
-        self.menubar.add_command(label=manual[self.GUI_lang_index],
-                                 command=self.user_manual)
 
         # Main Frame
         self.main_frame = Frame(self.root)
