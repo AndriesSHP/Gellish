@@ -31,6 +31,7 @@ If you want to use a virtualenv, make sure to also include system site packages:
 
     mkvirtualenv --system-site-packages --python=/opt/local/bin/python3.6 env
 
-The Application software starts with the Communicator.py module:
+The Application software starts with the Communicator.py module. To run from a shell:
 
-    python3.6 CommunicatorSource/Communicator.py
+    cd CommunicatorSource/
+    python3.6 Communicator.py
