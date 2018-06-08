@@ -2,7 +2,6 @@ import os
 import webbrowser
 from tkinter import *
 from tkinter.ttk import *
-##from tkinter import messagebox, filedialog
 
 from SemanticNetwork import Semantic_Network
 from Query import Query
@@ -109,13 +108,9 @@ class User_interface():
         verify = ['Read file', 'Lees file']
         search = ['Search', 'Zoek']
         query = ['Query', 'Vraag']
-##        edit = ['Modify', 'Wijzig']
-##        stop = ['Stop', 'Stop']
         admin = ['DB Admin', 'DB Admin']
         new_net = ['New network', 'Nieuw netwerk']
         save_as = ['Save net', 'Opslaan']
-##        load_net = ['Load net', 'Import']
-##        read_db = ['Net from db', 'Net van db']
         manual = ['User manual', 'Handleiding']
 
         self.menubar.add_command(label=login[self.GUI_lang_index], \
@@ -126,10 +121,6 @@ class User_interface():
                                  command=self.search_net)
         self.menubar.add_command(label=query[self.GUI_lang_index], \
                                  command=self.query_net)
-##        self.menubar.add_command(label=edit[self.GUI_lang_index], \
-##                                 command=self.modify_db)
-##        self.menubar.add_command(label=stop[self.GUI_lang_index], \
-##                                 command=self.stop_quit)
 
         self.DBMenu = Menu(self.menubar)
         self.menubar.add_cascade(menu=self.DBMenu, \
