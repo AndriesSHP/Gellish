@@ -113,24 +113,24 @@ class User_interface():
         save_as = ['Save net', 'Opslaan']
         manual = ['User manual', 'Handleiding']
 
-        self.menubar.add_command(label=login[self.GUI_lang_index], \
+        self.menubar.add_command(label=login[self.GUI_lang_index],
                                  command=self.login_reg)
-        self.menubar.add_command(label=verify[self.GUI_lang_index], \
+        self.menubar.add_command(label=verify[self.GUI_lang_index],
                                  command=self.read_file)
-        self.menubar.add_command(label=search[self.GUI_lang_index], \
+        self.menubar.add_command(label=search[self.GUI_lang_index],
                                  command=self.search_net)
-        self.menubar.add_command(label=query[self.GUI_lang_index], \
+        self.menubar.add_command(label=query[self.GUI_lang_index],
                                  command=self.query_net)
 
         self.DBMenu = Menu(self.menubar)
-        self.menubar.add_cascade(menu=self.DBMenu, \
+        self.menubar.add_cascade(menu=self.DBMenu,
                                  label=admin[self.GUI_lang_index])
-        self.DBMenu.add_command(label=new_net[self.GUI_lang_index], \
+        self.DBMenu.add_command(label=new_net[self.GUI_lang_index],
                                 command=self.gel_net.reset_and_build_network)
-        self.DBMenu.add_command(label=save_as[self.GUI_lang_index], \
+        self.DBMenu.add_command(label=save_as[self.GUI_lang_index],
                                 command=self.dump_net)
 
-        self.menubar.add_command(label=manual[self.GUI_lang_index], \
+        self.menubar.add_command(label=manual[self.GUI_lang_index],
                                  command=self.user_manual)
 
     # Main Frame
@@ -143,11 +143,11 @@ class User_interface():
 
         # Define header row with language selector
         lang_text = ['Language:', 'Taal:']
-        self.lang_label = Label(self.main_frame, \
+        self.lang_label = Label(self.main_frame,
                                 text=lang_text[self.GUI_lang_index], width=10)
         # Set default language: GUI_lang_names[0] = English, [1] = Nederlands
         self.lang_default = StringVar(value=self.GUI_lang_names[0])
-        self.lang_box = Combobox(self.main_frame, textvariable=self.lang_default,\
+        self.lang_box = Combobox(self.main_frame, textvariable=self.lang_default,
                                  values=self.GUI_lang_names, width=10)
         self.lang_label.grid(column=0, row=0, sticky=NW)
         self.lang_box.grid(column=1, row=0, sticky=NW)
