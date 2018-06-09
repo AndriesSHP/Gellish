@@ -1,10 +1,7 @@
-import os
 import webbrowser
 from tkinter import *
 from tkinter.ttk import *
-##from tkinter import messagebox, filedialog
 
-from SemanticNetwork import Semantic_Network
 from Query import Query
 from QueryViews import Query_view
 from Display_views import Display_views
@@ -16,7 +13,7 @@ class User_interface():
         The options start queries that are executed
         and the resulting models are displayed in model views.
     '''
-    
+
     def __init__(self, gel_net):
         #self.main = main
         self.gel_net = gel_net
@@ -37,7 +34,7 @@ class User_interface():
         self.root.columnconfigure(0, weight=1)
         self.root.rowconfigure(0, weight=1)
         self.root.option_add('*tearOff', False)
-        
+
         self.extended_query = False
         self.obj_without_name_in_context = []
 
@@ -63,7 +60,7 @@ class User_interface():
         #self.ex_candids = []
         self.unknown = ['unknown', 'onbekend']
         self.unknown_quid = 0   # start UID for unknowns in queries
-        
+
         # Create display views object and initialize notebook
         self.views = Display_views(gel_net, self)
 
@@ -100,73 +97,70 @@ class User_interface():
     def Main_window(self):
         """ Define a MainWindow with select options.
         """
-        
+
         # Menu bar
         self.menubar = Menu(self.root, bg='#fbf')
         self.root['menu'] = self.menubar
 
+        main_menu = ['Main Menu', 'Hoofdmenu']
         login = ['Login/Register', 'Login/Registreer']
         verify = ['Read file', 'Lees file']
         search = ['Search', 'Zoek']
         query = ['Query', 'Vraag']
-##        edit = ['Modify', 'Wijzig']
-##        stop = ['Stop', 'Stop']
         admin = ['DB Admin', 'DB Admin']
         new_net = ['New network', 'Nieuw netwerk']
         save_as = ['Save net', 'Opslaan']
-##        load_net = ['Load net', 'Import']
-##        read_db = ['Net from db', 'Net van db']
         manual = ['User manual', 'Handleiding']
 
-        self.menubar.add_command(label=login[self.GUI_lang_index], \
-                                 command=self.login_reg)
-        self.menubar.add_command(label=verify[self.GUI_lang_index], \
-                                 command=self.read_file)
-        self.menubar.add_command(label=search[self.GUI_lang_index], \
-                                 command=self.search_net)
-        self.menubar.add_command(label=query[self.GUI_lang_index], \
-                                 command=self.query_net)
-##        self.menubar.add_command(label=edit[self.GUI_lang_index], \
-##                                 command=self.modify_db)
-##        self.menubar.add_command(label=stop[self.GUI_lang_index], \
-##                                 command=self.stop_quit)
+        self.MainMenu = Menu(self.menubar)
+        self.menubar.add_cascade(menu=self.MainMenu,
+                                 label=main_menu[self.GUI_lang_index])
+        self.MainMenu.add_command(label=login[self.GUI_lang_index],
+                                  command=self.login_reg)
+        self.MainMenu.add_command(label=verify[self.GUI_lang_index],
+                                  command=self.read_file)
+        self.MainMenu.add_command(label=search[self.GUI_lang_index],
+                                  command=self.search_net)
+        self.MainMenu.add_command(label=query[self.GUI_lang_index],
+                                  command=self.query_net)
+        self.MainMenu.add_command(label=manual[self.GUI_lang_index],
+                                  command=self.user_manual)
 
         self.DBMenu = Menu(self.menubar)
-        self.menubar.add_cascade(menu=self.DBMenu, \
+        self.menubar.add_cascade(menu=self.DBMenu,
                                  label=admin[self.GUI_lang_index])
-        self.DBMenu.add_command(label=new_net[self.GUI_lang_index], \
+        self.DBMenu.add_command(label=new_net[self.GUI_lang_index],
                                 command=self.gel_net.reset_and_build_network)
-        self.DBMenu.add_command(label=save_as[self.GUI_lang_index], \
+        self.DBMenu.add_command(label=save_as[self.GUI_lang_index],
                                 command=self.dump_net)
 
-        self.menubar.add_command(label=manual[self.GUI_lang_index], \
-                                 command=self.user_manual)
-
-    # Main Frame
+        # Main Frame
         self.main_frame = Frame(self.root)
         self.main_frame.grid(column=0, row=0, sticky=NSEW)
-        self.main_frame.columnconfigure(0,weight=0)
-        self.main_frame.columnconfigure(1,weight=1)
-        self.main_frame.rowconfigure(0,weight=0)
-        self.main_frame.rowconfigure(1,weight=1)
+        self.main_frame.columnconfigure(0, weight=0)
+        self.main_frame.columnconfigure(1, weight=1)
+        self.main_frame.rowconfigure(0, weight=0)
+        self.main_frame.rowconfigure(1, weight=1)
 
         # Define header row with language selector
         lang_text = ['Language:', 'Taal:']
-        self.lang_label = Label(self.main_frame, \
+        self.lang_label = Label(self.main_frame,
                                 text=lang_text[self.GUI_lang_index], width=10)
         # Set default language: GUI_lang_names[0] = English, [1] = Nederlands
         self.lang_default = StringVar(value=self.GUI_lang_names[0])
-        self.lang_box = Combobox(self.main_frame, textvariable=self.lang_default,\
-                                 values=self.GUI_lang_names, width=10)
+        self.lang_box = Combobox(self.main_frame,
+                                 textvariable=self.lang_default,
+                                 values=self.GUI_lang_names,
+                                 width=10)
         self.lang_label.grid(column=0, row=0, sticky=NW)
         self.lang_box.grid(column=1, row=0, sticky=NW)
 
         # Binding GUI language choice
-        self.lang_box.bind  ("<<ComboboxSelected>>",self.Determine_GUI_language)
+        self.lang_box.bind("<<ComboboxSelected>>", self.Determine_GUI_language)
 
     def Determine_GUI_language(self, event):
         ''' Determine which user interface language is spacified by the user. '''
-        
+
         GUI_lang_name  = self.lang_box.get()
         self.Set_GUI_language(GUI_lang_name)
 
@@ -182,7 +176,7 @@ class User_interface():
 
     def user_manual(self):
         ''' Open the user manual wiki. '''
-        
+
         url = 'http://wiki.gellish.net/'
         # Open URL in a new tab, if a browser window is already open.
         webbrowser.open_new_tab(url)
@@ -227,7 +221,7 @@ class User_interface():
         else:
             # Create a query object
             self.query = Query(self.gel_net, self)
-            
+
             # Enter and Interpret a query
 ##            if self.use_GUI:
             q_view = Query_view(self.gel_net, self)
@@ -305,7 +299,7 @@ class User_interface():
                         break
                 if obj_name:
                     break
-                
+
             # Search for partial definition in specialization relation in pref_languages
             # thus in a name_in_context[3] where 'is called' (5117) is used
             if obj_name:
@@ -329,7 +323,7 @@ class User_interface():
                                break
                        if part_def:
                            break
-            else:    
+            else:
                 # No name is available in the preferred language,
                 # then use the first available name and its definition
                 obj_name = names_in_contexts[0][2]
@@ -370,7 +364,7 @@ class User_interface():
             full_def = super_name + ' ' + part_def
         else:
             full_def = part_def
-        
+
         return lang_name, comm_name, obj_name, full_def
 
     def stop_quit(self):
