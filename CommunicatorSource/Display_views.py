@@ -2419,6 +2419,7 @@ class Display_views():
                     if network_line[7] == '':
                         openness = True
                     color_tag = 'sum_tag'
+                    rel_tag = ''
                     term = network_line[6].partition(' ')
                     if term[0] in ['has', 'heeft', 'classifies', 'classificeert', \
                                    'is', 'can', 'kan', 'shall', 'moet']:
@@ -2513,6 +2514,7 @@ class Display_views():
                     continue
                 else:
                     color_tag = 'sum_tag'
+                    rel_tag = ''
                     term = taxon_line[1].partition(' ')
                     if term[0] in ['has', 'heeft', 'classifies', 'classificeert']:
                         rel_tag = 'rel_tag'
