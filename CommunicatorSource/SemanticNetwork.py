@@ -990,9 +990,9 @@ class Semantic_Network():
 ##                                      supertype.first_role.name, supertype.name))
                 else:
                     Message(self.GUI_lang_index,
-                        'The first kind of role {} has no supertypes'.\
+                        'The first kind of role <{}> has no supertypes'.\
                         format(rel.first_role.name),\
-                        'De eerste soort rol {} heeft geen supertypes'.\
+                        'De eerste soort rol <{}> heeft geen supertypes'.\
                         format(rel.first_role.name))
                 #print('rel.first_role_def:', rel.first_role.name)
             #else:
