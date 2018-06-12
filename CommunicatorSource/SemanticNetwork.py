@@ -173,10 +173,7 @@ class Semantic_Network():
             and import their content in the semantic network.
         '''
         # Create list of files with their paths, names and extensions
-##        model_files = []
-        
         for file_name in file_names:
-
             # Build path and name from list of dirs and name
             path_and_name = []
             dirs = model_dirs[:]
@@ -190,11 +187,6 @@ class Semantic_Network():
 
             # Read the file and import its content in the semantic network
             self.current_file.Import_Gellish_from_file()
-##            model_files.append(file)
-##
-##        # Read each model file in list and import their content
-##        for self.current_file in model_files:
-##            self.current_file.Import_Gellish_from_file()
 
     def Create_base_reltype_objects(self):
         ''' Create initial collection of relation_type objects
