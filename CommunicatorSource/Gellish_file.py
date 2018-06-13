@@ -9,8 +9,6 @@ from Expr_Table_Def import *
 from Create_output_file import *
 from Mapping_tables_IB import *
 from Anything import Anything
-#from User_interface import Message
-##from Display_views import Display_views
 
 class Gellish_file:
     """ Data about files, especially Gellish files.
@@ -59,16 +57,6 @@ class Gellish_file:
         else:
             # Allocate file extension to file
             self.extension = name_ext[1]
-            
-##
-##class Expression_list:
-##    ''' A Gellish file is a list of expressions in full Gellish Expression Format
-##        read from any of various sources (such as CSV files),
-##        build a semantic network from it
-##        or export such a list in any of various formats (such as CSV or JSON files).
-##    '''
-##    def __init__(self, gel_net):
-##        self.gel_net = gel_net
 
     def Import_Gellish_from_file(self):
         """ Read current file in a Gellish Expression Format.
@@ -81,7 +69,7 @@ class Gellish_file:
             '>>> Read file {}'.format(self.path_and_name),\
             '>>> Lees file {}'.format(self.path_and_name))
         try:
-            f = open(self.path_and_name, "r", encoding="utf-8")
+            self.f = open(self.path_and_name, "r", encoding="utf-8")
         except IOError:
             Message(self.gel_net.GUI_lang_index,
                 "File '{}' does not exist or is not readable.".format(self.name),\
@@ -91,18 +79,18 @@ class Gellish_file:
         # Determine the file extension of the current file
         if self.extension == 'csv':
     ##        # determine dialect
-    ##        sample = f.read(4096)
+    ##        sample = self.f.read(4096)
     ##        dialect = csv.Sniffer().sniff(sample, delimiters=';')
     ##
     ##        # rewind to start
-    ##        f.seek(0)
+    ##        self.f.seek(0)
     ##
             # Initialise csv reading and read first line
-    ##        self.reader = csv.reader(f, dialect)
-            reader = csv.reader(f, delimiter=';')
+    ##        self.reader = csv.reader(self.f, dialect)
+            reader = csv.reader(self.f, delimiter=';')
             self.header = next(reader)
         elif self.extension == 'json':
-            self.json_dict = json.load(f)
+            self.json_dict = json.load(self.f)
 
             # Determine JSON file type: list or dict?
             # Convert dict to list
@@ -323,10 +311,10 @@ class Gellish_file:
                 'The file is not added to the semantic network.',\
                 'Waarschuwing: Kolom voor UID van idee ontbreekt. '
                 'De file is niet toegevoegd aan het semantische netwerk.')
-            idea_col_in = 0
+            self.idea_col_in = 0
         else:
             # the column nr where idea_uid is located (for error messageing)
-            idea_col_in = source_ids.index(1)
+            self.idea_col_in = source_ids.index(1)
 
         # Check if status column is present
         if 8 not in source_ids:
@@ -335,9 +323,9 @@ class Gellish_file:
                 'File is not added to the semantic network.',\
                 'Waarschuwing: Kolom voor status ontbreekt. '
                 'De file is niet toegevoegd aan het semantische netwerk.')
-            status_col_in = 0
+            self.status_col_in = 0
         else:
-            status_col_in = source_ids.index(8)
+            self.status_col_in = source_ids.index(8)
 
         lang_name_col_id  = {}
         lang_descr_col_id = {}
@@ -386,25 +374,28 @@ class Gellish_file:
         # Skip 3rd line ====
         next(reader)
 
-        # Read line 4 etc. where data starts ====
         loc_default_row = default_row[:]
-        idea_uid = 0
-        db_row   = []
+        # Determine the highest numeric uid that appears in lh_uid and rh_uid
+        # in the input file (reader)
+        self.Determine_highest_uids_in_ranges(reader, source_ids, loc_default_row)
 
+        # Read line 4 etc. where data starts ====
+        idea_uid = 0
+        db_row = []
         for in_row in reader:
             # skip empty rows
             if in_row == []:
                 #print('Empty row following idea {} skipped.'.format(idea_uid))
                 continue
             # Skip rows with status 'ignore' or equivalent
-            if in_row[status_col_in] in ignores:
+            if self.status_col_in is not 0 and in_row[self.status_col_in] in ignores:
                 #print('Expression with status = "ignore etc." following idea {} skipped.'.\
                 #      format(idea_uid))
                 continue
 
             # Rearrange the values in in_row in the sequence of the database
             # and add defaults for missing values and remove commas (,) from uids
-            db_row = self.Rearrange_input_row(idea_col_in, in_row, source_ids, loc_default_row)
+            db_row = self.Rearrange_input_row(in_row, source_ids, loc_default_row)
 
             # Save idea_uid for later reference to the preceeding row.
             idea_uid = db_row[idea_uid_col]
@@ -418,17 +409,17 @@ class Gellish_file:
             # Verify existence and uniqueness of idea_uid
             # If no idea_uid is provided, then add a uid conform prefix and range
             if idea_uid == '':
-                self.gel_net.new_rel_uid += 1
-                if str(self.gel_net.new_rel_uid) not in self.gel_net.idea_uids \
-                   and self.gel_net.new_rel_uid <= self.upper_rel_range_uid:
-                    idea_uid = self.prefix + str(self.gel_net.new_rel_uid)
+                self.gel_net.new_idea_uid += 1
+                if str(self.gel_net.new_idea_uid) not in self.gel_net.idea_uids \
+                   and self.gel_net.new_idea_uid <= self.upper_idea_range_uid:
+                    idea_uid = self.prefix + str(self.gel_net.new_idea_uid)
                     db_row[idea_uid_col] = idea_uid
                     self.gel_net.idea_uids.append(idea_uid)
                     #print('Idea_uid {} added'.format(idea_uid))
                 else:
                     Message(self.gel_net.GUI_lang_index,
-                        'UID {} already used in the network'.format(self.gel_net.new_rel_uid),\
-                        'UID {} is al gebruikt in het netwerk'.format(self.gel_net.new_rel_uid))
+                        'UID {} already used in the network'.format(self.gel_net.new_idea_uid),\
+                        'UID {} is al gebruikt in het netwerk'.format(self.gel_net.new_idea_uid))
             elif idea_uid not in self.gel_net.idea_uids:
                     self.gel_net.idea_uids.append(idea_uid)
             else:
@@ -552,7 +543,8 @@ class Gellish_file:
                 "File type '{}' is niet standaard. File met titel '{}' is verwerkt".\
                 format(self.header[5], self.header[6]))
             self.content_type = "unknown"
-        
+
+        # Read the file description
         self.descr = self.header[6]
 
         # Read the language name in which the textual fields (e.g. definitions)
@@ -585,12 +577,15 @@ class Gellish_file:
             self.gel_net.languages.append(lang)
             self.gel_net.lang_uid_dict[self.lang_uid] = self.lang_name
 
+        # Deteremine obj_uid_range and rel_uid_range
+        self.object_uid_range = []
+        self.rel_uid_range = []
         # Set defaults for prefix and uid range limits
         self.prefix = 'test:'
         self.lower_obj_range_uid = 100
         self.upper_obj_range_uid = 499
-        self.lower_rel_range_uid = 500
-        self.upper_rel_range_uid = 999
+        self.lower_idea_range_uid = 500
+        self.upper_idea_range_uid = 999
             
         if len(self.header) > 7:
             params = ['prefix', \
@@ -606,14 +601,14 @@ class Gellish_file:
                     elif value_parts[0] == params[2]:
                         self.upper_obj_range_uid = number # self.UID_range_limit(number, 499)
                     elif value_parts[0] == params[3]:
-                        self.lower_rel_range_uid = number # self.UID_range_limit(number, 500)
+                        self.lower_idea_range_uid = number # self.UID_range_limit(number, 500)
                     elif value_parts[0] == params[4]:
-                        self.upper_rel_range_uid = number # self.UID_range_limit(number, 999)
+                        self.upper_idea_range_uid = number # self.UID_range_limit(number, 999)
 
             # Verify whether values indicate proper ranges
             if self.upper_obj_range_uid <= self.lower_obj_range_uid \
-                    or self.lower_rel_range_uid <= self.upper_obj_range_uid \
-                    or self.upper_rel_range_uid <= self.lower_rel_range_uid :
+                    or self.lower_idea_range_uid <= self.upper_obj_range_uid \
+                    or self.upper_idea_range_uid <= self.lower_idea_range_uid :
                 Message(self.gel_net.GUI_lang_index,
                     'Object range UIDs are not in proper position or sequence.',\
                     'Object range UIDs staan niet op de juiste plaats '
@@ -623,57 +618,61 @@ class Gellish_file:
               format(self.prefix, \
                      self.lower_obj_range_uid, \
                      self.upper_obj_range_uid, \
-                     self.lower_rel_range_uid, \
-                     self.upper_rel_range_uid))
-        # Determine highest uid used within range for obj and rel
-        # === to be done ===
-        self.gel_net.new_obj_uid = self.lower_obj_range_uid
-        self.gel_net.new_rel_uid = self.lower_rel_range_uid
+                     self.lower_idea_range_uid, \
+                     self.upper_idea_range_uid))
 
-##        # Determine the UID ranges for new objects and relations in this current file
-##        if len(self.header) > 10:
-##            # If range limits are given, then allocate or apply defaults
-##            self.gel_net.lower_obj_range_uid = self.UID_range_limit(self.header[7] , 100)
-##            self.gel_net.upper_obj_range_uid = self.UID_range_limit(self.header[8] , 499)
-##            self.gel_net.lower_rel_range_uid = self.UID_range_limit(self.header[9] , 500)
-##            self.gel_net.upper_rel_range_uid = self.UID_range_limit(self.header[10], 999)
-##            # Verify whether values indicate proper ranges
-##            if self.gel_net.upper_obj_range_uid <= self.gel_net.lower_obj_range_uid or\
-##               self.gel_net.lower_rel_range_uid <= self.gel_net.upper_obj_range_uid or\
-##               self.gel_net.upper_rel_range_uid <= self.gel_net.lower_rel_range_uid :
-##                print('    Object range UIDs not in proper position or sequence.')
-##            print('    Obj_range_UIDs: {}, {}; Rel_range_UIDs: {} {}'.\
-##                  format(self.gel_net.lower_obj_range_uid, self.gel_net.upper_obj_range_uid, \
-##                         self.gel_net.lower_rel_range_uid, self.gel_net.upper_rel_range_uid))
-##        else:
-##            self.gel_net.lower_obj_range_uid = 100
-##            self.gel_net.upper_obj_range_uid = 499
-##            self.gel_net.lower_rel_range_uid = 500
-##            self.gel_net.upper_rel_range_uid = 999
+    def Determine_highest_uids_in_ranges(self, reader, source_ids, loc_default_row):
+        ''' Determine what the highest uids are within the given ranges
+            for the lh and rh objects and for the ideas.
+        '''
+        # Start with the lower value of the ranges
+        self.highest_obj_uid = self.lower_obj_range_uid
+        self.highest_idea_uid = self.lower_idea_range_uid
+        db_row = []
+        for in_row in reader:
+            # skip empty rows if present
+            if in_row == []:
+                continue
+            # Skip rows with status 'ignore' or equivalent
+            if self.status_col_in is not 0 and in_row[self.status_col_in] in ignores:
+                continue
 
-##    def UID_range_limit(self, string, default):
-##        ''' Determine a UID range value from numeric string, otherwise make default'''
-##        limits = ['Lower_obj_uid', 'Upper_obj_uid', 'Lower_rel_uid', 'Upper_rel_uid']
-##        uid = default
-##        if string != '':
-##            parts = string.partition('=')
-##            if parts[2] != '':
-##                if parts[1] not in limits:
-##                    print('UID range limit name <{}> not in list {}'.format(parts[1], limits))
-##                number = parts[2]
-##            else:
-##                number = parts[0]
-##            dots_removed   = number.replace('.','')
-##            commas_removed = dots_removed.replace(',','')
-##            spaces_removed = commas_removed.replace(' ','')
-##            if spaces_removed.isdecimal():
-##                uid = int(spaces_removed)
-##        return uid
+            # Rearrange the values in in_row in the sequence of the database
+            # and add defaults for missing values and remove commas (,) from uids
+            db_row = self.Rearrange_input_row(in_row, source_ids, loc_default_row)
+
+            # Convert lh_uid, rh_uid and idea_uid to integer, if possible
+            # If lh_uid is integer and is in range and is greater than highest value
+            # then replace highest value by uid
+            integer, int_lh_uid = self.Clean_whole_number(db_row[lh_uid_col])
+            if integer and int_lh_uid > self.highest_obj_uid \
+               and int_lh_uid < self.upper_obj_range_uid:
+                self.highest_obj_uid = int_lh_uid
+            integer, int_rh_uid = self.Clean_whole_number(db_row[rh_uid_col])
+            if integer and int_rh_uid > self.highest_obj_uid \
+               and int_rh_uid < self.upper_obj_range_uid:
+                self.highest_obj_uid = int_rh_uid
+            integer, int_idea_uid = self.Clean_whole_number(db_row[idea_uid_col])
+            if integer and int_idea_uid > self.highest_idea_uid \
+               and int_idea_uid < self.upper_idea_range_uid:
+                self.highest_idea_uid = int_idea_uid
+            #if self.highest_obj_uid > self.lower_obj_range_uid:
+            #    print('Highest uid in range: ', self.highest_obj_uid, self.highest_idea_uid)
+
+        # Rewind file and skip first three lines
+        self.f.seek(0)
+        next(reader)
+        next(reader)
+        next(reader)
+        
+        # Determine first uid for new obj and idea
+        self.gel_net.new_obj_uid = self.highest_obj_uid + 1
+        self.gel_net.new_idea_uid = self.highest_idea_uid + 1
 
     def Clean_whole_number(self, number):
         ''' Ensure that a whole number is coded as an integer '''
         integer = True
-        dots_removed   = number.replace('.','')
+        dots_removed = number.replace('.','')
         commas_removed = dots_removed.replace(',','')
         spaces_removed = commas_removed.replace(' ','')
         if spaces_removed.isdecimal():
@@ -683,7 +682,7 @@ class Gellish_file:
             uid = number
         return integer, uid
 
-    def Rearrange_input_row(self, idea_col_in, in_row, source_ids, loc_default_row):
+    def Rearrange_input_row(self, in_row, source_ids, loc_default_row):
         ''' Rearrange values in in_row into db_row
             conform the destination column ids specified in source_id_dict.
             Missing values are loaded with local default values,
@@ -705,25 +704,18 @@ class Gellish_file:
                         76, 70, 67, 11, 6, 78, 53, 50]):
                     uid, integer = Convert_numeric_to_integer(in_row[source_ids.index(source_id)])
                     value = str(uid)
-##                    if integer is False and value != '':
-##                        print('Warning Idea {}: UID <{}> in column {} is not a whole number'.\
-##                              format(in_row[idea_col_in], in_row[source_ids.index(source_id)], \
-##                                     source_id))
                 else:
                     value = in_row[source_ids.index(source_id)]
                 db_row[self.source_id_dict[source_id]] = value
 
                 # Index for UID of UoM, successorUID, appContUID and collUID are optional
                 if source_id in [2, 1, 60, 15]:
-                    if idea_col_in != 0 and value == '':
+                    if self.idea_col_in != 0 and value == '':
                         Message(self.gel_net.GUI_lang_index,
                             'Idea {} - UID in column {} is missing'.\
-                            format(in_row[idea_col_in], source_id),\
+                            format(in_row[self.idea_col_in], source_id),\
                             'Idee {} - UID in kolom {} ontbreekt'.\
-                            format(in_row[idea_col_in], source_id))
-        #if self.test == True:
-        #    print('db_row', db_row)
-        #self.test = False
+                            format(in_row[self.idea_col_in], source_id))
         return db_row
 
     def Verify_row(self, db_row):
