@@ -78,7 +78,7 @@ class Semantic_Network():
         
         self.new_obj_uid = 100  # default start UID for new things in model mappings
         self.new_things = {}   # collection of new things in model mappings
-        self.new_rel_uid = 500  # default start UID for unknown relations in model mappings
+        self.new_idea_uid = 500  # default start UID for unknown relations in model mappings
         self.select_dict = {}
         self.base_ontology = False
 
@@ -1301,9 +1301,9 @@ class Semantic_Network():
 
     def save_pickle_db(self, fname):
         ''' Save the semantic network by a pickle dump '''
-        f = open(fname, "bw")
-        pickle.dump(self, f)
-        f.close()
+        file = open(fname, "bw")
+        pickle.dump(self, file)
+        file.close()
 
 ##    def Determine_preferred_phrase(self, rel_type, base_or_inverse):
 ##        is_related_to = ['is related to', 'is gerelateerd aan']
