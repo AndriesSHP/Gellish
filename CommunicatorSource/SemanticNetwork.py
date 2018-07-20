@@ -13,10 +13,8 @@ from Gellish_file import Gellish_file
 from Anything import Anything, Relation # , Object, Individual, Kind, RelationType
 from Bootstrapping import *
 from GellishDict import GellishDict
-#from Display_views import Display_views
 from Create_output_file import Create_gellish_expression, Convert_numeric_to_integer, \
      Open_output_file, Message
-#from User_interface import Message
 
 class Semantic_Network():
     """ Build and query a Semantic_Network model.
@@ -32,6 +30,7 @@ class Semantic_Network():
     """
     def __init__(self, net_name):
         self.name = net_name
+        self.semantic_file_name = "Gellish_net_db"
         
         self.Gellish_files = []
         self.rels = []
@@ -1299,11 +1298,16 @@ class Semantic_Network():
                 uid = 2000000000 + number
         return uid
 
-    def save_pickle_db(self, fname):
+    def save_pickle_db(self):
         ''' Save the semantic network by a pickle dump '''
-        file = open(fname, "bw")
-        pickle.dump(self, file)
-        file.close()
+        semantic_net = open(self.semantic_file_name, "bw")
+        pickle.dump(self, semantic_net)
+        semantic_net.close()
+        self.Message(
+            "Network '{}' is saved in file {}.".\
+            format(self.gel_net.name, self.semantic_file_name),
+            "Netwerk '{}' is opgeslagen in file {}.".\
+            format(self.gel_net.name, self.semantic_file_name))
 
 ##    def Determine_preferred_phrase(self, rel_type, base_or_inverse):
 ##        is_related_to = ['is related to', 'is gerelateerd aan']

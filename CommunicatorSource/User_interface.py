@@ -15,9 +15,7 @@ class User_interface():
     '''
 
     def __init__(self, gel_net):
-        #self.main = main
         self.gel_net = gel_net
-        self.pickle_file_name = "Gellish_net_db"
         self.GUI_lang_name_dict = {"English":'910036', \
                                    "Nederlands":'910037'}
         #self.root = main.root
@@ -132,7 +130,7 @@ class User_interface():
         self.DBMenu.add_command(label=new_net[self.GUI_lang_index],
                                 command=self.gel_net.reset_and_build_network)
         self.DBMenu.add_command(label=save_as[self.GUI_lang_index],
-                                command=self.dump_net)
+                                command=self.gel_net.save_pickle_db)
 
         # Main Frame
         self.main_frame = Frame(self.root)
@@ -192,15 +190,6 @@ class User_interface():
             and extent the semantic network with its content.
         '''
         self.gel_net.read_verify_and_merge_files()
-
-    def dump_net(self):
-        ''' Dump semantic network as pickle binary file.'''
-        self.gel_net.save_pickle_db(self.pickle_file_name)
-        self.Message(
-            "Network '{}' is saved in file {}.".\
-            format(self.gel_net.name, self.pickle_file_name),
-            "Netwerk '{}' is opgeslagen in file {}.".\
-            format(self.gel_net.name, self.pickle_file_name))
 
     def search_net(self):
         ''' Initiate the execution of a simple query as a search for an object.'''
