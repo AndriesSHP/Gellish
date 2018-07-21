@@ -917,8 +917,8 @@ class Query_view():
                         found_uid = unknown.uid
                         continue
             if found_uid == '':
-                self.user_interface.Message(
-                    'No uid found.',\
+                self.user_interface.Message_UI(
+                    'No uid found.',
                     'Er is geen uid gevonden.')
             return found_uid, options
         
@@ -1017,7 +1017,7 @@ class Query_view():
 
                 options.append(option)
                     
-                self.user_interface.Message(
+                self.user_interface.Message_UI(
                     'String <{}> not found in the dictionary. UID = {}. '.\
                     format(search_string, self.unknown_quid),\
                     'Term <{}> is niet gevonden in het woordenboek. UID = {}. '.\
@@ -1030,7 +1030,7 @@ class Query_view():
                         found_uid = obj.uid
                         break
             if found_uid == '':
-                self.user_interface.Message(
+                self.user_interface.Message_UI(
                     'The found UID is blank, which is incorrect.',\
                     'De gevonden UID is blanco, hetgeen niet correct is.')
                  
@@ -1048,7 +1048,7 @@ class Query_view():
         item = self.lh_options_tree.selection()
         ind = self.lh_options_tree.index(item) 
         if len(self.lh_options) == 0:
-            self.user_interface.Message(
+            self.user_interface.Message_UI(
                 'Warning: No option is selected yet. Please try again.',
                 'Waarschuwing: Er is nog geen optie geselecteerd. Probeer nogmaals.')
             return
@@ -1209,7 +1209,7 @@ class Query_view():
                 expr = lh_obj_rel.expression
                 rel_type = self.gel_net.uid_dict[expr[rel_type_uid_col]]
                 if rel_type == None:
-                    self.user_interface.Message(
+                    self.user_interface.Message_UI(
                         'The kind of relation {} is not found.'.format(rel_type_uid),\
                         'De soort relatie {} is niet gevonden.'.format(rel_type_uid))
                 else:
@@ -1326,7 +1326,7 @@ class Query_view():
         lh_uid_init = self.q_lh_uid_widget.get()
         if lh_uid_init == '':
             #print('Warning: Left hand option not yet selected. Please try again.')
-            self.user_interface.Message(
+            self.user_interface.Message_UI(
                 'Left hand option is not yet selected. Please try again.',
                 'Linker optie is nog niet geselecteerd. Probeer nogmaals.')
             return
@@ -1335,7 +1335,7 @@ class Query_view():
         # => lh_options: optionNr, whetherKnown, langUIDres, commUIDres, result_string,\
         #                resultUID, is_called_uid, kindKnown, kind
         if len(self.lh_options) == 0:
-            self.user_interface.Message(
+            self.user_interface.Message_UI(
                 'No option is selected. Please try again.',
                 'Er is geen optie geselecteerd. Probeer nogmaals.')
             return
@@ -1434,8 +1434,10 @@ class Query_view():
             # Verify whether a rh name is specified
             rh_uid_init = self.q_rh_uid_widget.get()
             if rh_uid_init == '':
-                print('Right hand option not (yet) selected.')
-                #self.query.MessagesQ.insert('end','\nRight hand option not (yet) selected.')
+                print('Right hand option is not (yet) selected.')
+                self.user_interface.Message_UI(
+                    'Right hand option ís not (yet) selected.',
+                    'Rechter optie is nog niet geselecteerd.')
             else:
                 # There is a rh name specified. Determine its name and uid and identity
                 item = self.rh_options_tree.selection()
@@ -1464,7 +1466,7 @@ class Query_view():
                                          self.query.q_phrase_type_uid]
 ##        else:
 ##            # Option for relation type is blank
-##            self.user_interface.Message(
+##            self.user_interface.Message_UI(
 ##              'Relation type option is not (yet) selected.',\
 ##              'Optie voor soort relatie is (noch) niet geselecteerd.')
                 
