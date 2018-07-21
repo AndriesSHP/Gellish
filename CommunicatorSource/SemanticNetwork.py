@@ -1303,11 +1303,11 @@ class Semantic_Network():
         semantic_net = open(self.semantic_file_name, "bw")
         pickle.dump(self, semantic_net)
         semantic_net.close()
-        self.Message(
+        Message(self.GUI_lang_index,
             "Network '{}' is saved in file {}.".\
-            format(self.gel_net.name, self.semantic_file_name),
+            format(self.name, self.semantic_file_name),
             "Netwerk '{}' is opgeslagen in file {}.".\
-            format(self.gel_net.name, self.semantic_file_name))
+            format(self.name, self.semantic_file_name))
 
 ##    def Determine_preferred_phrase(self, rel_type, base_or_inverse):
 ##        is_related_to = ['is related to', 'is gerelateerd aan']
@@ -1338,6 +1338,8 @@ if __name__ == "__main__":
 
     # Build semantic network
     # ===to be done===
+
+    network.save_pickle_db()
 
     # Query things in network
     qtext = input("\nEnter query string: ")
