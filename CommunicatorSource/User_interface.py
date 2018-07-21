@@ -22,7 +22,8 @@ class User_interface():
         self.root = Tk()
         self.GUI_lang_names = ['English', 'Nederlands']
         self.root.title("Gellish Communicator")
-        max_width, max_height = self.root.winfo_screenwidth(), self.root.winfo_screenheight()
+        max_width, max_height = self.root.winfo_screenwidth(), \
+                                self.root.winfo_screenheight()
         self.root.geometry('1000x600')
         self.root.minsize(width=600, height=300)
         self.root.maxsize(width=max_width, height=max_height) #1000,height=600)
@@ -62,7 +63,7 @@ class User_interface():
         # Create display views object and initialize notebook
         self.views = Display_views(gel_net, self)
 
-        tk.mainloop()
+        mainloop()
 
     def Set_GUI_language(self, GUI_lang_name):
         ''' Set the GUI language (name, uid, index and lang_prefs) of the user.
@@ -86,7 +87,7 @@ class User_interface():
                 # Set default preferences at international, user_language, English
                 self.GUI_lang_pref_uids = ['589211', self.GUI_lang_uid, '910036']
         else:
-            self.Message(
+            self.Message_UI(
                 'The GUI language {} is unknown. Default = English.'.format(GUI_lang_name),\
                 'De GUI taal {} is onbekend. Default = English.'.format(GUI_lang_name))
             GUI_set = False
@@ -162,11 +163,11 @@ class User_interface():
         GUI_lang_name  = self.lang_box.get()
         self.Set_GUI_language(GUI_lang_name)
 
-        chosen_language = ['The user interface language is', 'De GUI taal is']
-        print('{} {}'.format(chosen_language[self.GUI_lang_index], \
-                             self.GUI_lang_name))
+        self.Message_UI(
+            'The user interface language is {}.'.format(self.GUI_lang_name),
+            'De GUI taal is {}.'.format(self.GUI_lang_name))
 
-    def Message(self, mess_text_EN, mess_text_NL):
+    def Message_UI(self, mess_text_EN, mess_text_NL):
         if self.GUI_lang_index == 1:
             print(mess_text_NL)
         else:
@@ -241,7 +242,7 @@ class User_interface():
                 # Set default preferences at international, user_language, English
                 self.reply_lang_pref_uids = ['589211', self.reply_lang_uid, '910036']
         else:
-            self.Message(
+            self.Message_UI(
                 'The reply language {} is unknown. Default = English is used.'.\
                 format(reply_lang_name),\
                 'De antwoordtaal {} is onbekend. Default = English wordt gebruikt.'.\
@@ -328,7 +329,7 @@ class User_interface():
                 self.obj_without_name_in_context.append(obj)
                 numeric_uid, integer = Convert_numeric_to_integer(obj.uid)
                 if integer is False or numeric_uid not in range(1000000000, 3000000000):
-                    self.Message(
+                    self.Message_UI(
                         'There is no name in context known for {}'.format(obj.name),\
                         'Er is geen naam in context bekend voor {}'.format(obj.name))
             obj_name = obj.name
@@ -361,17 +362,21 @@ class User_interface():
         sys.exit()
 
 #------------------------------------------------
-import tkinter as tk
-from tkinter.ttk import *
-
 class Semantic_network():
     def __init__(self):
         self.GUI_lang_index = 0
         self.GUI_lang_name = 'English'
+        self.uid_dict = {} # key = uid; value = obj (an instance of Anything)
         pass
 
     def Set_GUI_language(self, GUI_lang_name):
         self.GUI_lang_index = 0
+
+    def reset_and_build_network(self):
+        return
+
+    def save_pickle_db(self):
+        return
 
 class Main():
     def __init__(self):
@@ -381,6 +386,5 @@ class Main():
         print('Build network')
 
 if __name__ == "__main__":
-    #root = Tk()
     main = Main()
     user_interface = User_interface(main.gel_net)
