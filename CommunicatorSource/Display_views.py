@@ -4346,11 +4346,14 @@ class Display_views():
                     'Filenaam {} bevat geen file extensie'.format(info_row[7]))
             else:
                 # Open the file in the file format that is defined by its file extension
-                #print('Open file {} about {}'.format(info_row[8], info_row[7]))
                 directory_name = info_row[3]
+                file_name = info_row[8]
                 if directory_name != '':
-                    logger.debug("directory_name: %s" % directory_name)
-                    file_path = os.path.join(directory_name, info_row[8])
+                    if not directory_name.startswith(os.sep):
+                        # By default, we look in the app root dir.
+                        # This assumes the app was started from the CommunicatorSource dir.
+                        directory_name = ".." + os.sep + directory_name
+                    file_path = os.path.join(directory_name, file_name)
                     normalized_path = os.path.normpath(file_path)
                     open_file(normalized_path)
 
