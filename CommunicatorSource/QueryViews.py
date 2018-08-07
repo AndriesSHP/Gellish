@@ -1122,9 +1122,15 @@ class Query_view():
                 self.q_aspects.sort(key=itemgetter(4,6))
                 for asp in self.q_aspects:
                     #print('Asp:', asp)
-                    self.aspects_tree.insert(asp[4], index='end',
-                                             iid=asp[1], values=asp,
-                                             text=asp[1], open=False)
+                    if asp[1] == '':
+                        self.aspects_tree.insert(asp[4], index='end',
+                                                 values=asp,
+                                                 text=asp[1], open=False)
+                    else:
+                        self.aspects_tree.insert(asp[4], index='end',
+                                                 iid=asp[1],
+                                                 values=asp,
+                                                 text=asp[1], open=False)
                         
             rel_options.sort()
             self.gel_net.rel_terms = rel_options
@@ -1137,14 +1143,14 @@ class Query_view():
             # Determine synonyms and translations of lh_object name in various languages        
             languages, alias_table = self.Determine_aliases(lh_object)
             for language in languages:
-                self.alias_tree.insert('', index='end',\
-                                       values=language,\
-                                       iid=language,\
+                self.alias_tree.insert('', index='end',
+                                       values=language,
+                                       iid=language,
                                        text=language, open=True)
             for alias_row in alias_table:
-                self.alias_tree.insert(alias_row[0], index='end',\
-                                       values=alias_row[1:],\
-                                       #iid=alias_row[1],\
+                self.alias_tree.insert(alias_row[0], index='end',
+                                       values=alias_row[1:],
+                                       #iid=alias_row[1],
                                        text=alias_row[1], open=True)
                 
     def Determine_aspect_and_value_options(self, lh_obj_sub):
