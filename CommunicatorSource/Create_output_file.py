@@ -6,6 +6,8 @@ from tkinter import filedialog
 from Bootstrapping import ini_out_path
 from Expr_Table_Def import *
 from Expr_Table_Def import expr_col_ids, header3, default_row
+from utils import open_file
+
 
 def Create_gellish_expression(lang_comm, idea_uid, intent_uid_name, \
                               lh_uid_name, rel_uid_phrase_type,\
@@ -39,7 +41,7 @@ def Open_output_file(expressions, subject_name, lang_name, serialization):
         such as the CSV in Gellish Expression Format:
         Serialization is either 'csv', 'xml', 'n3' or 'json'.
     """
-    
+
     date = datetime.date.today()
     # Create header line 1 and an initial file name
     if lang_name == 'Nederlands':
@@ -89,7 +91,7 @@ def Save_expressions_in_file(expressions, output_file, header1, serialization):
         # Save the result_expr expressions in a CSV file, preceeded by three header lines.
         try:
             f = open(output_file, mode='w',newline='', encoding='utf-8')
-            fileWriter = csv.writer(f, dialect='excel', delimiter=';') 
+            fileWriter = csv.writer(f, dialect='excel', delimiter=';')
 
             # Write header rows and expressions
             fileWriter.writerow(header1)
@@ -97,10 +99,10 @@ def Save_expressions_in_file(expressions, output_file, header1, serialization):
             fileWriter.writerow(header3)
             for expression in expressions:
                 fileWriter.writerow(expression)
-            
+
             f.close()
 
-            os.startfile(output_file,'open')     # Open written file in CSV viewer (e.g. Excel)
+            open_file(output_file)     # Open written file in CSV viewer (e.g. Excel)
         except PermissionError:
             print('File {} cannot be opened. Probably already in use'.format(output_file))
             return
@@ -143,7 +145,7 @@ def Save_expressions_in_file(expressions, output_file, header1, serialization):
     f.close()
     print('Saved file: {}'.format(output_file))
     # Open written file in a viewer
-    os.startfile(output_file,'open')
+    open_file(output_file)
 
 def Convert_numeric_to_integer(numeric_text):
     ''' Convert a numeric string into integer value removing dots(.), commas (,) and spaces ( )

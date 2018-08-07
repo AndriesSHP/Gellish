@@ -2,6 +2,7 @@ import os
 import sys
 import csv
 import json
+import logging
 from tkinter import filedialog
 
 from Bootstrapping import *
@@ -10,6 +11,9 @@ from Create_output_file import *
 from Mapping_tables_IB import *
 from Anything import Anything
 
+logger = logging.getLogger(__name__)
+
+
 class Gellish_file:
     """ Data about files, especially Gellish files.
         A Gellish file is a list of expressions in full Gellish Expression Format
@@ -17,7 +21,7 @@ class Gellish_file:
         build a semantic network from it
         or export such a list in any of various formats (such as CSV or JSON files).
     """
-    
+
     def __init__(self, path_and_name, gel_net):
         ''' Initialize a file that is read from a given location (path)
             The file_name is without path or directory, but with file extension.
@@ -26,7 +30,7 @@ class Gellish_file:
         self.gel_net = gel_net
         self.expressions = []
         self.query_lines = []
-        
+
         # Determine the directory, if present
         parts = path_and_name.rsplit('\\', maxsplit=1)
         if len(parts) == 1:
@@ -40,6 +44,7 @@ class Gellish_file:
                 self.name = parts2[1]
         else:
             self.name = parts[1]
+        logger.debug(self.name)
 
         # Determine the file extension from path_and_name
         name_ext = self.path_and_name.rsplit('.', maxsplit=1)
@@ -204,7 +209,7 @@ class Gellish_file:
                                     self.gel_expressions.append(gellish_expr)
 
                                 # If attrib_map indicates
-                                #   a <has by definition as aspect a> relation, 
+                                #   a <has by definition as aspect a> relation,
                                 # then create two expressions:
                                 #   1. for indicating the intrinsic aspect and the kind of aspect
                                 #   2. for quantification of the intrinsic aspect
@@ -517,21 +522,21 @@ class Gellish_file:
                               'basisontologie', 'Basisontologie']:
             self.content_type = "dictionary"
             self.base_ontology = True
-            
+
         elif self.header[5] in ['domain dictionary', 'Domain dictionary', 'Domain Dictionary', \
                                 'domeinwoordenboek', 'Domeinwoordenboek', 'Woordenboek']:
             self.content_type = "dictionary"
-            
+
         elif self.header[5] in ['Product models', 'Process models', 'Product and process models', \
                            'Productmodellen','Procesmodellen', 'Product- en procesmodellen', \
                            'Productmodel', 'Product model', \
                            'Product type model', 'Producttypemodel', 'Producttypemodellen']:
             self.content_type = "product_model"
-            
+
         elif self.header[5] in ['Query', 'Queries', 'Vraag', 'Vragen']:
             # A file that contains one or more queries that need to be answered
             self.content_type = "queries"
-            
+
         elif self.header[5] in ['Mapping']:
             # A file that required identification and/or allocation of uids
             self.content_type = "mapping"
@@ -551,7 +556,7 @@ class Gellish_file:
         # in the current file generally are expressed (header[1]).
         # Set the default model language in the current file to: 0 = 'English'
         self.lang_ind = 0
-        
+
         self.lang_name = self.header[1]
         if self.lang_name == 'Nederlands':
             self.lang_ind = 1
@@ -586,7 +591,7 @@ class Gellish_file:
         self.upper_obj_range_uid = 499
         self.lower_idea_range_uid = 500
         self.upper_idea_range_uid = 999
-            
+
         if len(self.header) > 7:
             params = ['prefix', \
                       'Lower_obj_uid', 'Upper_obj_uid', 'Lower_rel_uid', 'Upper_rel_uid']
@@ -613,7 +618,7 @@ class Gellish_file:
                     'Object range UIDs are not in proper position or sequence.',\
                     'Object range UIDs staan niet op de juiste plaats '
                     'of in de juiste volgorde.')
-                
+
         print('    Prefix: {}, Obj_range_UIDs: {}, {}, Rel_range_UIDs: {} {}'.\
               format(self.prefix, \
                      self.lower_obj_range_uid, \
@@ -664,7 +669,7 @@ class Gellish_file:
         next(reader)
         next(reader)
         next(reader)
-        
+
         # Determine first uid for new obj and idea
         self.gel_net.new_obj_uid = self.highest_obj_uid + 1
         self.gel_net.new_idea_uid = self.highest_idea_uid + 1
@@ -1050,7 +1055,7 @@ class Gellish_file:
 ##            else:
 ##                print('Duplicate inverse phrase <{}>, Idea {}'.\
 ##                      format(db_row[lh_name_col], db_row[idea_uid_col]))
-        
+
         # If phrase_type == 0 (unknown) then determine the phrase type;
         # base_phrase_type_uid = 6066 inverse_phrase_type_uid = 1986.
         # In case of the base ontology, where only bootstrapping relations may be present,
@@ -1101,10 +1106,10 @@ if __name__ == "__main__":
 
     # Create semantic network
     gel_net = Semantic_Network("Network")
-    
+
     # Create a base dictionary of kinds of relations from bootstrapping
     gel_net.Create_base_reltype_objects()
-    
+
     path_and_name = '..\\GellishDictionary/Formal language definition base-UTF-8.csv'
     current_file = Gellish_file(path_and_name, gel_net)
 
