@@ -44,7 +44,7 @@ class Gellish_file:
                 self.name = parts2[1]
         else:
             self.name = parts[1]
-        logger.debug(self.name)
+        #logger.debug(self.name)
 
         # Determine the file extension from path_and_name
         name_ext = self.path_and_name.rsplit('.', maxsplit=1)
