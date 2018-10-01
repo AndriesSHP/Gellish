@@ -44,7 +44,7 @@ class Gellish_file:
                 self.name = parts2[1]
         else:
             self.name = parts[1]
-        logger.debug(self.name)
+        #logger.debug(self.name)
 
         # Determine the file extension from path_and_name
         name_ext = self.path_and_name.rsplit('.', maxsplit=1)
@@ -74,7 +74,7 @@ class Gellish_file:
             '>>> Read file {}'.format(self.path_and_name),\
             '>>> Lees file {}'.format(self.path_and_name))
         try:
-            self.f = open(self.path_and_name, "r", encoding="utf-8")
+            f = open(self.path_and_name, "r", encoding="utf-8")
         except IOError:
             Message(self.gel_net.GUI_lang_index,
                 "File '{}' does not exist or is not readable.".format(self.name),\
@@ -84,18 +84,18 @@ class Gellish_file:
         # Determine the file extension of the current file
         if self.extension == 'csv':
     ##        # determine dialect
-    ##        sample = self.f.read(4096)
+    ##        sample = f.read(4096)
     ##        dialect = csv.Sniffer().sniff(sample, delimiters=';')
     ##
     ##        # rewind to start
-    ##        self.f.seek(0)
+    ##        f.seek(0)
     ##
             # Initialise csv reading and read first line
-    ##        self.reader = csv.reader(self.f, dialect)
-            reader = csv.reader(self.f, delimiter=';')
+    ##        self.reader = csv.reader(f, dialect)
+            reader = csv.reader(f, delimiter=';')
             self.header = next(reader)
         elif self.extension == 'json':
-            self.json_dict = json.load(self.f)
+            self.json_dict = json.load(f)
 
             # Determine JSON file type: list or dict?
             # Convert dict to list
@@ -121,7 +121,7 @@ class Gellish_file:
             if self.extension == 'json':
                 self.Interpret_non_gellish_JSON_file()
         else:
-            self.Import_expressions_from_Gellish_file(reader)
+            self.Import_expressions_from_Gellish_file(f, reader)
 
     def Interpret_non_gellish_JSON_file(self):
         ''' Read a non-Gellish JSON file and convert it into a Gellish file
@@ -279,7 +279,7 @@ class Gellish_file:
         Open_output_file(self.gel_expressions, subject_name[self.gel_net.reply_lang_index], \
                          lang_name, serialization)
 
-    def Import_expressions_from_Gellish_file(self, reader):
+    def Import_expressions_from_Gellish_file(self, f, reader):
         ''' Read the expressions from the current file in Gellish expression format
             verify its quality
             and add its content to the semantic network
@@ -383,6 +383,11 @@ class Gellish_file:
         # Determine the highest numeric uid that appears in lh_uid and rh_uid
         # in the input file (reader)
         self.Determine_highest_uids_in_ranges(reader, source_ids, loc_default_row)
+        # Rewind file and skip first three lines
+        f.seek(0)
+        next(reader)
+        next(reader)
+        next(reader)
 
         # Read line 4 etc. where data starts ====
         idea_uid = 0
@@ -663,12 +668,6 @@ class Gellish_file:
                 self.highest_idea_uid = int_idea_uid
             #if self.highest_obj_uid > self.lower_obj_range_uid:
             #    print('Highest uid in range: ', self.highest_obj_uid, self.highest_idea_uid)
-
-        # Rewind file and skip first three lines
-        self.f.seek(0)
-        next(reader)
-        next(reader)
-        next(reader)
 
         # Determine first uid for new obj and idea
         self.gel_net.new_obj_uid = self.highest_obj_uid + 1

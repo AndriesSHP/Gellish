@@ -2,35 +2,20 @@
 
 import sys
 import pickle
-#import tkinter as tk
 
 import SystemUsers as SU
 from User_interface import User_interface
 from SemanticNetwork import Semantic_Network
-#from Display_views import Display_views
-#from Query import Query
-#from QueryViews import Query_view
 
 #-------------------------------------------------
 class Main():
     def __init__(self):
         self.net_name = "Gellish semantic network"
         self.pickle_file_name = "Gellish_net_db"
-##        self.query = None
-##        self.query_spec = []
+
         self.gel_net = None
         self.user = None
-##        self.views = None
-##        self.use_GUI = False
-        #self.GUI_lang_names = ("English", "Nederlands")
-        #self.lang_uid_dict = {"English": '910036', "Nederlands": '910037'}
-
-        #self.root = None
         self.user_interface = None
-
-##        graphic = 'y' #input('GUI (y/n):')
-##        if graphic == 'y':
-##            self.use_GUI = True
 
 #-----------------------------------------------------
     def start_up(self, user_db):
@@ -85,29 +70,6 @@ class Main():
         else:
             infile.close()
 
-##    def start_gui(self):
-##        self.root = tk.Tk()
-##        self.user_interface = User_interface(self)
-##        # Create a query object
-##        self.query = Query(self.gel_net, self)
-##        # Create display views objects and initialize notebook
-##        self.views = Display_views(main)
-##        tk.mainloop()
-
-##    def read_file(self):
-##        ''' Verify file(s) means read one or more files, verify their content
-##            and extent the semantic network with its content
-##        '''
-##        self.gel_net.read_verify_and_merge_files()
-
-##    def verify_presence_of_network(self):
-##        # Verify presence of a semantic network,
-##        #   if not present then create them
-##        # build a new network from files
-##        if self.gel_net is None:
-##            self.gel_net.Create_base_reltype_objects()
-##            self.gel_net.Build_new_network()
-
 #-----------------------------------------------
 if __name__ == "__main__":
     sys.setrecursionlimit(100000)
@@ -118,37 +80,3 @@ if __name__ == "__main__":
     main = Main()
     main.start_up(user_db)
     main.start_net()
-
-##    if main.use_GUI:
-##        main.start_gui()
-##    else:
-##        # Select one of the following actions
-##        action = input('\nEnter action '
-##                       '\n  Create network     (c) '
-##                       '\n  Modify existing db (m) '
-##                       '\n  Verify user table  (v) '
-##                       '\n  Query existing db  (q) '
-##                       '\n  Dump network db    (d) '
-##                       '\n  Load network db    (l) '
-##                       '\n  Stop and Exit      (s): ')
-##        while action != "s":
-##            if action == 'c':
-##                main.gel_net = Semantic_Network(main.net_name)
-##                main.gel_net.build_network()
-##    ##        if action == 'r': main.read_db()
-##    ##        if action == 'm': main.modify_db()
-##            if action == 'v': main.read_file()
-##            if action == 'q': main.query_net()
-##            if action == 'd': main.dump_net()
-##            if action == 'l': main.load_net()
-##            if action == 's': main.stop_quit()
-##
-##            action = input('\nEnter action '
-##                           '\n  Create network     (c) '
-##                           '\n  Read database      (r) '
-##                           '\n  Modify existing db (m) '
-##                           '\n  Verify user table  (v) '
-##                           '\n  Query existing db  (q) '
-##                           '\n  Dump network db    (d) '
-##                           '\n  Load network db    (l) '
-##                           '\n  Stop and Exit      (s): ')
